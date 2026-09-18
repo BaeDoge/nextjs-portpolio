@@ -1,0 +1,65 @@
+---
+title: "Still Looking for a Good Way to Record Tech Debt"
+publishedAt: "2025-11-20"
+summary: "Nobody reads TODO comments, so I tried other approaches."
+tag: "Career"
+---
+
+## The limits of TODO comments
+
+```python
+# TODO: add caching later
+# FIXME: this logic is a stopgap
+```
+
+I left plenty of these. Months later, grep returned over thirty
+and I couldn't recall the context for most.
+
+`git blame` gives you the *when*, never the *why it was temporary*.
+
+## Attempt 1 — convert to issues
+
+I migrated them all to GitHub issues.
+Result: issues piled up and nothing got done.
+
+Without priority they always lose to new features. Predictable in hindsight.
+
+## Attempt 2 — put the context in the comment
+
+I fixed a format.
+
+```python
+# [debt] 2025-11-20 / Seung Ho Bae
+# Situation: went with a synchronous call due to the deadline
+# Problem: timeout risk as request volume grows. Fine at today's 300/day
+# Trigger: switch to a queue once we pass 1000/day
+```
+
+**The "trigger" line was the key part.**
+Not "later" but "when this number is hit" —
+the decision criterion now lives in the code.
+
+## Attempt 3 — a debt list as a document
+
+A `DEBT.md` at the repo root, reviewed periodically.
+
+```markdown
+| Item | Trigger | Impact | Recorded |
+|---|---|---|---|
+| Synchronous file processing | Over 1000/day | Timeouts | 2025-11-20 |
+| Hardcoded categories | New category requested | Requires deploy | 2025-10-02 |
+```
+
+I review this table once a quarter.
+Only items whose trigger has fired become candidates.
+
+## Current state
+
+Not perfect. I keep forgetting to update the table.
+But since the "when should this be addressed" is written down,
+I at least stopped losing time to "why is this like this?"
+
+## Thought
+
+I've come around to the idea that tech debt isn't eliminated, it's managed.
+What matters isn't paying it down, it's **knowing when it comes due**.

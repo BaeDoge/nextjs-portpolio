@@ -1,0 +1,83 @@
+---
+title: "Tailwind와 CSS Modules 사이에서"
+publishedAt: "2025-08-29"
+summary: "두 방식을 같은 프로젝트에서 써보고 정리한 기준입니다."
+tag: "Tooling"
+---
+
+## 배경
+
+포트폴리오 사이트를 만들면서 두 방식을 섞어 썼습니다.
+의도한 건 아니고, 템플릿이 CSS Modules를 쓰는데
+제가 추가한 컴포넌트에는 인라인 스타일과 Tailwind를 쓰다 보니 그렇게 됐습니다.
+
+정리할 겸 각각 어디가 좋았는지 적어둡니다.
+
+## Tailwind가 편했던 경우
+
+**일회성 레이아웃**
+
+```tsx
+<div className="flex items-center gap-2 px-4 py-2 rounded-lg">
+```
+
+이 정도를 위해 클래스명을 짓고 파일을 하나 더 만드는 건 과합니다.
+이름 짓는 데 드는 시간이 아깝습니다.
+
+**반응형**
+
+```tsx
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+```
+
+미디어 쿼리를 따로 안 써도 되는 게 큽니다.
+
+## CSS Modules가 나았던 경우
+
+**상태가 많은 컴포넌트**
+
+hover, focus, disabled, active가 조합되기 시작하면
+클래스 문자열이 감당이 안 됩니다.
+
+```tsx
+// 이쯤 되면 읽기 어렵다
+className="bg-white hover:bg-gray-50 disabled:bg-gray-200 disabled:cursor-not-allowed focus:ring-2 focus:ring-blue-500 ..."
+```
+
+CSS 파일에서는 그냥 셀렉터로 씁니다.
+
+```css
+.button:disabled {
+  background: var(--gray-200);
+  cursor: not-allowed;
+}
+```
+
+**애니메이션**
+
+keyframes가 들어가면 CSS 파일 쪽이 확실히 편합니다.
+
+## 지금 쓰는 기준
+
+- 레이아웃·간격·정렬 → Tailwind
+- 컴포넌트 고유 스타일, 상태 변화, 애니메이션 → CSS Modules
+- 값은 양쪽 다 **CSS 변수**로 참조
+
+마지막이 중요했습니다.
+색상을 Tailwind 설정과 CSS 파일에 각각 적어두면 다크모드에서 어긋납니다.
+
+```css
+:root {
+  --surface: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --surface: #121212; }
+}
+```
+
+양쪽이 같은 변수를 보게 하니 문제가 사라졌습니다.
+
+## 결론
+
+둘 중 하나를 고르는 문제가 아니라 **어디에 쓸지 나누는** 문제였습니다.
+섞어 쓰는 게 지저분하다고 생각했는데, 경계만 명확하면 괜찮았습니다.

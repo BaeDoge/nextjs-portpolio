@@ -1,0 +1,75 @@
+---
+title: "I Added async and Nothing Got Faster"
+publishedAt: "2025-09-26"
+summary: "I was blocking the event loop. The keyword isn't magic."
+tag: "Troubleshooting"
+---
+
+## Expectation vs reality
+
+To raise concurrent throughput I converted every FastAPI handler to `async def`.
+Throughput barely moved. Some paths got slower.
+
+## Cause — synchronous libraries inside async handlers
+
+```python
+import requests
+
+@app.get("/items")
+async def get_items():
+    # requests is a synchronous library
+    res = requests.get("https://api.example.com/items")
+    return res.json()
+```
+
+A blocking call inside `async def` **stalls the entire event loop**.
+Nothing else is processed while it waits.
+
+Ironically, leaving it as a plain `def` would have let FastAPI
+push it to a threadpool. Declaring it `async` removed that safety net.
+
+## Fixes
+
+**1. Use an async client**
+
+```python
+import httpx
+
+@app.get("/items")
+async def get_items():
+    async with httpx.AsyncClient() as client:
+        res = await client.get("https://api.example.com/items")
+    return res.json()
+```
+
+In practice I reuse one client for the app lifetime rather than creating one per request —
+rebuilding the connection pool each time is wasteful.
+
+**2. If you can't change it, send it to a thread**
+
+```python
+from fastapi.concurrency import run_in_threadpool
+
+@app.get("/report")
+async def get_report():
+    data = await run_in_threadpool(legacy_sync_call)
+    return data
+```
+
+**3. Move CPU work out entirely**
+
+Long CPU-bound work (image processing, say) isn't solved by threads either, because of the GIL.
+That went to separate worker processes.
+
+## My rules now
+
+- If there's nothing to `await`, don't use `async def`
+- Never make a blocking call inside `async def`
+- If blocking is unavoidable, wrap it in `run_in_threadpool`
+
+## Summary
+
+`async` is a tool for **yielding during waits**.
+No waiting, or no yielding, means no benefit.
+
+Changing the keyword alone made nothing faster.

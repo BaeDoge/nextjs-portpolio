@@ -1,0 +1,78 @@
+---
+title: "Where Our LLM API Spend Was Actually Leaking"
+publishedAt: "2026-03-03"
+summary: "The monthly bill was triple what I expected. Half of it was tokens we never needed to send."
+tag: "GenAI"
+---
+
+## Discovery
+
+An internal tool's LLM API bill came in far higher than expected.
+Call volume matched projections; token count didn't.
+
+## 1. The system prompt ships every single time
+
+Obvious in hindsight, easy to overlook.
+A 1,500-token system prompt across 10,000 calls is 15 million tokens —
+sent **regardless of conversation content**.
+
+Rereading the prompt, I found lines like:
+
+```
+You are a very kind, professional and accurate assistant.
+You must answer the user's questions sincerely and...
+```
+
+None of that measurably affected output quality. I deleted it.
+1,500 → 400 tokens, with no perceptible difference.
+
+## 2. We sent the entire conversation history
+
+Multi-turn conversations passed the full history every time,
+so tokens grew linearly with turn count.
+
+Now we keep only the last N turns.
+
+```python
+MAX_TURNS = 6
+
+def trim(messages: list[dict]) -> list[dict]:
+    system = [m for m in messages if m["role"] == "system"]
+    rest = [m for m in messages if m["role"] != "system"]
+    return system + rest[-MAX_TURNS * 2:]
+```
+
+You can also summarise older turns into a single message, but recent turns
+were sufficient for our use case.
+
+## 3. Too much RAG context
+
+We passed the top 10 chunks via `match_count=10`.
+Logs showed answers typically cited only 2–3 of them.
+
+I dropped to `match_count=4` and raised the similarity threshold.
+Answer quality actually improved — irrelevant chunks confuse the model.
+
+## 4. Route by model size
+
+Every request hit the largest model.
+Classification and short summarisation ran fine on a smaller one.
+
+```python
+def pick_model(task: str) -> str:
+    if task in ("classify", "summarize_short"):
+        return SMALL_MODEL
+    return LARGE_MODEL
+```
+
+## Result
+
+Monthly spend dropped roughly 60%.
+Items 1 and 3 delivered most of the savings.
+
+## Lesson
+
+Cost problems are rarely "too many calls" — they're usually
+**too much sent per call**.
+Log token usage per request and the heavy paths become obvious.
+I hadn't, which is why it took me so long.

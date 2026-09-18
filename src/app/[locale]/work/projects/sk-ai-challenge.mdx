@@ -1,0 +1,57 @@
+---
+title: "SK AI Challenge — 자율주행 객체 탐지 모델"
+publishedAt: "2021-10-01"
+summary: "SK주식회사 주관 공모전. 자율주행 차량 카메라 영상에서 도로 요소를 탐지하는 Semi-Supervised 객체 탐지 모델 개발. 3위 수상."
+images:
+  - "/projects/sk-ai-challenge/main.png"
+  - "/projects/sk-ai-challenge/diagram1.png"
+tag: "Computer Vision"
+---
+
+<Feedback
+  icon
+  variant="success"
+  title="1줄 요약"
+  description="자율 주행 차량의 객체 탐지 모델 경진대회에서 진행한 프로젝트"
+/>
+
+
+## 대회 개요
+
+SK AI Challenge for Our Society는 SK주식회사가 주관한 AI 공모전입니다.
+자율주행 차량의 카메라 영상 데이터를 활용하여
+차선, 신호등, 보행자 등 도로 요소를 탐지하는 모델을 개발하는 과제였습니다.
+
+저는 제가 좋아하는 강아지 "도지" (당시에는 비트코인 이름이 아니였습니다!) + Vision 으로 경진대회에 참가하였습니다.
+
+## 핵심 접근 방식: Semi-Supervised Learning
+
+이 대회의 핵심 도전은 **라벨링된 데이터의 부족**이었습니다.
+라벨이 있는 데이터는 제한적이었고, 라벨 없는 데이터는 방대했습니다.
+
+완전 지도학습(Supervised) 방식으로만 학습하면 데이터 부족으로 성능에 한계가 있습니다.
+이를 해결하기 위해 **준지도학습(Semi-Supervised Learning)** 기반 모델을 개발했습니다.
+
+라벨 없는 데이터에서 의사 라벨(Pseudo Label)을 생성하고,
+신뢰도 높은 예측만 학습에 반영하는 방식으로
+라벨링 데이터를 효과적으로 확장했습니다.
+
+## 기술 스택
+
+`Python` `PyTorch` `YOLO` `Semi-Supervised Learning` `Pseudo Labeling` `OpenCV`
+
+## 결과
+
+**3위 수상** (SK AI Challenge for Our Society, 2021)
+
+## Lesson & Learned
+
+실제 자율주행 데이터에는 라벨 없는 데이터가 압도적으로 많을거라 생각되었습니다.
+
+현실 세계 문제를 해결하려면 Semi-Supervised, Self-Supervised 같은
+비지도·준지도 학습 방법론이 필수라는 것을 배운 프로젝트였습니다.
+
+다른 공모전을 준비하면서 혼자 참가한 경진대회였는데,
+프로젝트를 진행하는 2달은 무척 힘들었지만 결과를 남길 수 있어 매우 알찬 경험이였던 것 같습니다.
+
+![leaderboard](/projects/sk-ai-challenge/leaderboard.jpg)

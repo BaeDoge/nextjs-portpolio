@@ -1,0 +1,50 @@
+---
+title: "What Survived Three Months of Claude Code Extensions"
+publishedAt: "2026-05-08"
+summary: "I installed plenty and deleted plenty. Here's only what actually stuck."
+tag: "Tooling"
+---
+
+## Why I did the cleanup
+
+Every extension looks good on install day. Three months later, I was only opening a handful of them.
+While tidying my config I kept hitting entries where I thought "when did I add this?" — so I pruned.
+
+## What survived
+
+**1. A project-level context file**
+
+More of a convention than an extension, but it made the biggest difference.
+Writing project rules at the repo root meant I stopped explaining our conventions every single time.
+
+```markdown
+- This project is Flask + MySQL. No ORM — raw queries only.
+- All logging is structured (JSON). No print().
+- Tests use pytest, filenames are test_*.py
+```
+
+I wasn't sure it was worth writing down. After writing it, review nitpicks clearly dropped.
+
+## What I removed
+
+**Auto-generated commit messages**
+
+Novel for a week. Then every message became "a sentence describing the diff."
+
+```
+- Update user_service.py to add validation logic and modify error handling
+```
+
+That's all visible in the diff. The part I actually need — the *why* — never made it in.
+Writing them myself was faster, so I turned it off.
+
+**Inline suggestions while typing**
+
+Constant popups broke my concentration. Personal taste, but it didn't work for me.
+
+## Takeaway
+
+The more tools you add, the more you need to separate "can't work without this" from "slightly nicer with this."
+When the second category grows, config maintenance costs more than the tools give back.
+
+I'll prune again in three months.

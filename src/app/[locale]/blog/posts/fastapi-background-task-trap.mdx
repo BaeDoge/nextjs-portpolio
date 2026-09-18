@@ -1,0 +1,91 @@
+---
+title: "FastAPI BackgroundTasks를 믿었다가 생긴 일"
+publishedAt: "2026-03-30"
+summary: "응답은 200인데 작업이 안 돌았습니다. 왜 그런지 찾는 데 반나절 걸렸습니다."
+tag: "Troubleshooting"
+---
+
+## 상황
+
+파일 업로드 후 후처리를 비동기로 돌리려고 `BackgroundTasks`를 썼습니다.
+
+```python
+from fastapi import BackgroundTasks, FastAPI
+
+app = FastAPI()
+
+@app.post("/upload")
+async def upload(file: UploadFile, bg: BackgroundTasks):
+    path = await save_file(file)
+    bg.add_task(process_document, path)
+    return {"status": "accepted"}
+```
+
+응답은 즉시 200. 로컬에서 잘 돌았습니다.
+
+## 문제
+
+배포하고 나니 처리된 문서가 절반 정도만 나왔습니다.
+에러 로그는 없고, 응답도 전부 200이었습니다.
+
+## 원인 두 가지
+
+**1. 워커가 재시작되면 작업이 사라진다**
+
+`BackgroundTasks`는 **같은 프로세스 안**에서 응답 후에 실행됩니다.
+배포, 스케일 인, OOM 등으로 프로세스가 죽으면 대기 중이던 작업은 그냥 증발합니다.
+어디에도 기록이 안 남습니다.
+
+**2. 예외가 조용히 삼켜진다**
+
+백그라운드 작업에서 예외가 나도 클라이언트는 이미 200을 받은 뒤입니다.
+로깅을 안 걸어두면 아무 흔적이 없습니다.
+
+```python
+def process_document(path: str):
+    # 여기서 예외가 나면?
+    # 응답은 이미 나갔고, 로그에도 안 남을 수 있다
+    ...
+```
+
+## 대응
+
+**짧은 작업은 로깅부터 감쌌습니다.**
+
+```python
+import logging
+
+logger = logging.getLogger(__name__)
+
+def process_document(path: str):
+    try:
+        ...
+    except Exception:
+        logger.exception("문서 처리 실패: %s", path)
+        raise
+```
+
+**긴 작업은 큐로 옮겼습니다.**
+
+처리 시간이 몇 초를 넘거나, 유실되면 안 되는 작업은
+DB에 작업 레코드를 남기고 워커가 집어가는 구조로 바꿨습니다.
+
+```python
+@app.post("/upload")
+async def upload(file: UploadFile):
+    path = await save_file(file)
+    await db.execute(
+        "INSERT INTO jobs (type, payload, status) VALUES (?, ?, 'pending')",
+        ("process_document", path),
+    )
+    return {"status": "queued"}
+```
+
+투박하지만 "어디까지 처리됐는지"를 조회할 수 있다는 게 큽니다.
+
+## 정리
+
+`BackgroundTasks`는 **실패해도 괜찮은 짧은 작업**에만 쓰는 게 맞습니다.
+이메일 발송 로그 남기기 정도. 유실되면 곤란한 건 처음부터 큐를 쓰는 게 낫습니다.
+
+"편해 보이는 기능은 어떤 보장을 안 해주는지" 먼저 확인하는 습관이 생겼습니다.

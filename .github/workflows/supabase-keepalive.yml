@@ -1,0 +1,32 @@
+name: Supabase Keepalive
+
+# Vercel Cron과 별개로, GitHub Actions에서 Supabase REST API를 직접 호출.
+# Vercel 배포/크론이 어떤 이유로든 실패하더라도 이 워크플로우가 살아있는 한
+# 7일 무쿼리 슬립 조건에 걸리지 않음 (앱 자체를 경유하지 않는 이중 안전장치).
+#
+# 사전 준비: 레포 Settings → Secrets and variables → Actions 에
+#   SUPABASE_URL       (예: https://xxxx.supabase.co)
+#   SUPABASE_ANON_KEY   (anon/public key — service role key는 여기 넣지 않기)
+# 두 개를 등록해야 동작합니다.
+
+on:
+  schedule:
+    - cron: "0 15 * * *" # UTC 15:00 = KST 00:00
+  workflow_dispatch: {} # 수동 실행 버튼도 필요하면 사용
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase (read-only, minimal query)
+        run: |
+          http_status=$(curl -s -o /tmp/resp.json -w "%{http_code}" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/page_views?select=id&limit=1" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
+          echo "HTTP status: $http_status"
+          cat /tmp/resp.json
+          if [ "$http_status" -ge 400 ]; then
+            echo "::error::Supabase keepalive ping failed with status $http_status"
+            exit 1
+          fi

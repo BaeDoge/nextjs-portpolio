@@ -1,0 +1,71 @@
+---
+title: "Why 512 Tokens Wasn't the Right Answer for RAG Chunking"
+publishedAt: "2026-04-28"
+summary: "I rewrote my chunking strategy three times while building RAG over policy documents."
+tag: "GenAI"
+---
+
+## I started by just cutting at 512
+
+Most RAG tutorials start with something like `chunk_size=512, overlap=50`.
+I did the same, and the demo worked fine.
+
+The trouble started with real policy documents.
+
+## Problem 1 — clauses get cut in half
+
+Korean financial terms and conditions look like this:
+
+```
+Article 15 (Termination)
+① The customer may terminate the contract at any time.
+② Notwithstanding paragraph ①, termination is restricted in the following cases:
+   1. ...
+```
+
+Cutting at 512 tokens sometimes splits between ① and ②.
+Then retrieval surfaces "may terminate" without "is restricted."
+In a financial domain that isn't a quality issue — it's an incident.
+
+## Attempt 1 — bigger overlap
+
+I pushed `overlap` to 200. Fewer cuts, but the index grew and near-duplicate chunks
+started crowding the top of the result list.
+
+## Attempt 2 — split by article
+
+```python
+import re
+
+def split_by_article(text: str) -> list[str]:
+    parts = re.split(r'(Article\s*\d+)', text)
+    chunks = []
+    for i in range(1, len(parts), 2):
+        chunks.append(parts[i] + parts[i + 1])
+    return chunks
+```
+
+Semantic boundaries held, but length variance became the problem.
+Some articles are two lines, some are three pages. Long ones produce mushy embeddings.
+
+## What I settled on — two stages
+
+1. Split by article first (preserve the semantic boundary)
+2. If an article is too long, split again by paragraph (①②③)
+3. **Prefix every chunk with its parent article heading**
+
+Step 3 was the key.
+
+```
+[Article 15 (Termination)] ② Notwithstanding paragraph ①, ...
+```
+
+Now even a split chunk keeps its context. Retrieval accuracy improved noticeably.
+
+## What I learned
+
+Chunking isn't a question of "how many tokens." It's a question of
+**"what is the unit of meaning in this document?"**
+
+Policies have articles, meeting notes have agenda items, code has functions.
+The answer differs per domain. The tutorial's 512 is a default for generic text, not a rule.

@@ -1,0 +1,88 @@
+---
+title: "PPG 기반 딥러닝 혈압 추정 모델"
+publishedAt: "2022-08-01"
+summary: "MIMIC-III 10만 건 데이터로 개발한 혈압 추정 모델"
+images:
+  - "/projects/etri-intern/main.png"
+  - "/projects/etri-intern/ppg-research.png"
+tag: "Medical AI"
+---
+
+<Feedback
+  icon
+  variant="success"
+  title="1줄 요약"
+  description="MIMIC-III 데이터를 기반으로 PPG 와 ECG 지표를 통한 혈압 추정모델 개발"
+/>
+
+## ETRI Research
+
+2022년 여름, ETRI 대경권연구센터 의료IT융합연구실에서 두 달 인턴십을 했습니다.
+
+과제는 **PPG 신호로 혈압을 추정하는 딥러닝 모델** 개발이었습니다.
+커프(혈압계 밴드) 없이 손가락 센서만으로 혈압을 재는 게 목표였는데,
+센서 데이터 자체가 정밀도가 낮고 변동성이 크기 때문에 쉽게 개발할 수 있는 프로젝트는 아니였습니다. 
+
+저는 해당 분류 모델 개발을 위해 MIMIC-III 의료 데이터셋을 사용하였습니다.
+
+<Feedback
+  icon
+  variant="info"
+  title="MIMIC-III 데이터셋"
+  description="Beth Israel Deaconess Medical Center 중환자실 데이터. 약 1,600명 환자의 생체신호가 공개되어 있습니다. 8초 이상 연속 구간을 뽑고 노이즈를 제거하면 101,087개 샘플이 나옵니다."
+/>
+
+## 3-Branch Functional Model
+
+기존 연구들은 PPG 파형을  Sequential하게 LSTM에 넣는 게 대부분이었습니다.
+근데 PPG에서 뽑을 수 있는 Time-domain 특성이 더 있다는 것을 파악했습니다.
+
+<Grid fillWidth columns="2" gap="16" marginBottom="16" marginTop="8">
+  <Column border="neutral-alpha-medium" padding="16" radius="m" gap="8">
+    <Text variant="label-strong-s">파형 형태 (Morphology)</Text>
+    <Text variant="body-default-s" onBackground="neutral-weak">수축기 피크 높이, 이완기 트로프 위치, 노치(중복맥파) 모양 등 파형 자체의 형태적 특성</Text>
+  </Column>
+  <Column border="neutral-alpha-medium" padding="16" radius="m" gap="8">
+    <Text variant="label-strong-s">시간 영역 특성 (Time-Domain)</Text>
+    <Text variant="body-default-s" onBackground="neutral-weak">BPM, 맥박 간격(IBI), 상승 시간, 하강 시간 등 시간축 기반 통계 지표</Text>
+  </Column>
+</Grid>
+
+이 두 가지를 하나의 Input으로 넣으면 모델이 두 특성을 독립적으로 처리하기 못해 성능의 차이가 없었기 때문에,
+Branch를 총 3개로 나누었습니다.
+
+```text
+[PPG 파형] → Branch 1 (General CNN-LSTM) ─┐
+[PPG 파형] → Branch 2 (Wide CNN-LSTM)    ─┼→ Dense → SBP 예측
+[시간 특성] → Branch 3 (Time-domain DNN)  ─┘
+```
+
+Branch 1, 2는 Window의 크기를 다르게 설정하여 센서 데이터의 로컬/글로벌 특성을 각각 포착하고,
+Branch 3은 Heartpy 라이브러리로 추출한 시간 영역 데이터를 받습니다.
+
+## 성능 비교
+
+<Table
+  data={{
+    headers: [
+      { content: "모델 구성", key: "model" },
+      { content: "MAE (mmHg)", key: "mae", sortable: true }
+    ],
+    rows: [
+      ["General CNN-LSTM만 사용", "9.9805"],
+      ["+ Wide CNN-LSTM 추가", "9.4603"],
+      ["전체 3-Branch (최종)", "8.9248 ↓ 12% 향상"]
+    ]
+  }}
+/>
+
+시간 영역 Branch가 추가됐을 때 개선 폭이 제일 컸습니다.
+파형 형태만으로는 놓치는 혈압 관련 정보가 시간 영역에 담겨있다는 의미입니다.
+
+## Lesson & Learned
+
+"모델 구조보다 데이터 이해가 먼저다" — 이 말이 얼마나 맞는 말인지 이 프로젝트에서 처음 제대로 느꼈던 것 같습니다.
+Branch 구조를 생각해낸 것도 PPG 신호를 직접 뜯어보다 보니 발견할수 있었습니다.
+
+2개월이라는 짧은시간 연구소에서 근무하였지만, 시계열 데이터를 입력으로 하는 모델 개발 경험을 쌓았고,
+배운것을 결과로 남기기 위해 찗은 논문으로 작성해 학술대회에서 발표하였습니다.

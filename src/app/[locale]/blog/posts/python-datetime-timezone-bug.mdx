@@ -1,0 +1,74 @@
+---
+title: "타임존 때문에 하루 날린 이야기"
+publishedAt: "2026-04-19"
+summary: "배치가 매일 9시간씩 밀려서 돌았습니다. 원인은 한 줄이었습니다."
+tag: "Troubleshooting"
+---
+
+## 증상
+
+매일 자정에 도는 집계 배치가 있었습니다.
+로컬에서는 멀쩡한데, 배포하니 전날 데이터가 일부 누락됐습니다.
+
+정확히는 **9시간치**가 비었습니다. 숫자를 보는 순간 짐작은 갔습니다.
+
+## 원인
+
+```python
+# 문제의 코드
+from datetime import datetime, timedelta
+
+today = datetime.now().date()
+yesterday = today - timedelta(days=1)
+```
+
+`datetime.now()`는 **실행 환경의 로컬 타임존**을 따릅니다.
+제 노트북은 KST, 컨테이너는 UTC였습니다.
+
+한국 시간 00:30에 배치가 돌면, 컨테이너 기준으로는 아직 전날 15:30입니다.
+그래서 `yesterday`가 실제로는 그저께가 되고, 하루치가 통째로 어긋납니다.
+
+## 고친 방법
+
+타임존을 명시했습니다.
+
+```python
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+
+KST = ZoneInfo("Asia/Seoul")
+
+today = datetime.now(KST).date()
+yesterday = today - timedelta(days=1)
+```
+
+그리고 컨테이너에도 못 박았습니다.
+
+```dockerfile
+ENV TZ=Asia/Seoul
+```
+
+둘 다 한 이유는, 환경변수만 믿었다가 다른 곳에 배포되면 또 같은 일이 생기기 때문입니다.
+코드가 스스로 보장하게 두는 쪽이 안전합니다.
+
+## 재발 방지
+
+`datetime.now()`를 금지어로 정했습니다. 린트 규칙에 넣었습니다.
+
+```python
+# 금지
+datetime.now()
+datetime.utcnow()
+
+# 허용
+datetime.now(KST)
+datetime.now(timezone.utc)
+```
+
+`utcnow()`도 같이 막았습니다. 이건 naive datetime을 돌려주는데,
+이름 때문에 timezone-aware라고 착각하기 쉽습니다. 실제로 파이썬 3.12부터 deprecated입니다.
+
+## 남은 교훈
+
+로컬에서 되는데 서버에서 안 되면, 대부분 **환경 차이가 코드에 암묵적으로 스며든** 경우입니다.
+타임존, 인코딩, 파일 경로 구분자. 이 세 가지는 특히 그렇습니다.

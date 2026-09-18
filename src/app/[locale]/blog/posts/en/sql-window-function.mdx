@@ -1,0 +1,97 @@
+---
+title: "I Regret Learning Window Functions So Late"
+publishedAt: "2026-01-26"
+summary: "Thirty lines of subqueries became five."
+tag: "Troubleshooting"
+---
+
+## How I used to write it
+
+Fetching "the most recent conversation per user" looked like this:
+
+```sql
+SELECT c.*
+FROM chat_logs c
+INNER JOIN (
+  SELECT user_id, MAX(created_at) AS max_created
+  FROM chat_logs
+  GROUP BY user_id
+) latest
+  ON c.user_id = latest.user_id
+ AND c.created_at = latest.max_created;
+```
+
+It works — until two rows share a timestamp, and you get duplicates.
+Guarding against that keeps adding conditions.
+
+## With a window function
+
+```sql
+SELECT *
+FROM (
+  SELECT c.*,
+         ROW_NUMBER() OVER (
+           PARTITION BY user_id
+           ORDER BY created_at DESC, id DESC
+         ) AS rn
+  FROM chat_logs c
+) t
+WHERE rn = 1;
+```
+
+Adding `id DESC` to the `ORDER BY` makes ties deterministic.
+
+## The ones I reach for most
+
+**Compare with the previous row — LAG**
+
+```sql
+SELECT
+  measured_at,
+  value,
+  value - LAG(value) OVER (ORDER BY measured_at) AS diff
+FROM metrics;
+```
+
+No self-join needed for day-over-day deltas.
+
+**Running totals — SUM OVER**
+
+```sql
+SELECT
+  dt,
+  amount,
+  SUM(amount) OVER (ORDER BY dt) AS running_total
+FROM daily_sales;
+```
+
+**Rank within a group — RANK / DENSE_RANK**
+
+```sql
+SELECT
+  category,
+  name,
+  RANK() OVER (PARTITION BY category ORDER BY score DESC) AS rnk
+FROM items;
+```
+
+`RANK` skips after ties (1,1,3); `DENSE_RANK` doesn't (1,1,2).
+I still look this up every time.
+
+## One gotcha
+
+You can't use a window function directly in `WHERE`.
+
+```sql
+-- Invalid
+WHERE ROW_NUMBER() OVER (...) = 1
+
+-- Must wrap in a subquery
+```
+
+`WHERE` is evaluated before window functions. It took a few attempts to internalise.
+
+## Afterthought
+
+These have been available since MySQL 8.0, and I only found out long after we upgraded.
+Worth skimming the release notes when you bump a database version.

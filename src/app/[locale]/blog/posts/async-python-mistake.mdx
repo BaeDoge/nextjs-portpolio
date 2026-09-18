@@ -1,0 +1,79 @@
+---
+title: "async를 붙였는데 왜 빨라지지 않았나"
+publishedAt: "2025-09-26"
+summary: "이벤트 루프를 막고 있었습니다. async 키워드가 마법은 아니었습니다."
+tag: "Troubleshooting"
+---
+
+## 기대와 현실
+
+동시 요청 처리량을 올리려고 FastAPI 핸들러를 전부 `async def`로 바꿨습니다.
+결과는 거의 그대로였습니다. 일부 구간은 오히려 느려졌습니다.
+
+## 원인 — 동기 라이브러리를 그대로 썼다
+
+```python
+import requests
+
+@app.get("/items")
+async def get_items():
+    # requests는 동기 라이브러리다
+    res = requests.get("https://api.example.com/items")
+    return res.json()
+```
+
+`async def` 안에서 동기 블로킹 호출을 하면
+**이벤트 루프 전체가 멈춥니다.** 그동안 다른 요청은 아무것도 처리되지 않습니다.
+
+오히려 일반 `def`로 뒀다면 FastAPI가 알아서 스레드풀로 보내줬을 텐데,
+`async def`로 선언한 탓에 그 안전장치가 사라진 겁니다.
+
+## 고친 방법
+
+**1. 비동기 클라이언트로 교체**
+
+```python
+import httpx
+
+@app.get("/items")
+async def get_items():
+    async with httpx.AsyncClient() as client:
+        res = await client.get("https://api.example.com/items")
+    return res.json()
+```
+
+실제로는 클라이언트를 요청마다 만들지 않고 앱 수명주기 동안 재사용합니다.
+커넥션 풀을 매번 새로 만드는 건 낭비입니다.
+
+**2. 바꿀 수 없으면 스레드로 넘기기**
+
+레거시 동기 라이브러리는 이렇게 처리했습니다.
+
+```python
+from fastapi.concurrency import run_in_threadpool
+
+@app.get("/report")
+async def get_report():
+    data = await run_in_threadpool(legacy_sync_call)
+    return data
+```
+
+**3. CPU 작업은 아예 밖으로**
+
+이미지 처리처럼 CPU를 오래 쓰는 작업은 스레드로도 부족합니다(GIL).
+별도 워커 프로세스로 뺐습니다.
+
+## 판단 기준
+
+간단하게 정리했습니다.
+
+- `await` 할 게 없으면 `async def`를 쓰지 않는다 (그냥 `def`)
+- `async def` 안에서는 블로킹 호출을 하지 않는다
+- 블로킹이 불가피하면 `run_in_threadpool`로 감싼다
+
+## 정리
+
+`async`는 **기다리는 시간을 양보하는** 도구입니다.
+기다림이 없거나, 양보하지 않으면 아무 이득이 없습니다.
+
+키워드만 바꿔서 빨라지는 건 없었습니다.

@@ -1,0 +1,68 @@
+---
+title: "AI 가상 상담원 PoC"
+publishedAt: "2024-06-01"
+summary: "Unreal Engine + Nvidia Audio2Face + 모바일 웹앱을 연결한 비용 효율적 AI 아바타 시스템 개념 검증"
+images:
+  - "/projects/poc/main.png"
+tag: "AI · 3D"
+---
+
+<Feedback
+  icon
+  variant="success"
+  title="1줄 요약"
+  description="Metahuman 실사 캐릭터 기반 아바타 챗봇 PoC 프로젝트"
+/>
+
+
+## 배경
+
+AI 금융비서 서비스는 실사 기반의 아바타를 통해 금융 서비스를 제공했는데,
+사전에 촬영된 영상 데이터를 기반으로 제한된 제스쳐만 제공할 수 있다는 한계점도 존재하였습니다.
+
+이 프로젝트는 게임 엔진 기반의 Metahuman Assets 고품질 실사 캐릭터를 바탕으로
+고객과 Interaction이 가능하며 실시간으로 대화할 수 있는 시스템을 PoC로 진행한 내용입니다.
+
+실제 모델은 초상권을 매년 재계약을 해야 했기 때문에,
+무료로 사용할 수 있는 고품질 아바타를 기반으로 실사 아바타 챗봇을 구현할 수 있는지 검증하는 것이 목표였습니다.
+
+## 시스템 구성
+
+```text
+사용자 음성 → STT → LLM 답변 생성 → TTS
+↓
+Nvidia Audio2Face (안면 합성) ← 음성 신호
+↓
+Unreal Engine 3D 렌더링
+↓
+Pixel Streaming → 모바일 웹앱
+```
+
+Pixel Streaming을 활용해 Unreal Engine의 렌더링 결과를
+별도 앱 설치 없이 모바일 웹뷰를 통해 스트리밍합니다.
+사용자는 앱처럼 보이지만 실제로는 서버에서 렌더링됩니다.
+
+## 실제로 구현한 영역
+
+- Unreal Engine + Pixel Streaming 파이프라인 구성
+- Nvidia Audio2Face 안면 합성 모듈 연동
+- STT/TTS와 답변 생성 파이프라인 연결
+- 모바일 웹앱 프론트엔드 개발 (데모) 및 스트리밍 연동
+
+## 기술 스택
+
+`Unreal Engine` `Nvidia Audio2Face` `Pixel Streaming` `Python` `Web RTC`
+
+## PoC 결과
+
+기술적 구현 가능성을 확인했습니다.
+하지만 부서 내 모션이나 Lip-syncing 을 개발할 언리얼 개발자 Pool 이 없었기 때문에 PoC로 마무리하게 되었습니다.
+
+렌더링 서버 비용과 스트리밍 지연(latency) 문제도 식별되었고, 다중 사용자에 대한 유연한 서버 스케일이 필요할 것으로 보였습니다.
+
+## Lesson & Learned
+
+평소에 다뤄보지 못했던 Unreal Engine 과 3D 모델을 사용해 보고, 영상 데이터를 픽셀 단위로 스트리밍하는 파이프라인을 구현해 볼 수 있었던 경험이였던 것 같습니다.
+
+해결할 문제가 생겼을 때 다양한 시각에서 접근하는 역량도 기를수 있었던 것 같습니다.
+

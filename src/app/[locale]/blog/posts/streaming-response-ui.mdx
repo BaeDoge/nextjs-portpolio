@@ -1,0 +1,89 @@
+---
+title: "스트리밍 응답 UI에서 놓치기 쉬운 것"
+publishedAt: "2025-12-05"
+summary: "글자는 잘 나오는데 사용자 경험이 나빴습니다. 이유는 UI 쪽에 있었습니다."
+tag: "GenAI"
+---
+
+## 배경
+
+LLM 응답을 스트리밍으로 받아서 타이핑되듯 보여주는 UI를 만들었습니다.
+기능은 됐는데 써보니 불편했습니다.
+
+## 문제 1 — 자동 스크롤이 사용자를 방해한다
+
+응답이 길어지면 자동으로 맨 아래로 스크롤합니다.
+그런데 사용자가 위쪽을 읽고 있을 때도 끌고 내려갑니다.
+
+**해결**: 사용자가 맨 아래 근처에 있을 때만 따라갑니다.
+
+```ts
+function isNearBottom(el: HTMLElement, threshold = 80) {
+  return el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+}
+
+// 새 토큰이 올 때
+if (isNearBottom(container)) {
+  container.scrollTop = container.scrollHeight;
+}
+```
+
+위로 올려서 읽는 중이면 내버려 둡니다.
+
+## 문제 2 — 마크다운이 중간에 깨진다
+
+스트리밍 중에는 마크다운이 미완성 상태입니다.
+
+```
+**굵게 하려던 중
+```
+
+이걸 그대로 렌더링하면 별표가 그대로 보이거나, 뒷부분이 통째로 굵어집니다.
+코드 블록은 더 심합니다. 백틱 세 개가 열리고 안 닫힌 상태가 한동안 유지됩니다.
+
+**해결**: 스트리밍 중에는 코드 블록만 임시로 닫아줍니다.
+
+```ts
+function safeMarkdown(text: string) {
+  const fences = (text.match(/```/g) || []).length;
+  return fences % 2 === 1 ? text + "\n```" : text;
+}
+```
+
+완벽하진 않지만 깨져 보이는 건 대부분 막힙니다.
+
+## 문제 3 — 중단할 수가 없다
+
+답변이 엉뚱하게 가고 있는데 멈출 방법이 없었습니다.
+끝날 때까지 기다려야 합니다.
+
+**해결**: `AbortController`를 붙였습니다.
+
+```ts
+const controller = new AbortController();
+
+fetch("/api/chat", {
+  method: "POST",
+  body: JSON.stringify({ messages }),
+  signal: controller.signal,
+});
+
+// 중단 버튼
+controller.abort();
+```
+
+버튼 하나 추가한 건데 체감이 컸습니다.
+
+## 문제 4 — 실패했을 때 흔적이 없다
+
+스트리밍 도중 연결이 끊기면 글자가 중간에 멈춥니다.
+사용자는 답변이 끝난 건지 끊긴 건지 알 수 없습니다.
+
+끝까지 왔다는 신호를 서버에서 명시적으로 보내고,
+그게 안 왔으면 "응답이 중단되었습니다"를 표시하도록 바꿨습니다.
+
+## 정리
+
+스트리밍은 "글자가 나온다"까지가 절반입니다.
+나머지 절반은 스크롤, 렌더링, 중단, 실패 처리입니다.
+이쪽을 안 하면 기능은 되는데 쓰기 싫은 UI가 됩니다.

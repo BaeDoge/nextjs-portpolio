@@ -1,0 +1,92 @@
+---
+title: "추론 지연을 줄이려다 ONNX까지 간 이야기"
+publishedAt: "2025-11-06"
+summary: "모델을 바꾸지 않고 응답 속도를 절반으로 줄인 과정입니다."
+tag: "AI/ML"
+---
+
+## 상황
+
+임베딩 모델 추론이 요청당 180ms 정도 나왔습니다.
+RAG 파이프라인에서 이게 전체 지연의 큰 부분을 차지했습니다.
+
+모델을 더 작은 걸로 바꾸는 건 품질 때문에 피하고 싶었습니다.
+
+## 1. 먼저 측정
+
+어디서 시간이 가는지부터 나눠봤습니다.
+
+```python
+import time
+
+t0 = time.perf_counter()
+tokens = tokenizer(text)
+t1 = time.perf_counter()
+output = model(**tokens)
+t2 = time.perf_counter()
+
+print(f"tokenize: {(t1-t0)*1000:.1f}ms, forward: {(t2-t1)*1000:.1f}ms")
+```
+
+토크나이즈 15ms, 추론 165ms. 추론이 대부분이었습니다.
+
+## 2. 배치 처리
+
+여러 문장을 한 번에 넣으니 처리량이 크게 올랐습니다.
+
+```python
+# 하나씩
+for text in texts:           # 100개 → 약 18초
+    embed(text)
+
+# 배치
+embed_batch(texts, size=32)  # 100개 → 약 2.4초
+```
+
+문서 인덱싱처럼 여러 건을 한꺼번에 처리하는 경우엔 이것만으로 충분했습니다.
+
+다만 실시간 질의는 요청이 한 건씩 들어와서 배치로 묶기 어려웠습니다.
+
+## 3. ONNX 변환
+
+PyTorch 모델을 ONNX로 바꾸고 ONNX Runtime으로 돌렸습니다.
+
+```python
+from optimum.onnxruntime import ORTModelForFeatureExtraction
+
+model = ORTModelForFeatureExtraction.from_pretrained(
+    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    export=True,
+)
+model.save_pretrained("./onnx-model")
+```
+
+단건 추론 165ms → 약 90ms.
+
+## 4. 양자화
+
+int8 양자화까지 적용했습니다.
+
+```python
+from optimum.onnxruntime import ORTQuantizer
+from optimum.onnxruntime.configuration import AutoQuantizationConfig
+
+quantizer = ORTQuantizer.from_pretrained("./onnx-model")
+config = AutoQuantizationConfig.avx512_vnni(is_static=False, per_channel=True)
+quantizer.quantize(save_dir="./onnx-quantized", quantization_config=config)
+```
+
+약 90ms → 약 55ms. 모델 크기도 4분의 1로 줄었습니다.
+
+품질 확인은 앞서 만들어둔 평가셋으로 했습니다.
+Recall@5 기준 하락폭이 1%p 미만이라 수용했습니다.
+
+## 결과
+
+180ms → 약 70ms (토크나이즈 포함).
+
+## 배운 것
+
+모델을 바꾸기 전에 **실행 환경에서 짜낼 수 있는 게 생각보다 많습니다.**
+그리고 무엇보다, 최적화 전에 평가셋을 만들어둔 게 결정적이었습니다.
+품질 하락을 숫자로 확인할 수 없었으면 양자화까지는 못 갔을 겁니다.

@@ -1,0 +1,69 @@
+---
+title: "I Wiped My Editor Config and Rebuilt It"
+publishedAt: "2026-01-07"
+summary: "settings.json hit 300 lines, so I deleted everything and only re-added what I missed."
+tag: "Tooling"
+---
+
+## Why
+
+Setting up a new laptop, I opened my old `settings.json` and stopped.
+Over 300 lines, half of which I couldn't explain.
+
+I started empty and agreed to add a line only when something annoyed me.
+
+## What remained after two weeks
+
+```jsonc
+{
+  // Format on save — added on day one
+  "editor.formatOnSave": true,
+
+  // Show whitespace. Needed when debugging mixed indentation
+  "editor.renderWhitespace": "boundary",
+
+  // Hide build artefacts in the explorer
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/node_modules": true
+  },
+
+  // Exclude from search — separate from the above.
+  // Took me a while to realise these are two different settings
+  "search.exclude": {
+    "**/dist": true,
+    "**/.next": true,
+    "**/package-lock.json": true
+  },
+
+  // Minimap off. Losing screen width cost more than it gave
+  "editor.minimap.enabled": false,
+
+  // Auto-save off — I want to choose when to save
+  "files.autoSave": "off"
+}
+```
+
+That's it. About twenty lines.
+
+## Things I dropped and remember
+
+- Font ligatures: looked nice, but `!=` merging into one glyph confused me
+- Custom bracket colours: the defaults were already fine
+- Assorted theme tweaks: picking one theme made the rest unnecessary
+
+## Extensions too
+
+From 35 down to 9.
+The criterion was "did I consciously use this at least once in the last two weeks?"
+
+A surprising number of extensions were memorable only as *installed*,
+never actually used.
+
+## Reflection
+
+Config accumulating is natural, but without periodic clearing
+you end up in a state you can't explain.
+
+I'll do it again next year.

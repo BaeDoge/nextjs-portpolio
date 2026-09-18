@@ -1,0 +1,80 @@
+---
+title: "Writing Docs for Myself Six Months From Now"
+publishedAt: "2025-09-12"
+summary: "Rules I adopted after repeatedly failing to read my own code."
+tag: "Career"
+---
+
+## Trigger
+
+I had to modify a batch job I'd written the previous year.
+My own code, and I couldn't remember why I'd done it that way.
+
+This part was especially awkward:
+
+```python
+if retry_count > 3 and elapsed < 60:
+    time.sleep(5)
+```
+
+Where did 3, 60, and 5 come from? No idea.
+With no basis for judging whether they could change, I left it alone.
+
+## Rule 1 — justify the numbers
+
+```python
+# The upstream API is rate limited to 60 calls/min. Three consecutive
+# failures most likely means we hit the limit, so back off 5 seconds.
+# (5s is the measured average recovery time.)
+if retry_count > 3 and elapsed < 60:
+    time.sleep(5)
+```
+
+Code shows *what*. Comments are where the **why** goes.
+
+## Rule 2 — record the choices you didn't make
+
+```python
+# Considered SQS here, but at ~300 jobs/day the operational overhead
+# outweighed the benefit, so we poll the DB instead.
+# Revisit if volume grows substantially.
+```
+
+This proved most useful.
+"Why didn't we use a queue?" now has an immediate answer,
+and nobody has to redo the evaluation.
+
+## Rule 3 — put "how do I run this" at the top of the README
+
+What people need in the moment isn't an architecture overview —
+it's how to get it running locally.
+
+```markdown
+## Local run
+
+1. `cp .env.example .env` and fill in values
+2. `docker compose up -d db`
+3. `python -m app.migrate`
+4. `uvicorn app.main:app --reload`
+
+If it fails: it's usually step 3 because the DB isn't up yet. Retry after 10s.
+```
+
+That last line saves real time.
+
+## Rule 4 — label stopgaps as stopgaps
+
+```python
+# [temporary] 2025-09-12
+# Retrying to work around upstream returning 500.
+# Remove once their team replies.
+```
+
+Dating it tells you how long "temporary" has lasted.
+A two-year-old stopgap is permanent code.
+
+## Summary
+
+Rather than trying to write good documentation, it's more practical to
+**pre-answer the questions future-me will ask**.
+They're fairly predictable: why is it like this, can I change it, how do I run it.

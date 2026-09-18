@@ -1,0 +1,85 @@
+---
+title: "도커 이미지 1.2GB를 180MB로 줄인 과정"
+publishedAt: "2026-03-12"
+summary: "배포가 느려서 손댔는데, 줄이는 것보다 왜 컸는지 아는 게 더 도움이 됐습니다."
+tag: "Cloud & Infra"
+---
+
+## 시작
+
+CI에서 이미지 빌드와 푸시에만 6분이 걸렸습니다.
+이미지를 보니 1.2GB였습니다. 파이썬 앱 하나치고는 과합니다.
+
+## 뭐가 컸나
+
+```bash
+docker history my-app:latest --human --format "{{.Size}}\t{{.CreatedBy}}"
+```
+
+레이어별로 보니 답이 나왔습니다.
+
+- 베이스 이미지 `python:3.11` — 약 900MB
+- `apt-get install` 캐시 — 약 150MB
+- 빌드 도구(gcc 등) — 약 100MB
+
+## 1. 베이스 이미지 교체
+
+`python:3.11` → `python:3.11-slim`.
+이것만으로 900MB가 130MB로 줄었습니다.
+
+`alpine`도 고려했는데, 파이썬에서는 권하지 않습니다.
+musl libc 때문에 wheel을 못 쓰고 소스 빌드를 하게 되는 경우가 많아
+빌드 시간이 오히려 늘어납니다. 실제로 해봤다가 되돌렸습니다.
+
+## 2. apt 캐시 정리
+
+```dockerfile
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      libmariadb-dev \
+ && rm -rf /var/lib/apt/lists/*
+```
+
+`&&`로 같은 레이어에서 지우는 게 핵심입니다.
+`RUN rm`을 다음 줄에 따로 쓰면 앞 레이어에 파일이 그대로 남아서 크기가 안 줄어듭니다.
+
+## 3. 멀티스테이지 빌드
+
+컴파일에만 필요한 도구를 최종 이미지에서 뺐습니다.
+
+```dockerfile
+FROM python:3.11-slim AS builder
+RUN apt-get update && apt-get install -y --no-install-recommends gcc \
+ && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt .
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+FROM python:3.11-slim
+COPY --from=builder /root/.local /root/.local
+COPY . /app
+ENV PATH=/root/.local/bin:$PATH
+WORKDIR /app
+CMD ["gunicorn", "app:app"]
+```
+
+최종 180MB. 빌드/푸시 6분 → 1분 40초.
+
+## 4. .dockerignore
+
+이건 크기보다 빌드 캐시에 영향이 큽니다.
+
+```
+.git
+__pycache__
+*.pyc
+.venv
+node_modules
+tests/
+```
+
+`.git`을 빼는 것만으로도 컨텍스트 전송이 확 줄었습니다.
+
+## 배운 것
+
+크기를 줄이는 것 자체보다, **레이어가 어떻게 쌓이는지** 이해한 게 남았습니다.
+Dockerfile의 각 줄이 레이어이고, 한 번 들어간 파일은 나중 레이어에서 지워도 사라지지 않는다는 것.
+이걸 알고 나니 다른 이미지도 금방 손볼 수 있었습니다.

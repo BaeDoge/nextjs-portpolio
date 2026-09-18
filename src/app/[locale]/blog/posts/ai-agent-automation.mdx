@@ -1,0 +1,85 @@
+---
+title: "AI 에이전트로 반복 업무를 자동화한 실험기"
+publishedAt: "2025-04-01"
+summary: "Crawl4AI + Ollama + n8n으로 기술 뉴스를 매일 자동 수집·요약하는 파이프라인을 만들었습니다."
+tag: "Automation"
+---
+
+반복하는 일 중에 "이거 AI가 하면 되겠는데"라는 생각이 드는 순간이 있습니다.
+
+저는 매일 GeekNews랑 GitHub Trending을 훑어보는 게 그랬습니다. 읽고, 정리하고, 메모하는 데 생각보다 시간이 걸립니다. 그래서 자동화해봤습니다.
+
+## 구조
+
+```text
+매일 오전 9시 (n8n 스케줄러)
+    ↓
+Crawl4AI (GeekNews, YozmIT, GitHub Trending 크롤링)
+    ↓
+Ollama Qwen2.5:32b (관련성 스코어링 + 주제 선정)
+    ↓
+Ollama (블로그 초안 작성)
+    ↓
+Tistory API (자동 발행)
+```
+
+회사 PC에 NVIDIA A5000 GPU가 있어서 Ollama로 32B 모델을 로컬에서 구동합니다. API 비용이 없습니다.
+
+## 에이전트 역할 분담
+
+에이전트를 하나로 쓰지 않고 역할별로 나눴습니다.
+
+<Column fillWidth gap="4" marginTop="16">
+  <Row fillWidth padding="12" background="neutral-alpha-weak" radius="m-top">
+    <Column flex={1}><Text weight="bold">에이전트</Text></Column>
+    <Column flex={2}><Text weight="bold">역할</Text></Column>
+  </Row>
+  <Row fillWidth padding="12" borderBottom="neutral-alpha-weak">
+    <Column flex={1}><Text>탐색 에이전트</Text></Column>
+    <Column flex={2}><Text>Crawl4AI로 여러 소스 크롤링 + 원문 수집</Text></Column>
+  </Row>
+  <Row fillWidth padding="12" borderBottom="neutral-alpha-weak">
+    <Column flex={1}><Text>분석 에이전트</Text></Column>
+    <Column flex={2}><Text>수집된 내용 중 블로그로 쓰기 좋은 주제 선정</Text></Column>
+  </Row>
+  <Row fillWidth padding="12" borderBottom="neutral-alpha-weak">
+    <Column flex={1}><Text>작성 에이전트</Text></Column>
+    <Column flex={2}><Text>선정된 주제로 초안 작성</Text></Column>
+  </Row>
+  <Row fillWidth padding="12" radius="m-bottom">
+    <Column flex={1}><Text>검토 에이전트</Text></Column>
+    <Column flex={2}><Text>초안 다듬기 + SEO 최적화</Text></Column>
+  </Row>
+</Column>
+
+## 실제로 써보니
+
+AI가 선별한 뉴스 품질이 생각보다 괜찮았습니다. GitHub Trending에서 평소엔 못 봤을 레포들이 들어오는 게 좋았습니다.
+
+아직 아쉬운 점도 있습니다. 제 관심 분야(AI·MLOps·Kubernetes)에 특화된 필터링이 부족해서, 가끔 전혀 관심 없는 주제가 선정되기도 합니다. 개인화 레이어를 추가하는 게 다음 과제입니다.
+
+## 핵심 코드
+
+```python
+# 분석 에이전트 — 가장 좋은 주제 선정
+async def agent_analyst(raw_items: list[dict]) -> dict:
+    combined = "\n".join([f"[{i['source']}] {i['raw']}" for i in raw_items])
+
+    prompt = f"""다음 기술 뉴스 중 한국 개발자 블로그에
+쓰기 가장 좋은 주제 1개를 선정해줘.
+AI, ML, 백엔드, 클라우드, DevOps 관련 우선.
+
+수집된 뉴스:
+{combined}
+
+JSON으로만 답해줘:
+{{"title": "...", "topic": "...", "reason": "..."}}"""
+
+    res = requests.post(
+        "http://localhost:11434/api/generate",
+        json={"model": "qwen2.5:32b", "prompt": prompt, "stream": False}
+    )
+    return json.loads(res.json()["response"])
+```
+
+자동화가 잘 돌아가는 날에는 아침에 일어나면 글이 이미 발행되어 있습니다. 작은 성취감이 있습니다.

@@ -1,0 +1,89 @@
+---
+title: "What's Easy to Miss in a Streaming Response UI"
+publishedAt: "2025-12-05"
+summary: "The tokens arrived fine, but the experience was bad. The problem was on the UI side."
+tag: "GenAI"
+---
+
+## Background
+
+I built a UI that streams LLM responses so they type out progressively.
+It worked, and using it was unpleasant.
+
+## Problem 1 — auto-scroll fights the user
+
+Long responses auto-scroll to the bottom —
+including while the user is reading further up.
+
+**Fix**: only follow when the user is already near the bottom.
+
+```ts
+function isNearBottom(el: HTMLElement, threshold = 80) {
+  return el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+}
+
+// on each new token
+if (isNearBottom(container)) {
+  container.scrollTop = container.scrollHeight;
+}
+```
+
+If they've scrolled up to read, leave them alone.
+
+## Problem 2 — markdown breaks mid-stream
+
+During streaming the markdown is incomplete.
+
+```
+**about to bold
+```
+
+Rendering that shows raw asterisks, or bolds everything after.
+Code fences are worse — three backticks open and stay unclosed for a while.
+
+**Fix**: temporarily close open fences while streaming.
+
+```ts
+function safeMarkdown(text: string) {
+  const fences = (text.match(/```/g) || []).length;
+  return fences % 2 === 1 ? text + "\n```" : text;
+}
+```
+
+Not perfect, but it stops most visible breakage.
+
+## Problem 3 — no way to stop
+
+When an answer was clearly going sideways, there was no stop.
+You waited for it to finish.
+
+**Fix**: `AbortController`.
+
+```ts
+const controller = new AbortController();
+
+fetch("/api/chat", {
+  method: "POST",
+  body: JSON.stringify({ messages }),
+  signal: controller.signal,
+});
+
+// stop button
+controller.abort();
+```
+
+One button. Large perceived improvement.
+
+## Problem 4 — failures leave no trace
+
+If the connection drops mid-stream, text just stops.
+The user can't tell whether it finished or broke.
+
+I made the server send an explicit completion signal,
+and show "response interrupted" when it never arrives.
+
+## Summary
+
+Streaming is only half done when tokens appear.
+The other half is scrolling, rendering, cancellation, and failure handling.
+Skip that and you get a UI that technically works and nobody enjoys.

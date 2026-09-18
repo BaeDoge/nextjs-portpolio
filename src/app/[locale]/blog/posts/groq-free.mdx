@@ -1,0 +1,96 @@
+---
+title: "Groq API — GPT-4보다 빠른 무료 LLM을 포트폴리오에 붙인 방법"
+publishedAt: "2025-04-15"
+summary: "Groq의 무료 Llama 3.3 API로 RAG 챗봇을 구축한 경험. 왜 OpenAI 대신 Groq을 선택했는지, 실제 연동 코드까지."
+tag: "GenAI"
+---
+
+포트폴리오에 AI 챗봇을 붙이기로 결심하고 첫 번째로 고민한 것은
+어떤 LLM API를 쓸 것인가였습니다.
+
+OpenAI는 품질이 검증됐지만 비용이 문제였습니다.
+포트폴리오처럼 장기 운영하는 서비스에 방문자마다 비용이 발생하면
+월 운영비가 예측하기 어려워집니다.
+
+그래서 선택한 게 **Groq API**입니다.
+
+## Groq이 뭔가요?
+
+Groq은 LPU(Language Processing Unit)라는 전용 칩을 만드는 회사입니다.
+이 칩이 LLM 추론에 특화되어 있어서, 응답 속도가 기존 GPU 기반보다
+훨씬 빠릅니다.
+
+무료 플랜으로 **Llama 3.3 70B**를 사용할 수 있고,
+분당 30 요청, 일 14,400 토큰 한도는 포트폴리오 트래픽에 충분합니다.
+
+## 실제 연동 코드
+
+```typescript
+// src/app/api/chat/route.ts
+import Groq from "groq-sdk";
+
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+
+  const stream = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      ...messages.slice(-6),
+    ],
+    stream: true,
+    temperature: 0.2,
+    max_tokens: 400,
+  });
+
+  // SSE 스트리밍으로 반환
+  const readable = new ReadableStream({
+    async start(controller) {
+      for await (const chunk of stream) {
+        const text = chunk.choices[0]?.delta?.content || "";
+        if (text) {
+          controller.enqueue(
+            new TextEncoder().encode(`data: ${JSON.stringify({ text })}\n\n`)
+          );
+        }
+      }
+      controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
+      controller.close();
+    },
+  });
+
+  return new Response(readable, {
+    headers: { "Content-Type": "text/event-stream" },
+  });
+}
+```
+
+## OpenAI와 비교했을 때
+
+응답 속도는 Groq이 확실히 빠릅니다.
+첫 토큰까지의 시간(TTFT)이 체감상 2~3배 빠릅니다.
+
+품질은 Llama 3.3 70B 기준으로 GPT-3.5보다 낫고 GPT-4와 비슷한 수준입니다.
+한국어 지원도 나쁘지 않습니다.
+
+포트폴리오 챗봇 같은 정해진 지식베이스 기반의 Q&A에는 충분합니다.
+
+## 한 가지 주의사항
+
+무료 플랜의 일일 토큰 한도가 있습니다.
+트래픽이 갑자기 몰리면 소진될 수 있으니,
+API 오류 시 fallback 응답을 준비해두는 게 좋습니다.
+
+```typescript
+// fallback 처리
+try {
+  const response = await callGroq(messages);
+  return response;
+} catch (error) {
+  return Response.json({
+    answer: "지금 잠시 응답이 어렵습니다. doge@kbfg.com으로 직접 연락 주세요."
+  });
+}
+```
