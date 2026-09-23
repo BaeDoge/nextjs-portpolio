@@ -21,9 +21,9 @@ jobs:
       - name: Ping Supabase (read-only, minimal query)
         run: |
           http_status=$(curl -s -o /tmp/resp.json -w "%{http_code}" \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/page_views?select=id&limit=1" \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
+            "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}/rest/v1/page_views?select=id&limit=1" \
+            -H "apikey: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}")
           echo "HTTP status: $http_status"
           cat /tmp/resp.json
           if [ "$http_status" -ge 400 ]; then
