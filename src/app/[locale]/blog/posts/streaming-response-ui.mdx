@@ -1,0 +1,61 @@
+---
+title: "[AI] 스트리밍 응답 UI 개선"
+publishedAt: "2025-12-05"
+summary: "LLM 스트리밍 응답 UI에서 발생한 문제와 개선 사항을 정리합니다."
+tag: "GenAI"
+---
+
+오늘은 스트리밍 응답 UI를 개선한 과정을 정리해 보겠습니다.
+
+## 배경
+
+LLM 응답을 스트리밍으로 출력하는 UI를 구현했습니다. 기본 기능은 정상 동작했으나 사용 과정에서 몇 가지 문제가 확인되었습니다.
+
+## 문제 1 — 자동 스크롤
+
+응답 생성 중 자동으로 최하단으로 스크롤되어, 사용자가 이전 내용을 확인 중인 경우에도 화면이 이동하는 문제가 있었습니다.
+
+**해결**: 사용자가 최하단 근처에 위치한 경우에만 자동 스크롤을 적용했습니다.
+
+```ts
+function isNearBottom(el: HTMLElement, threshold = 80) {
+  return el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+}
+```
+
+## 문제 2 — 마크다운 렌더링 오류
+
+스트리밍 도중에는 마크다운 문법이 미완성 상태로 렌더링되어 표시 오류가 발생했습니다.
+
+**해결**: 스트리밍 중 코드 블록이 닫히지 않은 경우 임시로 닫아 처리했습니다.
+
+```ts
+function safeMarkdown(text: string) {
+  const fences = (text.match(/```/g) || []).length;
+  return fences % 2 === 1 ? text + "\n```" : text;
+}
+```
+
+## 문제 3 — 응답 중단 불가
+
+응답 생성 중 중단할 수 있는 기능이 없었습니다.
+
+**해결**: `AbortController`를 적용했습니다.
+
+```ts
+const controller = new AbortController();
+
+fetch("/api/chat", {
+  method: "POST",
+  body: JSON.stringify({ messages }),
+  signal: controller.signal,
+});
+```
+
+## 문제 4 — 연결 종료 시 상태 불명확
+
+스트리밍 도중 연결이 끊길 경우, 정상 종료인지 오류인지 구분이 어려웠습니다. 서버에서 종료 신호를 명시적으로 전달하도록 하여, 신호가 없을 경우 오류 상태로 표시하도록 변경했습니다.
+
+## 결론
+
+스트리밍 UI는 텍스트 출력 외에도 스크롤, 렌더링, 중단 처리, 오류 처리를 함께 고려해야 한다는 점을 확인했습니다.

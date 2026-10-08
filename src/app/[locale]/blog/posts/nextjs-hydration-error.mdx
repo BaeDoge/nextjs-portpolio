@@ -1,0 +1,71 @@
+---
+title: "[트러블슈팅] Next.js Hydration 에러 원인"
+publishedAt: "2026-02-04"
+summary: "서버와 클라이언트의 날짜 포맷 불일치로 발생한 Hydration 에러를 정리합니다."
+tag: "Troubleshooting"
+---
+
+오늘은 Next.js에서 발생한 Hydration 에러 사례를 정리해 보겠습니다.
+
+## 문제
+
+```
+Hydration failed because the server rendered HTML didn't match the client.
+```
+
+화면은 정상적으로 표시되지만 콘솔에 위 에러가 반복적으로 발생했습니다.
+
+## 원인 확인
+
+에러 메시지를 따라가 보니 게시글 목록의 날짜 표시 부분이었습니다.
+
+```tsx
+<span>{new Date(post.publishedAt).toLocaleDateString()}</span>
+```
+
+`toLocaleDateString()`은 실행 환경의 로케일을 따릅니다. 서버(UTC/en-US)와 브라우저(KST/ko-KR)가 서로 다른 문자열을 생성하면서 HTML 불일치가 발생했습니다.
+
+- 서버: `3/21/2026`
+- 브라우저: `2026. 3. 21.`
+
+## 해결
+
+로케일과 타임존을 명시적으로 지정했습니다.
+
+```tsx
+function formatDate(iso: string) {
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(new Date(iso));
+}
+```
+
+이렇게 변경한 뒤 서버와 클라이언트에서 동일한 결과가 출력되는 것을 확인했습니다.
+
+## 유사 패턴
+
+Hydration 에러는 대부분 서버와 클라이언트의 렌더링 결과가 달라지는 경우에 발생합니다.
+
+```tsx
+{Math.random()}
+{new Date().toLocaleString()}
+{typeof window !== "undefined" ? "A" : "B"}
+{localStorage.getItem("theme")}
+```
+
+브라우저에서만 결정되어야 하는 값은 마운트 이후에 렌더링하도록 처리했습니다.
+
+```tsx
+const [mounted, setMounted] = useState(false);
+useEffect(() => setMounted(true), []);
+
+if (!mounted) return null;
+return <ThemeAwareThing />;
+```
+
+## 결론
+
+서버와 클라이언트가 동일한 HTML을 생성하는지 확인하는 것이 Hydration 에러 예방의 핵심이었습니다. 날짜, 랜덤 값, 브라우저 전용 API가 주요 원인이었습니다.

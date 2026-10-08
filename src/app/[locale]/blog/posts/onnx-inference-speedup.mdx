@@ -1,0 +1,51 @@
+---
+title: "[AI] ONNX 변환을 통한 추론 속도 개선"
+publishedAt: "2025-11-06"
+summary: "임베딩 모델의 추론 지연을 ONNX 변환과 양자화로 개선한 과정입니다."
+tag: "AI/ML"
+---
+
+오늘은 임베딩 모델의 추론 속도를 개선한 과정을 정리해 보겠습니다.
+
+## 상황
+
+임베딩 모델의 요청당 추론 시간이 약 180ms로, RAG 파이프라인 전체 지연의 상당 부분을 차지하고 있었습니다. 모델 교체는 품질 저하 우려로 제외했습니다.
+
+## 개선 1 — 배치 처리
+
+```python
+embed_batch(texts, size=32)  # 100건 기준 약 2.4초
+```
+
+문서 인덱싱과 같은 대량 처리에는 배치 처리가 효과적이었으나, 단건 요청이 많은 실시간 질의에는 적용이 어려웠습니다.
+
+## 개선 2 — ONNX 변환
+
+```python
+from optimum.onnxruntime import ORTModelForFeatureExtraction
+
+model = ORTModelForFeatureExtraction.from_pretrained(
+    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    export=True,
+)
+model.save_pretrained("./onnx-model")
+```
+
+단건 추론 시간이 165ms에서 약 90ms로 감소했습니다.
+
+## 개선 3 — 양자화
+
+```python
+from optimum.onnxruntime import ORTQuantizer
+from optimum.onnxruntime.configuration import AutoQuantizationConfig
+
+quantizer = ORTQuantizer.from_pretrained("./onnx-model")
+config = AutoQuantizationConfig.avx512_vnni(is_static=False, per_channel=True)
+quantizer.quantize(save_dir="./onnx-quantized", quantization_config=config)
+```
+
+int8 양자화 적용 후 약 55ms까지 감소했으며, 모델 용량은 4분의 1 수준으로 줄었습니다. 사전에 구성한 평가셋 기준으로 Recall@5 하락폭은 1%p 미만으로 확인했습니다.
+
+## 결론
+
+최종적으로 180ms에서 약 70ms(토크나이징 포함)로 개선되었습니다. 모델 자체를 교체하지 않고도 런타임 환경 최적화만으로 유의미한 개선이 가능했으며, 사전에 구성한 평가셋이 품질 검증 과정에서 중요한 역할을 했습니다.

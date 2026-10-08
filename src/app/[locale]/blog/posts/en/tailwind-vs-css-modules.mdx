@@ -1,0 +1,84 @@
+---
+title: "Between Tailwind and CSS Modules"
+publishedAt: "2025-08-29"
+summary: "I used both in the same project. Here's the split I landed on."
+tag: "Tooling"
+---
+
+## Background
+
+Building my portfolio site, I ended up mixing both.
+Not by design — the template used CSS Modules, while the components
+I added used inline styles and Tailwind.
+
+Writing down where each worked better, partly to clean it up.
+
+## Where Tailwind was better
+
+**One-off layout**
+
+```tsx
+<div className="flex items-center gap-2 px-4 py-2 rounded-lg">
+```
+
+Naming a class and creating another file for this is overkill.
+The naming itself is the expensive part.
+
+**Responsive work**
+
+```tsx
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+```
+
+Not writing media queries is a real gain.
+
+## Where CSS Modules was better
+
+**Components with many states**
+
+Once hover, focus, disabled and active start combining,
+the class string becomes unreadable.
+
+```tsx
+// Past this point it's unreadable
+className="bg-white hover:bg-gray-50 disabled:bg-gray-200 disabled:cursor-not-allowed focus:ring-2 ..."
+```
+
+In a CSS file it's just a selector.
+
+```css
+.button:disabled {
+  background: var(--gray-200);
+  cursor: not-allowed;
+}
+```
+
+**Animation**
+
+Anything involving keyframes is clearly easier in a CSS file.
+
+## The split I use now
+
+- Layout, spacing, alignment → Tailwind
+- Component-specific styling, state changes, animation → CSS Modules
+- Values referenced through **CSS variables** on both sides
+
+The last point mattered most.
+Defining colours separately in the Tailwind config and in CSS files
+makes dark mode drift apart.
+
+```css
+:root {
+  --surface: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --surface: #121212; }
+}
+```
+
+Pointing both at the same variables made the problem disappear.
+
+## Conclusion
+
+It wasn't a question of choosing one, but of **deciding where each applies**.
+I assumed mixing them would be messy; with clear boundaries it's fine.

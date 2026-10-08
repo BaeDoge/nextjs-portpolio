@@ -1,0 +1,60 @@
+---
+title: "Choosing a Korean Embedding Model"
+publishedAt: "2025-12-18"
+summary: "I picked by benchmark score, then switched. Here's what measuring on real data showed."
+tag: "GenAI"
+---
+
+## Context
+
+I needed an embedding model for RAG.
+Mostly Korean documents, with English technical terms sprinkled in.
+
+## I started with benchmarks
+
+I took a top-ranked model from a leaderboard and wired it up.
+Retrieval quality was worse than expected.
+
+The issue was that benchmark data and our data had different characters.
+Our documents are long, formal policy text; the benchmarks lean on news and general prose.
+
+## I built my own evaluation set
+
+I pulled 50 real user questions and hand-labelled,
+for each one, which chunk *should* be retrieved.
+
+Half a day of work — and the best-spent time in the project.
+
+I measured Recall@5: how often the answer appears in the top five.
+For RAG, "is it in the candidate set?" matters more than being ranked first.
+
+## What I found
+
+**1. Multilingual models did better**
+
+Our documents mix in terms like `Kubernetes` and `HPA`.
+Korean-only models handled those tokens poorly.
+
+**2. More dimensions wasn't better**
+
+Recall@5 barely differed between a 1024-dim and a 384-dim model,
+while storage and query latency differed noticeably.
+
+**3. Don't skip normalisation**
+
+If you use cosine similarity, normalise your embeddings.
+Forgetting this made my early results nonsense.
+
+```python
+output = model(text, pooling="mean", normalize=True)
+```
+
+One argument. Very easy to miss.
+
+## Conclusion
+
+I went with a 384-dim multilingual model.
+Lower on the leaderboard, better on our data, and far lighter.
+
+**Fifty examples from your own data beat a leaderboard.**
+Half a day is enough to build them.

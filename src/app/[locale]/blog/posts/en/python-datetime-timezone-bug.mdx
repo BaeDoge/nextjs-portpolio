@@ -1,0 +1,75 @@
+---
+title: "A Timezone Bug That Cost Me a Day of Data"
+publishedAt: "2026-04-19"
+summary: "A nightly batch ran nine hours off. The cause was one line."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+We had an aggregation batch running at midnight.
+Fine locally; after deploy, part of the previous day's data was missing.
+
+Exactly **nine hours** worth. That number told me most of the story immediately.
+
+## Cause
+
+```python
+# The offending code
+from datetime import datetime, timedelta
+
+today = datetime.now().date()
+yesterday = today - timedelta(days=1)
+```
+
+`datetime.now()` follows the **local timezone of wherever it runs**.
+My laptop was KST; the container was UTC.
+
+When the batch fires at 00:30 KST, the container still thinks it's 15:30 the previous day.
+So `yesterday` resolves to two days ago, and a whole day shifts out of range.
+
+## The fix
+
+Make the timezone explicit:
+
+```python
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+
+KST = ZoneInfo("Asia/Seoul")
+
+today = datetime.now(KST).date()
+yesterday = today - timedelta(days=1)
+```
+
+And pin it in the container too:
+
+```dockerfile
+ENV TZ=Asia/Seoul
+```
+
+I did both because relying only on the env var means the same bug returns
+the moment this deploys somewhere else. Better to let the code guarantee it.
+
+## Preventing recurrence
+
+`datetime.now()` is now banned, enforced by a lint rule.
+
+```python
+# Banned
+datetime.now()
+datetime.utcnow()
+
+# Allowed
+datetime.now(KST)
+datetime.now(timezone.utc)
+```
+
+I banned `utcnow()` as well — it returns a naive datetime, and the name makes it
+easy to assume otherwise. It's deprecated as of Python 3.12 anyway.
+
+## Lesson
+
+When something works locally but not on the server, it's usually because an
+**environment difference leaked implicitly into the code**.
+Timezone, encoding, and path separators are the three usual suspects.

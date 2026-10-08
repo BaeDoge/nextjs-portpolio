@@ -1,0 +1,128 @@
+---
+title: "AI 학습관리 플랫폼"
+publishedAt: "2026-04-01"
+summary: "KB국민은행 챗봇·콜봇 학습 데이터를 통합 관리하고 운영 인력을 절반으로 줄인 사내 AI 플랫폼."
+images:
+  - "/projects/kb-lms/main.png"
+tag: "Enterprise AI"
+---
+
+<Feedback
+  icon
+  variant="success"
+  title="1줄 요약"
+  description="여러 채널의 학습/로그 데이터를 분석하여 Insight를 제공하는 통합 플랫폼 개발 프로젝트"
+/>
+
+금융 AI센터에서 고객컨택혁신부로 부서가 옮겨지면서, 새로운 부서의 업무파악을 하던 도중,
+상당히 많은 영역의 단위 업무들이 파편화되고 수기로 관리되고 있다는 점을 발견하게 되었습니다. 
+
+저희 부서에서는 고객과 직원에게 제공하는 여러 채널의 봇 엔진들이 있는데,
+(대표적으로 고객용 챗봇,콜봇,직원용 챗봇)
+해당 채널마다 담당자와 솔루션이 별도로 존재하고,
+각자 로컬 저장소에 학습 데이터와 괸리 대장을 엑셀로 별도로 관리하고 있었습니다.
+
+그러다 보니, 같은 질문인데 채널마다 답이 다르게 나오기도 하고,
+신규 상품이 출시되면 모든 채널 담당자가 각자 업데이트하는 불편한 업무 구조를 가지고 있었습니다.
+
+
+
+<Feedback
+  icon
+  variant="warning"
+  title="발견된 문제"
+  description="채널 간 Silo로 인해 동일 질의에 대한 답변 불일치 발생. 변경 이력 추적 불가. 신규 상품 반영 시 다중 수작업 필요."
+/>
+
+## 개발 과정
+
+처음엔 간단한 단일 페이지의 Flask 대시보드로 시작했는데,
+현업 담당자들이 쓰기 시작하면서 요구사항이 쌓였습니다.
+"시간대별 질의 통계 보고 싶어요", "비슷한 질문끼리 묶어서 보여주세요" - 이런 식으로요.
+
+그래서 문장 유사도 분석을 위한 임베딩 모델을 직접 PEFT 하여 별도의 추론 서버를 구축하고,
+프론트는 템플릿 기반으로 가볍고 빠르게 다중 페이지를 구축 가능한
+**FastAPI + HTMX + JavaScript MPA** 구조로 전면 재설계 하였습니다.
+
+## 기술 스택
+
+<Table
+  data={{
+    headers: [
+      { content: "영역", key: "area" },
+      { content: "기술", key: "tech" },
+      { content: "역할", key: "role" }
+    ],
+    rows: [
+      ["Backend", "FastAPI (Python)", "REST API 및 비즈니스 로직"],
+      ["Frontend", "HTMX + JavaScript", "MPA 구조 웹 UI"],
+      ["Database", "MySQL , REDIS", "학습 데이터·대화 로그 저장"],
+      ["AI", "임베딩 모델 + AI Agent", "질의 클러스터링·유사도 분석"],
+      ["Infra", "AWS EKS + Kubernetes + Docker", "컨테이너 오케스트레이션"],
+      ["Network", "NLB (Inbound) / Transit Gateway (Outbound)", "은행망 내·외부 통신"]
+    ]
+  }}
+/>
+
+## 시스템 구조
+
+```text
+운영자 브라우저 (HTMX + JS)
+    ↓
+내부망 Region Proxy
+    ↓
+AWS EKS (Kubernetes Deployment)
+    ↓
+FastAPI 백엔드
+    ├── MySQL (학습 데이터 / 대화 로그)
+    ├── Redis (메모리 캐싱, 작업 임시 저장)
+    └── 임베딩 모델 (질의 유사도 분석)
+```
+
+은행망 특성상 타 AWS 계정의 Raw 데이터와 본 프로젝트의 데이터간 통신 설정이 꽤 까다로웠습니다.
+방화벽 해제, SG , LB 구성을 인프라팀과 맞추는 데 생각보다 시간이 걸렸던 것 같아요.
+
+## 주요 기능
+
+<AccordionGroup
+  items={[
+    {
+      title: "통합 모니터링 대시보드",
+      content: <Text variant="body-default-s" onBackground="neutral-weak">전체 채널(고객 챗봇, 직원 챗봇, 콜봇)의 대화 현황을 한 화면에서 확인. 시간대별 질의량, 빈출 질문 유형, 미응답 질의를 실시간으로 모니터링합니다.</Text>
+    },
+    {
+      title: "유사 질의 자동 클러스터링",
+      content: <Text variant="body-default-s" onBackground="neutral-weak">임베딩 기반으로 비슷한 질의를 자동으로 묶어서 보여줍니다. 중복이나 불일치를 담당자가 일일이 찾지 않아도 시스템이 먼저 감지합니다.</Text>
+    },
+    {
+      title: "변경 이력 자동 기록",
+      content: <Text variant="body-default-s" onBackground="neutral-weak">누가 언제 어떤 답변을 수정했는지 자동으로 기록됩니다. 형상 관리가 가능해져서 문제 발생 시 롤백 기준점을 갖출 수 있게 됐습니다.</Text>
+    }
+  ]}
+/>
+
+## 결과
+
+<Table
+  data={{
+    headers: [
+      { content: "항목", key: "item" },
+      { content: "변화", key: "change" }
+    ],
+    rows: [
+      ["운영 관리 인력", "기존 대비 50% 감축"],
+      ["변경 반영 속도", "신규 상품 출시 시 전 채널 동시 반영 가능"],
+      ["데이터 정합성", "채널 간 Silo 해소, 중앙화된 버전 관리"]
+    ]
+  }}
+/>
+
+개발 이후 담당자들로부터 긍정적인 평가를 받았습니다. '이제 엑셀 안 써도 되냐'는 말이 제일 기억에 남네요.
+
+
+## Lesson & Learned
+현업의 요구사항을 듣고 필요한 분석 기능을 직접 개발하고, 웹서버 개발과 클라우드 서비스 배포까지 모두 경험해볼 수 있었던 것 같습니다.
+
+특히, 이용량이 많게는 일일 백만건 넘게 유입되는 고객 데이터를 핸들링하고, 스키마가 다른 여러개의 (정말 많은) 채널별 테이블들을 하나의 통합된 기준으로 표준화했던 작업은 힘들었지만 값진 경험이였습니다.
+
+

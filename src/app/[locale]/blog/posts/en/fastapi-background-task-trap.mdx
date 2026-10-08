@@ -1,0 +1,84 @@
+---
+title: "I Trusted FastAPI BackgroundTasks — Then This Happened"
+publishedAt: "2026-03-30"
+summary: "Responses were 200 but the work never ran. It took half a day to find out why."
+tag: "Troubleshooting"
+---
+
+## Setup
+
+I used `BackgroundTasks` to post-process uploaded files asynchronously.
+
+```python
+from fastapi import BackgroundTasks, FastAPI
+
+app = FastAPI()
+
+@app.post("/upload")
+async def upload(file: UploadFile, bg: BackgroundTasks):
+    path = await save_file(file)
+    bg.add_task(process_document, path)
+    return {"status": "accepted"}
+```
+
+Immediate 200. Worked fine locally.
+
+## The problem
+
+After deploying, only about half the documents came out processed.
+No error logs, and every response was 200.
+
+## Two causes
+
+**1. Restarting workers discard queued tasks**
+
+`BackgroundTasks` runs **inside the same process**, after the response is sent.
+If the process dies — deploy, scale-in, OOM — pending tasks simply evaporate.
+Nothing is recorded anywhere.
+
+**2. Exceptions are swallowed silently**
+
+If a background task raises, the client already received a 200.
+Without explicit logging there's no trace at all.
+
+## What I changed
+
+**Short tasks got wrapped in logging:**
+
+```python
+import logging
+
+logger = logging.getLogger(__name__)
+
+def process_document(path: str):
+    try:
+        ...
+    except Exception:
+        logger.exception("document processing failed: %s", path)
+        raise
+```
+
+**Long tasks moved to a queue.**
+
+Anything taking more than a few seconds, or that must not be lost,
+now writes a job record to the DB for a worker to pick up.
+
+```python
+@app.post("/upload")
+async def upload(file: UploadFile):
+    path = await save_file(file)
+    await db.execute(
+        "INSERT INTO jobs (type, payload, status) VALUES (?, ?, 'pending')",
+        ("process_document", path),
+    )
+    return {"status": "queued"}
+```
+
+Crude, but being able to query "how far did this get?" matters a lot.
+
+## Summary
+
+`BackgroundTasks` is right for **short work that's fine to lose** —
+writing an email-sent log, say. Anything you can't afford to lose needs a real queue.
+
+I've picked up the habit of asking what guarantees a convenient-looking feature *doesn't* make.

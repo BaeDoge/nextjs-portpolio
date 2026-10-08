@@ -1,0 +1,225 @@
+/* :root {
+  /*
+  /* Override default variables here */
+  /*
+  --font-size-display-multiplier:   1;
+  --font-size-heading-multiplier:   1;
+  --font-size-body-multiplier:      1;
+  --font-size-label-multiplier:     1;
+
+  --line-height-display-multiplier: 1;
+  --line-height-heading-multiplier: 1;
+  --line-height-body-multiplier:    1;
+  --line-height-label-multiplier:   1;
+
+  --default-border:        var(--neutral-border-medium);
+
+  /*
+  /* Example setup for custom colors */
+  /* Generate at: https://once-ui.com/customize */
+  /*
+  --scheme-brand-100: #08002f;
+  --scheme-brand-200:  #04025c;
+  --scheme-brand-300:  #1f398e;
+  --scheme-brand-400:  #3856ae;
+  --scheme-brand-500:  #5071cc;
+  --scheme-brand-600:  #6f94f1;
+  --scheme-brand-700:  #8db3ff;
+  --scheme-brand-800:  #b2dbff;
+  --scheme-brand-900:  #bfe8ff;
+  --scheme-brand-1000: #ccf6ff;
+  --scheme-brand-1100: #d2fcff;
+  --scheme-brand-1200: #d2fcff;
+  --scheme-brand-600-10: rgba(111,148,241,0.1);
+  --scheme-brand-600-30: rgba(111,148,241,0.3);
+  --scheme-brand-600-50: rgba(111,148,241,0.5);
+
+  --scheme-accent-100:  #030b10;
+  --scheme-accent-200:  #0d181d;
+  --scheme-accent-300:  #364248;
+  --scheme-accent-400:  #505d64;
+  --scheme-accent-500:  #69777e;
+  --scheme-accent-600:  #8a989f;
+  --scheme-accent-700:  #a8b7bf;
+  --scheme-accent-800:  #c8d7df;
+  --scheme-accent-900:  #d5e4ec;
+  --scheme-accent-1000: #e2f1f9;
+  --scheme-accent-1100: #e9f8ff;
+  --scheme-accent-1200: #efffff;
+  --scheme-accent-600-10: rgba(138,152,159,0.1);
+  --scheme-accent-600-30: rgba(138,152,159,0.3);
+  --scheme-accent-600-50: rgba(138,152,159,0.5);
+
+  --scheme-neutral-100:  #020b10;
+  --scheme-neutral-200:  #0b181d;
+  --scheme-neutral-300:  #344248;
+  --scheme-neutral-400:  #4f5d64;
+  --scheme-neutral-500:  #68777e;
+  --scheme-neutral-600:  #89989f;
+  --scheme-neutral-700:  #a7b7be;
+  --scheme-neutral-800:  #c7d7df;
+  --scheme-neutral-900:  #d4e4ec;
+  --scheme-neutral-1000: #e1f2f9;
+  --scheme-neutral-1100: #e7f8ff;
+  --scheme-neutral-1200: #eeffff;
+  --scheme-neutral-600-10: rgba(137,152,159,0.1);
+  --scheme-neutral-600-30: rgba(137,152,159,0.3);
+  --scheme-neutral-600-50: rgba(137,152,159,0.5);
+  /*
+}*/
+
+
+/* ── ChatWidget ──────────────────────────────────────────────────
+   원래 ChatWidget.tsx 안에 <style jsx>로 있었는데, styled-jsx가
+   서버/클라이언트에서 서로 다른 jsx-해시 클래스명을 생성해서
+   hydration mismatch(className 불일치)가 났습니다.
+   런타임에 클래스를 새로 만드는 대신, 빌드타임에 고정되는
+   일반 전역 CSS로 옮겨서 해결했습니다. */
+.chat-widget-button {
+  position: fixed;
+  z-index: 1000;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(20, 20, 20, 0.65);
+  color: white;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.chat-widget-button:hover {
+  transform: translateY(-2px);
+}
+
+.chat-widget-panel {
+  position: fixed;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(15, 15, 15, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+}
+
+.chat-widget-header {
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chat-widget-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-bubble {
+  max-width: 82%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.chat-bubble.user {
+  align-self: flex-end;
+  background: #3b82f6;
+  color: white;
+  border-radius: 16px 16px 4px 16px;
+}
+
+.chat-bubble.assistant {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  border-radius: 16px 16px 16px 4px;
+}
+
+.quick-buttons {
+  padding: 0 12px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.quick-buttons button {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.chat-widget-input {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chat-widget-input input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: none;
+  outline: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+}
+
+.chat-widget-input button {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  background: #3b82f6;
+  color: white;
+}
+
+/* PC */
+@media (min-width: 769px) {
+  .chat-widget-button {
+    bottom: 28px;
+    right: 28px;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    font-size: 24px;
+  }
+  .chat-widget-panel {
+    bottom: 100px;
+    right: 28px;
+    width: 380px;
+    height: 560px;
+    border-radius: 20px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .chat-widget-button {
+    top: 18px;
+    right: 18px;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    font-size: 18px;
+  }
+  .chat-widget-panel {
+    top: 74px;
+    right: 12px;
+    width: calc(100vw - 24px);
+    max-width: 380px;
+    height: 72vh;
+    border-radius: 18px;
+  }
+}

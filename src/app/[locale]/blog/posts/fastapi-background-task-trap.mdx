@@ -1,0 +1,71 @@
+---
+title: "[트러블슈팅] FastAPI BackgroundTasks 작업 유실 이슈"
+publishedAt: "2026-03-30"
+summary: "BackgroundTasks로 처리한 작업 중 일부가 배포 시점에 유실되는 문제를 정리합니다."
+tag: "Troubleshooting"
+---
+
+오늘은 FastAPI의 `BackgroundTasks`를 사용하면서 겪은 문제를 정리해 보겠습니다.
+
+## 상황
+
+파일 업로드 후 파싱, 임베딩 같은 후처리를 비동기로 처리하기 위해 `BackgroundTasks`를 사용했습니다.
+
+```python
+from fastapi import BackgroundTasks, FastAPI
+
+app = FastAPI()
+
+@app.post("/upload")
+async def upload(file: UploadFile, bg: BackgroundTasks):
+    path = await save_file(file)
+    bg.add_task(process_document, path)
+    return {"status": "accepted"}
+```
+
+로컬 테스트에서는 정상적으로 동작했습니다.
+
+## 문제
+
+배포 후 확인해보니 처리된 문서가 절반 정도만 존재했습니다. 에러 로그는 없었고 API 응답도 모두 200이었습니다.
+
+배포 로그와 비교한 결과, 유실이 발생한 시점이 재배포 또는 스케일 인이 일어난 시점과 일치했습니다.
+
+## 원인
+
+두 가지 원인이 있었습니다.
+
+**1. 워커 재시작 시 작업이 유실됨**
+
+`BackgroundTasks`는 응답을 반환한 것과 같은 프로세스 내에서 실행됩니다. 배포나 스케일 인, OOM 등으로 프로세스가 종료되면 대기 중이던 작업은 별도의 기록 없이 사라집니다.
+
+**2. 예외 처리 미흡**
+
+```python
+def process_document(path: str):
+    # 이 지점에서 예외가 발생해도 클라이언트는 이미 200을 받은 상태
+    ...
+```
+
+별도의 로깅이 없으면 작업 실패 여부를 확인할 방법이 없었습니다.
+
+## 해결
+
+작업 상태를 DB에 기록하고, 별도 워커가 pending 상태의 작업을 처리하는 구조로 변경했습니다.
+
+```python
+@app.post("/upload")
+async def upload(file: UploadFile):
+    path = await save_file(file)
+    await db.execute(
+        "INSERT INTO jobs (type, payload, status) VALUES (?, ?, 'pending')",
+        ("process_document", path),
+    )
+    return {"status": "queued"}
+```
+
+이 구조로 변경한 뒤에는 처리 현황을 쿼리로 바로 확인할 수 있어, 동일한 문제가 발생해도 원인 파악이 빨라졌습니다.
+
+## 결론
+
+`BackgroundTasks`는 실패해도 무방한 짧은 작업에만 사용하는 것이 적절하다고 판단했습니다. 유실되면 안 되는 작업은 처음부터 큐나 DB 기반 구조로 설계하는 것이 안전합니다.

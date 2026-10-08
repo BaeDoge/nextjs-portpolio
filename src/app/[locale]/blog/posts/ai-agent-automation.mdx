@@ -1,0 +1,83 @@
+---
+title: "[자동화] AI 에이전트 기반 뉴스 수집 자동화"
+publishedAt: "2025-04-01"
+summary: "Crawl4AI, Ollama, n8n을 활용해 기술 뉴스 수집 및 요약을 자동화한 사례입니다."
+tag: "Automation"
+---
+
+오늘은 반복 업무를 AI 에이전트로 자동화한 사례를 정리해 보겠습니다.
+
+## 배경
+
+GeekNews, GitHub Trending 등을 매일 확인하고 정리하는 작업에 소요되는 시간을 줄이기 위해 자동화를 진행했습니다.
+
+## 구성
+
+```text
+매일 오전 9시 (n8n 스케줄러)
+    ↓
+Crawl4AI (GeekNews, YozmIT, GitHub Trending 크롤링)
+    ↓
+Ollama Qwen2.5:32b (관련성 스코어링 및 주제 선정)
+    ↓
+Ollama (초안 작성)
+    ↓
+Tistory API (자동 발행)
+```
+
+사내 PC의 NVIDIA A5000 GPU를 활용해 Ollama로 32B 모델을 로컬에서 구동하여 API 비용 없이 운영하고 있습니다.
+
+## 에이전트 구성
+
+<Column fillWidth gap="4" marginTop="16">
+  <Row fillWidth padding="12" background="neutral-alpha-weak" radius="m-top">
+    <Column flex={1}><Text weight="bold">에이전트</Text></Column>
+    <Column flex={2}><Text weight="bold">역할</Text></Column>
+  </Row>
+  <Row fillWidth padding="12" borderBottom="neutral-alpha-weak">
+    <Column flex={1}><Text>탐색</Text></Column>
+    <Column flex={2}><Text>다중 소스 크롤링 및 원문 수집</Text></Column>
+  </Row>
+  <Row fillWidth padding="12" borderBottom="neutral-alpha-weak">
+    <Column flex={1}><Text>분석</Text></Column>
+    <Column flex={2}><Text>수집 데이터 중 주제 선정</Text></Column>
+  </Row>
+  <Row fillWidth padding="12" borderBottom="neutral-alpha-weak">
+    <Column flex={1}><Text>작성</Text></Column>
+    <Column flex={2}><Text>선정 주제 기반 초안 작성</Text></Column>
+  </Row>
+  <Row fillWidth padding="12" radius="m-bottom">
+    <Column flex={1}><Text>검토</Text></Column>
+    <Column flex={2}><Text>초안 검토 및 SEO 최적화</Text></Column>
+  </Row>
+</Column>
+
+## 핵심 코드
+
+```python
+async def agent_analyst(raw_items: list[dict]) -> dict:
+    combined = "\n".join([f"[{i['source']}] {i['raw']}" for i in raw_items])
+
+    prompt = f"""다음 기술 뉴스 중 블로그 게시에 적합한 주제 1개를 선정하세요.
+AI, ML, 백엔드, 클라우드, DevOps 우선.
+
+수집된 뉴스:
+{combined}
+
+JSON 형식으로만 응답하세요:
+{{"title": "...", "topic": "...", "reason": "..."}}"""
+
+    res = requests.post(
+        "http://localhost:11434/api/generate",
+        json={"model": "qwen2.5:32b", "prompt": prompt, "stream": False}
+    )
+    return json.loads(res.json()["response"])
+```
+
+## 운영 결과
+
+기존에 접하지 못했던 저장소가 수집되는 등 유의미한 결과가 확인되었습니다. 다만 관심 분야에 대한 필터링이 부족해 관련성이 낮은 주제가 선정되는 경우가 있어, 개인화 필터 추가를 계획하고 있습니다.
+
+## 결론
+
+자동화 이후 수집 및 정리에 소요되던 시간이 크게 줄었으며, 이후에는 필터링 정확도 개선을 진행할 예정입니다.

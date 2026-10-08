@@ -1,0 +1,54 @@
+---
+title: "[AI] LLM API 비용 절감 사례"
+publishedAt: "2026-03-03"
+summary: "LLM API 비용이 예상보다 높게 발생한 원인을 분석하고 절감한 과정입니다."
+tag: "GenAI"
+---
+
+오늘은 LLM API 비용을 절감한 과정을 정리해 보겠습니다.
+
+## 상황
+
+사내 도구의 LLM API 비용이 예상 대비 높게 발생했습니다. 호출 수는 예상 범위였으나 토큰 사용량이 많았습니다.
+
+## 원인 및 개선
+
+**1. 시스템 프롬프트 비대화**
+
+시스템 프롬프트가 약 1,500 토큰으로, 모든 호출에 반복 포함되고 있었습니다. 불필요한 수식어를 제거해 400 토큰으로 축소했으며, 출력 품질 차이는 확인되지 않았습니다.
+
+**2. 대화 히스토리 전체 전송**
+
+멀티턴 대화에서 전체 히스토리를 매번 전송하고 있었습니다. 최근 N턴만 유지하도록 변경했습니다.
+
+```python
+MAX_TURNS = 6
+
+def trim(messages: list[dict]) -> list[dict]:
+    system = [m for m in messages if m["role"] == "system"]
+    rest = [m for m in messages if m["role"] != "system"]
+    return system + rest[-MAX_TURNS * 2:]
+```
+
+**3. RAG 컨텍스트 과다 포함**
+
+상위 10개 청크를 컨텍스트로 포함하고 있었으나, 실제 인용되는 청크는 2~3개 수준이었습니다. `match_count=4`로 조정하고 유사도 임계값을 상향했습니다.
+
+**4. 모델 단일화**
+
+모든 요청에 동일한 대형 모델을 사용하고 있었습니다. 분류, 단순 요약과 같은 작업은 경량 모델로 전환했습니다.
+
+```python
+def pick_model(task: str) -> str:
+    if task in ("classify", "summarize_short"):
+        return SMALL_MODEL
+    return LARGE_MODEL
+```
+
+## 결과
+
+월 비용이 약 60% 절감되었습니다. 시스템 프롬프트 축소와 컨텍스트 조정의 효과가 가장 컸습니다.
+
+## 결론
+
+비용 문제의 원인은 호출 횟수보다 호출당 토큰 사용량에 있는 경우가 많았습니다. 호출별 토큰 사용량을 로깅해두면 원인 파악에 도움이 됩니다.

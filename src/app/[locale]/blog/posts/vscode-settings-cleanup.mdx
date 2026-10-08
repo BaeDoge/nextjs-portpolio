@@ -1,0 +1,53 @@
+---
+title: "[개발도구] VS Code 설정 정리"
+publishedAt: "2026-01-07"
+summary: "누적된 에디터 설정을 초기화하고 필요한 항목만 재구성한 과정입니다."
+tag: "Tooling"
+---
+
+오늘은 VS Code 설정을 정리한 과정을 정리해 보겠습니다.
+
+## 배경
+
+새 노트북 설정 과정에서 기존 `settings.json`을 확인해보니 300줄을 초과한 상태였고, 상당수 항목의 용도를 기억하지 못하는 상태였습니다.
+
+## 진행 방식
+
+설정을 초기화하고, 필요할 때마다 항목을 추가하는 방식으로 재구성했습니다.
+
+## 2주 후 유지된 설정
+
+```jsonc
+{
+  "editor.formatOnSave": true,
+  "editor.renderWhitespace": "boundary",
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/node_modules": true
+  },
+  "search.exclude": {
+    "**/dist": true,
+    "**/.next": true,
+    "**/package-lock.json": true
+  },
+  "editor.minimap.enabled": false,
+  "files.autoSave": "off"
+}
+```
+
+약 20줄 수준으로 정리되었습니다.
+
+## 제외한 항목
+
+- 폰트 리가처: 특정 연산자 표시가 오히려 가독성을 저하시켜 제외
+- 브래킷 색상 커스터마이징: 기본값으로도 충분
+- 다수의 테마 관련 설정: 테마 확정 후 불필요
+
+## 확장 프로그램 정리
+
+35개였던 확장 프로그램을 "최근 2주간 실제 사용 여부"를 기준으로 9개로 축소했습니다.
+
+## 결론
+
+설정은 시간이 지나며 누적되는 경향이 있어, 주기적으로 정리하지 않으면 용도를 파악하기 어려운 상태가 됩니다. 이후로도 주기적인 점검을 진행할 계획입니다.

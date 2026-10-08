@@ -1,0 +1,77 @@
+---
+title: "Prompts Need Version Control Too"
+publishedAt: "2026-01-15"
+summary: "Answers got worse overnight and nobody knew what had changed."
+tag: "GenAI"
+---
+
+## The incident
+
+A report came in that chatbot answer quality had dropped.
+No code had been deployed. The model was unchanged.
+
+Someone had edited the prompt through the admin screen,
+and the previous version existed nowhere.
+
+## The shape of the problem
+
+Prompts affect behaviour like code, but weren't managed like code.
+
+- No record of who changed it
+- No record of what changed
+- No way to roll back
+- No way to compare before and after
+
+## What we do now
+
+**1. Store prompts as versions in the DB**
+
+Append only, never overwrite.
+
+```sql
+CREATE TABLE prompts (
+  id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+  name        VARCHAR(100) NOT NULL,
+  version     INT NOT NULL,
+  content     TEXT NOT NULL,
+  created_by  VARCHAR(100),
+  created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+  is_active   BOOLEAN DEFAULT FALSE,
+  UNIQUE KEY uk_name_version (name, version)
+);
+```
+
+Only the active version carries `is_active = TRUE`.
+Rollback is just flipping the flag.
+
+**2. Record the version in response logs**
+
+```python
+log = {
+    "prompt_name": "customer_faq",
+    "prompt_version": 12,
+    "question": question,
+    "answer": answer,
+}
+```
+
+Now "when did it start behaving oddly?" has an immediate answer.
+This turned out to be the most valuable piece.
+
+**3. Run a fixed question set before switching**
+
+We keep 30 frequently asked questions. Changing a prompt means running them
+and diffing the answers against the previous version.
+
+No automated scoring — a human skim catches most of the
+"wait, that's wrong" cases on its own.
+
+## What we didn't do
+
+I considered keeping prompts in git, but non-engineers here need to edit them,
+so the DB approach won. If only developers touch them, git is simpler.
+
+## Summary
+
+Anything that changes behaviour without being code still needs versioning:
+prompts, feature flags, rule tables. Same problem in different clothes.

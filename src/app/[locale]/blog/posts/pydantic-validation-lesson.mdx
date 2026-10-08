@@ -1,0 +1,48 @@
+---
+title: "[트러블슈팅] 검증 로직 중복으로 인한 이슈"
+publishedAt: "2025-10-24"
+summary: "동일한 검증 로직이 여러 위치에 중복되어 발생한 문제와 개선 과정입니다."
+tag: "Troubleshooting"
+---
+
+오늘은 검증 로직 중복으로 발생한 문제를 정리해 보겠습니다.
+
+## 문제
+
+전화번호 형식 검증 로직이 프론트엔드, API, 배치에 각각 구현되어 있었습니다. 규칙 변경 시 API만 수정하고 배포한 결과, 배치에서 입력된 데이터가 조회 시 필터링되는 문제가 발생했습니다.
+
+## 원인
+
+각 영역에서 개별적으로 검증 로직을 구현하면서 규칙이 중복 관리되고 있었습니다.
+
+## 해결
+
+검증 로직을 단일 위치로 통합했습니다.
+
+```python
+from pydantic import BaseModel, field_validator
+import re
+
+PHONE_RE = re.compile(r"^01[016789]-?\d{3,4}-?\d{4}$")
+
+class Contact(BaseModel):
+    phone: str
+
+    @field_validator("phone")
+    @classmethod
+    def check_phone(cls, v: str) -> str:
+        normalized = v.replace("-", "")
+        if not PHONE_RE.match(v):
+            raise ValueError("전화번호 형식이 올바르지 않습니다")
+        return normalized
+```
+
+API와 배치는 동일한 모델을 참조하도록 변경했습니다. 프론트엔드는 언어 특성상 별도 구현이 필요했으나, 정규식은 공유 상수로 관리했습니다.
+
+## 부가 효과
+
+검증과 함께 정규화 처리를 적용한 결과, DB에 저장되는 데이터 형식이 통일되었습니다.
+
+## 결론
+
+검증 규칙은 단일 위치에서 관리하고 필요한 곳에서 호출하는 구조로 설계하는 것이 안전합니다. 검증과 정규화를 함께 처리하는 방식도 데이터 일관성 유지에 효과적이었습니다.

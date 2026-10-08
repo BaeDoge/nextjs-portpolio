@@ -1,0 +1,76 @@
+---
+title: "[인프라] Docker 이미지 용량 최적화"
+publishedAt: "2026-03-12"
+summary: "Docker 이미지 용량을 1.2GB에서 180MB로 줄인 과정을 정리합니다."
+tag: "Cloud & Infra"
+---
+
+오늘은 Docker 이미지 용량을 최적화한 과정을 정리해 보겠습니다.
+
+## 상황
+
+CI에서 이미지 빌드 및 푸시에 약 6분이 소요되었습니다. 이미지 용량을 확인해보니 1.2GB였습니다.
+
+## 원인 확인
+
+```bash
+docker history my-app:latest --human --format "{{.Size}}\t{{.CreatedBy}}"
+```
+
+레이어별 용량은 다음과 같았습니다.
+
+- 베이스 이미지 `python:3.11` — 약 900MB
+- apt 캐시 — 약 150MB
+- 빌드 도구(gcc 등) — 약 100MB
+
+## 해결
+
+**1. 베이스 이미지 변경**
+
+`python:3.11`을 `python:3.11-slim`으로 변경했습니다. 이 변경만으로 900MB가 130MB로 줄었습니다.
+
+**2. apt 캐시 정리**
+
+```dockerfile
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      libmariadb-dev \
+ && rm -rf /var/lib/apt/lists/*
+```
+
+캐시 삭제 명령을 동일 레이어 내에서 실행해야 실제 용량이 줄어듭니다.
+
+**3. 멀티스테이지 빌드 적용**
+
+```dockerfile
+FROM python:3.11-slim AS builder
+RUN apt-get update && apt-get install -y --no-install-recommends gcc \
+ && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt .
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+FROM python:3.11-slim
+COPY --from=builder /root/.local /root/.local
+COPY . /app
+ENV PATH=/root/.local/bin:$PATH
+WORKDIR /app
+CMD ["gunicorn", "app:app"]
+```
+
+**4. .dockerignore 적용**
+
+```
+.git
+__pycache__
+*.pyc
+.venv
+node_modules
+tests/
+```
+
+## 결과
+
+최종 이미지 용량은 180MB, 빌드 및 푸시 시간은 6분에서 1분 40초로 단축되었습니다.
+
+## 결론
+
+Dockerfile의 각 레이어는 이전 레이어의 파일을 삭제해도 용량에서 제외되지 않는다는 점을 확인했습니다. 레이어 구조를 이해하는 것이 이미지 최적화의 핵심이었습니다.

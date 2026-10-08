@@ -1,0 +1,54 @@
+---
+title: "[AI] Groq 무료 API 연동 후기"
+publishedAt: "2025-04-15"
+summary: "포트폴리오 챗봇에 Groq 무료 API를 연동한 과정과 OpenAI 대비 비교 결과입니다."
+tag: "GenAI"
+---
+
+오늘은 포트폴리오 챗봇에 Groq API를 연동한 과정을 정리해 보겠습니다.
+
+## 배경
+
+포트폴리오에 챗봇을 추가하며 LLM API를 선정해야 했습니다. OpenAI는 품질 면에서 검증되었으나, 장기 운영 시 비용 예측이 어렵다는 문제가 있었습니다.
+
+## Groq API
+
+Groq은 LPU(Language Processing Unit)를 기반으로 추론 속도가 빠른 것이 특징입니다. 무료 요금제로 Llama 3.3 70B를 분당 30회, 일 14,400 토큰까지 사용할 수 있어 포트폴리오 트래픽에는 충분했습니다.
+
+## 연동 코드
+
+```typescript
+const stream = await groq.chat.completions.create({
+  model: "llama-3.3-70b-versatile",
+  messages: [
+    { role: "system", content: SYSTEM_PROMPT },
+    ...messages.slice(-6),
+  ],
+  stream: true,
+  temperature: 0.2,
+  max_tokens: 400,
+});
+```
+
+## OpenAI와의 비교
+
+응답 속도는 Groq이 더 빨랐으며, 첫 토큰 응답 시간(TTFT) 기준 체감상 2~3배 수준이었습니다. 답변 품질은 GPT-3.5 이상, GPT-4와 유사한 수준으로 확인되었습니다.
+
+## 참고 사항
+
+무료 요금제는 일일 토큰 한도가 있어, 트래픽 증가 시 소진될 수 있습니다. 오류 발생 시 대체 응답을 반환하도록 처리했습니다.
+
+```typescript
+try {
+  const response = await callGroq(messages);
+  return response;
+} catch (error) {
+  return Response.json({
+    answer: "현재 응답이 어렵습니다. doge@kbfg.com으로 문의 바랍니다."
+  });
+}
+```
+
+## 결론
+
+정해진 지식베이스 기반의 응답이 필요한 경우, Groq API는 비용과 속도 측면에서 실용적인 선택지였습니다.

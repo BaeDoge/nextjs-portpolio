@@ -1,0 +1,79 @@
+---
+title: "A Hydration Error Caused by Date Formatting"
+publishedAt: "2026-02-04"
+summary: "The console kept throwing red. Server and browser were rendering different text."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+```
+Hydration failed because the server rendered HTML didn't match the client.
+```
+
+The page looked fine; only the console complained.
+It's the kind of error you want to ignore — and ignoring it eventually breaks real rendering.
+
+## Finding it
+
+The error does tell you which node mismatched.
+Following it led to the date in the post list.
+
+```tsx
+<span>{new Date(post.publishedAt).toLocaleDateString()}</span>
+```
+
+`toLocaleDateString()` follows the **runtime's locale**.
+The server (Node, UTC/en-US) and the browser (KST/ko-KR) produce different strings.
+
+- Server: `3/21/2026`
+- Browser: `2026. 3. 21.`
+
+Different HTML, broken hydration.
+
+## Fix
+
+Pin locale and timezone explicitly.
+
+```tsx
+function formatDate(iso: string) {
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(new Date(iso));
+}
+```
+
+Identical output on both sides.
+
+## The same family of traps
+
+Hydration errors almost always come from values that differ between server and browser.
+
+```tsx
+// Risky
+{Math.random()}
+{new Date().toLocaleString()}
+{typeof window !== "undefined" ? "A" : "B"}
+{localStorage.getItem("theme")}
+```
+
+If a value genuinely must be decided in the browser, set it after mount.
+
+```tsx
+const [mounted, setMounted] = useState(false);
+useEffect(() => setMounted(true), []);
+
+if (!mounted) return null;
+return <ThemeAwareThing />;
+```
+
+This renders nothing on the first frame, so layout can jump.
+Reserving the height in advance makes it less noticeable.
+
+## Summary
+
+Keep asking "do server and client render the same HTML?" and most of these resolve.
+Dates, randomness, and browser-only APIs are the recurring culprits.

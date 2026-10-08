@@ -1,0 +1,71 @@
+---
+title: "[인프라] Kubernetes 클라우드 비용 최적화"
+publishedAt: "2025-02-20"
+summary: "Lambda 스케줄링과 HPA를 함께 적용해 AI 서비스 운영 비용을 절감한 사례입니다."
+tag: "Cloud & Infra"
+---
+
+오늘은 KB국민은행 AI 금융비서 서비스에서 진행한 클라우드 비용 최적화 사례를 정리해 보겠습니다.
+
+## 상황
+
+영업 시간(평일 9시~18시)에 트래픽이 집중되고, 야간과 주말에는 트래픽이 거의 없는 패턴이었습니다. 파드를 24시간 동일 스펙으로 유지할 경우 비사용 시간대에도 동일한 비용이 발생하는 문제가 있었습니다.
+
+## 해결 1 — Lambda 스케줄링
+
+AWS Lambda를 사용해 시간대별로 파드 수를 조정했습니다.
+
+```python
+def scale_eks_deployment(replicas: int, deployment: str):
+    k8s_client.patch_namespaced_deployment_scale(
+        name=deployment,
+        namespace="production",
+        body={"spec": {"replicas": replicas}}
+    )
+```
+
+<Feedback
+  icon
+  variant="info"
+  title="스케일업 시점"
+  description="파드 기동 시간을 고려해 영업 시작 10분 전에 스케일업하도록 설정했습니다."
+/>
+
+## 해결 2 — HPA 설정
+
+예측 불가능한 트래픽 증가에 대응하기 위해 HPA를 함께 구성했습니다.
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+spec:
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+```
+
+## 역할 구분
+
+<Table
+  data={{
+    headers: [
+      { content: "방법", key: "method" },
+      { content: "역할", key: "role" },
+      { content: "기준", key: "basis" }
+    ],
+    rows: [
+      ["Lambda Scheduling", "예측 가능한 트래픽 패턴 대응", "시간"],
+      ["HPA", "예측 불가능한 트래픽 증가 대응", "CPU 사용률 70%"]
+    ]
+  }}
+/>
+
+## 결론
+
+정기적인 패턴은 Lambda 스케줄링으로, 돌발 트래픽은 HPA로 대응하는 구조를 적용했습니다. 임계값과 대기 시간 등의 세부 수치는 실제 트래픽 데이터를 기준으로 조정했습니다.

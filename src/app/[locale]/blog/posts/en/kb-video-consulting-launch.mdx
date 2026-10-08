@@ -1,0 +1,67 @@
+---
+title: "What I'm Learning Building Remote Identity Verification"
+publishedAt: "2026-09-05"
+summary: "I work where convenience and security collide head-on."
+tag: "Cloud & Infra"
+---
+
+## What I picked up
+
+I now work on a channel where customers consult a qualified specialist over video
+and subscribe to financial products without visiting a branch.
+
+My part is **identity verification**.
+Remote trust product sales and non-face-to-face Star Banking subscriptions
+legally require verifying who the customer is.
+
+## The hard part
+
+Two demands sit in direct opposition.
+
+- Customers want it fast and simple
+- Regulation and security want it certain
+
+Add one authentication step and drop-off rises.
+Remove one and impersonation risk rises.
+
+I initially framed this as "find the balance." In practice it's about deciding
+**which segments get strict treatment and which get lenient treatment.**
+
+## Lesson 1 — failure paths vastly outnumber the happy path
+
+There's one success route and dozens of failure routes.
+
+- Glare on the ID card
+- Face drifts out of frame
+- Poor lighting
+- Network drop
+- Older ID card format
+
+Treating them all as generic "failure" leaves the customer with no idea what went wrong.
+Each needs a distinct reason and a distinct instruction.
+
+That accounts for most of the logic complexity.
+
+## Lesson 2 — some things must never be logged
+
+For debugging I'd love to inspect the failed image. ID images can't be stored.
+
+So instead of images we keep **decisions and metrics**:
+
+- which verification step failed
+- similarity score band
+- retry count
+
+Tracing causes without the original artefact means deciding *what to record*
+much more carefully at design time.
+
+## Lesson 3 — domain knowledge is design
+
+You can't write the code without knowing what the Real Name Financial Transactions Act requires.
+Not knowing *why* a step exists leads you to optimise the wrong thing.
+
+This project made it clear that technical skill alone isn't sufficient here.
+
+## Now
+
+Still in progress. I'll write something more concrete once it settles.

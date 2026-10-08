@@ -1,0 +1,85 @@
+---
+title: "Cutting a Docker Image From 1.2GB to 180MB"
+publishedAt: "2026-03-12"
+summary: "I started because deploys were slow, but understanding *why* it was big helped more."
+tag: "Cloud & Infra"
+---
+
+## Starting point
+
+Image build and push alone took six minutes in CI.
+The image was 1.2GB — excessive for a single Python app.
+
+## What was big
+
+```bash
+docker history my-app:latest --human --format "{{.Size}}\t{{.CreatedBy}}"
+```
+
+The layer breakdown answered it:
+
+- Base image `python:3.11` — about 900MB
+- `apt-get install` cache — about 150MB
+- Build tools (gcc etc.) — about 100MB
+
+## 1. Swap the base image
+
+`python:3.11` → `python:3.11-slim`. That alone took 900MB down to 130MB.
+
+I considered `alpine` but don't recommend it for Python.
+musl libc means you often lose prebuilt wheels and end up compiling from source,
+which makes builds *slower*. I tried it and reverted.
+
+## 2. Clean the apt cache
+
+```dockerfile
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      libmariadb-dev \
+ && rm -rf /var/lib/apt/lists/*
+```
+
+Removing it **in the same layer** with `&&` is the point.
+A separate `RUN rm` on the next line leaves the files in the previous layer,
+so the size never drops.
+
+## 3. Multi-stage build
+
+Keep compile-only tools out of the final image.
+
+```dockerfile
+FROM python:3.11-slim AS builder
+RUN apt-get update && apt-get install -y --no-install-recommends gcc \
+ && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt .
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+FROM python:3.11-slim
+COPY --from=builder /root/.local /root/.local
+COPY . /app
+ENV PATH=/root/.local/bin:$PATH
+WORKDIR /app
+CMD ["gunicorn", "app:app"]
+```
+
+Final: 180MB. Build + push: 6 min → 1 min 40 s.
+
+## 4. .dockerignore
+
+This matters more for build cache than size.
+
+```
+.git
+__pycache__
+*.pyc
+.venv
+node_modules
+tests/
+```
+
+Excluding `.git` alone cut context transfer dramatically.
+
+## What I took away
+
+More than the size reduction, I took away an understanding of **how layers stack**:
+every Dockerfile line is a layer, and a file that entered one layer doesn't disappear
+when a later layer deletes it. Knowing that made every other image easy to fix.

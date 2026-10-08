@@ -1,0 +1,64 @@
+---
+title: "I Changed How I Write Review Comments"
+publishedAt: "2026-02-13"
+summary: "My comments were technically correct and consistently ignored."
+tag: "Career"
+---
+
+## Trigger
+
+My review comments weren't getting acted on.
+I assumed it was the other person — until I collected my own comments and reread them.
+
+```
+This'll probably cause N+1
+```
+
+Not wrong. But from the receiving end, "where? why? what should I do instead?"
+are all missing.
+
+## The format I switched to
+
+Three things, always.
+
+**1. Exactly what's wrong**
+
+```
+The user.profile access inside this loop fires a query per iteration.
+With 100 items that's 101 queries.
+```
+
+**2. Why it matters**
+
+```
+It's invisible now because the list is short, but the admin screen
+allows fetching up to 500 records — it'll fall over there.
+```
+
+**3. What to do (or an honest "I don't know")**
+
+```
+Adding select_related("profile") fetches it in one go.
+```
+
+## I added labels
+
+Not every comment is blocking, so I prefix them.
+
+- `[must]` fix before merge
+- `[nit]` taste, feel free to ignore
+- `[question]` not criticism, I genuinely don't know
+
+Since adopting `[nit]`, the stress around small remarks dropped on both sides.
+The author immediately knows what they can skip.
+
+`[question]` turned out surprisingly useful too —
+there was context I was missing more often than I expected.
+
+## Still unsolved
+
+Communicating "I think this needs restructuring" remains hard.
+Too big for a PR comment, too nagging to let go.
+
+These days I go talk to the person instead.
+In writing it just gets long and both sides get defensive.

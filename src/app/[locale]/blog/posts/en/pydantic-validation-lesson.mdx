@@ -1,0 +1,65 @@
+---
+title: "Where Should Validation Live?"
+publishedAt: "2025-10-24"
+summary: "The same validation lived in three places. I fixed one, deployed, and broke production."
+tag: "Troubleshooting"
+---
+
+## Incident
+
+Phone number validation existed separately in the frontend, the API, and a batch job.
+The rule changed, I updated only the API, and rows inserted by the batch
+started getting filtered out on read.
+
+## Why it was scattered
+
+Each had a reason:
+
+- Frontend: give users instant feedback
+- API: block bad external calls
+- Batch: validate CSV uploads
+
+The problem was that **the rule itself had been copied**.
+
+## What I changed
+
+One source of truth; everything else calls it.
+
+```python
+# validators.py — single source
+from pydantic import BaseModel, field_validator
+import re
+
+PHONE_RE = re.compile(r"^01[016789]-?\d{3,4}-?\d{4}$")
+
+class Contact(BaseModel):
+    phone: str
+
+    @field_validator("phone")
+    @classmethod
+    def check_phone(cls, v: str) -> str:
+        if not PHONE_RE.match(v):
+            raise ValueError("invalid phone number format")
+        return v.replace("-", "")
+```
+
+The API and the batch both use this model.
+The frontend is a different language, so it stays duplicated —
+but the regex string is now emitted as a shared constant at build time.
+
+## Side benefit — normalisation
+
+Turning validation into **validation + normalisation** mattered more than expected.
+
+Previously `010-1234-5678` and `01012345678` both lived in the database,
+so every query had to consider both shapes.
+
+Now hyphens are stripped before storage and only one form exists.
+
+## Principles
+
+- Define a validation rule in **exactly one place**
+- If several places need it, **call** it — don't copy it
+- Normalise while you validate
+
+The third one prevented the most downstream pain.

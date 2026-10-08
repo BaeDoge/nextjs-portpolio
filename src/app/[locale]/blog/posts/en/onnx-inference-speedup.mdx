@@ -1,0 +1,94 @@
+---
+title: "Chasing Inference Latency All the Way to ONNX"
+publishedAt: "2025-11-06"
+summary: "How I halved response time without changing the model."
+tag: "AI/ML"
+---
+
+## Situation
+
+Embedding inference took about 180ms per request,
+a large share of total latency in our RAG pipeline.
+
+I wanted to avoid switching to a smaller model for quality reasons.
+
+## 1. Measure first
+
+Break down where the time goes.
+
+```python
+import time
+
+t0 = time.perf_counter()
+tokens = tokenizer(text)
+t1 = time.perf_counter()
+output = model(**tokens)
+t2 = time.perf_counter()
+
+print(f"tokenize: {(t1-t0)*1000:.1f}ms, forward: {(t2-t1)*1000:.1f}ms")
+```
+
+Tokenise 15ms, inference 165ms. Inference dominated.
+
+## 2. Batching
+
+Throughput jumped when processing several sentences at once.
+
+```python
+# one at a time
+for text in texts:           # 100 items → ~18s
+    embed(text)
+
+# batched
+embed_batch(texts, size=32)  # 100 items → ~2.4s
+```
+
+That alone solved bulk document indexing.
+
+Live queries arrive one at a time, though, so batching didn't help there.
+
+## 3. Convert to ONNX
+
+Export the PyTorch model and run it on ONNX Runtime.
+
+```python
+from optimum.onnxruntime import ORTModelForFeatureExtraction
+
+model = ORTModelForFeatureExtraction.from_pretrained(
+    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    export=True,
+)
+model.save_pretrained("./onnx-model")
+```
+
+Single-request inference: 165ms → about 90ms.
+
+## 4. Quantisation
+
+Then int8 quantisation.
+
+```python
+from optimum.onnxruntime import ORTQuantizer
+from optimum.onnxruntime.configuration import AutoQuantizationConfig
+
+quantizer = ORTQuantizer.from_pretrained("./onnx-model")
+config = AutoQuantizationConfig.avx512_vnni(is_static=False, per_channel=True)
+quantizer.quantize(save_dir="./onnx-quantized", quantization_config=config)
+```
+
+About 90ms → about 55ms, and a quarter of the model size.
+
+I validated quality on the evaluation set I'd built earlier.
+Recall@5 dropped by under one percentage point, which I accepted.
+
+## Result
+
+180ms → about 70ms including tokenisation.
+
+## Takeaway
+
+There's usually **more to extract from the runtime than you'd expect**
+before changing models.
+
+More importantly, having built the evaluation set beforehand was decisive.
+Without a way to quantify the quality loss, I'd never have shipped the quantised version.

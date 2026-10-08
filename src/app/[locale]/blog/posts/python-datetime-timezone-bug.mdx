@@ -1,0 +1,63 @@
+---
+title: "[트러블슈팅] 타임존 미지정으로 인한 배치 오류"
+publishedAt: "2026-04-19"
+summary: "datetime.now()의 타임존 미지정으로 배치 데이터가 누락된 사례를 정리합니다."
+tag: "Troubleshooting"
+---
+
+오늘은 타임존 설정 누락으로 발생한 배치 오류 사례를 정리해 보겠습니다.
+
+## 상황
+
+매일 자정에 실행되는 집계 배치에서 전날 데이터 중 일부가 누락되는 문제가 있었습니다. 로컬 환경에서는 정상 동작했습니다.
+
+## 원인
+
+```python
+from datetime import datetime, timedelta
+
+today = datetime.now().date()
+yesterday = today - timedelta(days=1)
+```
+
+`datetime.now()`는 실행 환경의 로컬 타임존을 따릅니다. 로컬 환경은 KST였지만 배포 환경의 컨테이너는 UTC로 설정되어 있었습니다.
+
+이로 인해 한국 시간 00:30에 배치가 실행되어도 컨테이너 기준으로는 전날 15:30이 되어, `yesterday` 값이 실제와 하루 어긋나는 문제가 발생했습니다.
+
+## 해결
+
+타임존을 명시적으로 지정했습니다.
+
+```python
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+
+KST = ZoneInfo("Asia/Seoul")
+
+today = datetime.now(KST).date()
+yesterday = today - timedelta(days=1)
+```
+
+컨테이너 환경변수에도 타임존을 지정했습니다.
+
+```dockerfile
+ENV TZ=Asia/Seoul
+```
+
+## 재발 방지
+
+`datetime.now()`와 `datetime.utcnow()` 사용을 린트 규칙으로 제한했습니다.
+
+```python
+# 사용 금지
+datetime.now()
+datetime.utcnow()
+
+# 사용
+datetime.now(KST)
+datetime.now(timezone.utc)
+```
+
+## 결론
+
+로컬 환경과 배포 환경의 차이가 코드에 암묵적으로 반영되어 있던 경우였습니다. 타임존, 인코딩, 경로 구분자와 같은 환경 의존적인 부분은 명시적으로 지정하는 것이 안전합니다.
