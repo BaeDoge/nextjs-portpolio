@@ -1,50 +1,46 @@
 ---
-title: "What Survived Three Months of Claude Code Extensions"
+title: "Claude Code Extensions I Kept After Three Months"
 publishedAt: "2026-05-08"
-summary: "I installed plenty and deleted plenty. Here's only what actually stuck."
+summary: "Which of the Claude Code extensions I tried over three months I actually kept."
 tag: "Tooling"
 ---
 
-## Why I did the cleanup
+Today I'll share what I sorted out after using Claude Code extensions for three months.
 
-Every extension looks good on install day. Three months later, I was only opening a handful of them.
-While tidying my config I kept hitting entries where I thought "when did I add this?" — so I pruned.
+## Background
 
-## What survived
+Many extensions that looked useful at install time were not ones I kept using, so I reviewed what I actually used.
 
-**1. A project-level context file**
+## What I kept
 
-More of a convention than an extension, but it made the biggest difference.
-Writing project rules at the repo root meant I stopped explaining our conventions every single time.
+**1. A project context file**
+
+Recording project conventions in a file at the repo root reduced how often I had to repeat explanations.
 
 ```markdown
-- This project is Flask + MySQL. No ORM — raw queries only.
-- All logging is structured (JSON). No print().
-- Tests use pytest, filenames are test_*.py
+- This project uses Flask + MySQL, no ORM
+- Logs use structured logging (JSON); no print()
+- Tests use pytest; file names are test_*.py
 ```
 
-I wasn't sure it was worth writing down. After writing it, review nitpicks clearly dropped.
+**2. Terminal integration**
 
-## What I removed
+Being able to work without switching windows improved my efficiency.
 
-**Auto-generated commit messages**
+## What I dropped
 
-Novel for a week. Then every message became "a sentence describing the diff."
+**Automatic commit message generation**
+
+It only described the diff, so it was hard to tell why a change was made.
 
 ```
 - Update user_service.py to add validation logic and modify error handling
 ```
 
-That's all visible in the diff. The part I actually need — the *why* — never made it in.
-Writing them myself was faster, so I turned it off.
+**Real-time inline suggestions**
 
-**Inline suggestions while typing**
+They often interrupted my flow, so I turned them off.
 
-Constant popups broke my concentration. Personal taste, but it didn't work for me.
+## Conclusion
 
-## Takeaway
-
-The more tools you add, the more you need to separate "can't work without this" from "slightly nicer with this."
-When the second category grows, config maintenance costs more than the tools give back.
-
-I'll prune again in three months.
+When adopting a tool, I think you need a standard that separates "things I can't work without" from "things that make work a bit easier." If the latter pile up, the cost of managing them can exceed their benefit.

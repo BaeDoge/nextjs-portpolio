@@ -1,0 +1,46 @@
+---
+title: "My First Open Source Pull Request"
+publishedAt: "2025-04-20"
+summary: "How I finally made an open source contribution I had been putting off for a long time."
+tag: "Open Source"
+---
+
+Today I'll write up my first open source contribution.
+
+## Background
+
+Open source contribution was something I felt I needed to do but kept putting off because I was worried about the barrier to entry.
+
+## Process
+
+I noticed that the Korean translation file of Flowise, which I use regularly, had missing entries, and I chose that as my contribution.
+
+```bash
+# 1. Fork & Clone
+gh repo fork FlowiseAI/Flowise --clone
+cd Flowise
+
+# 2. Create a branch
+git checkout -b fix/korean-i18n-improvements
+
+# 3. Edit the translation file
+# packages/ui/src/i18n/locales/ko.json
+
+# 4. Commit & push
+git commit -m "fix(i18n): add missing Korean translations for chatflow and agentflow"
+git push origin fix/korean-i18n-improvements
+
+# 5. Create the PR
+```
+
+After I opened the PR, I was asked to revise some wording and apply the change to additional files. I made those changes and it was merged.
+
+## What I Found
+
+- The reviewer's feedback was specific and cooperative.
+- Writing a clear PR description and commit message meant English communication was not a big burden.
+- Even though I only edited a translation file with no code changes, I was added to the Contributors list.
+
+## Conclusion
+
+Starting with a small contribution was effective for lowering the barrier to entry. As a next step, I plan to contribute at the code level.

@@ -1,0 +1,44 @@
+name: KB Sync
+
+# 블로그, 프로젝트, kb/ 변경 시와 매주 일요일에 챗봇 지식 베이스를 갱신합니다.
+# 저장소 Secrets: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/app/**/blog/posts/**"
+      - "src/app/**/work/projects/**"
+      - "kb/**"
+  schedule:
+    - cron: "0 18 * * 0" # UTC 일요일 18:00 = KST 월요일 03:00
+  workflow_dispatch:
+    inputs:
+      replace_legacy:
+        description: "예전 데이터(content_hash 없음)도 삭제 (최초 1회)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kb-sync
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: 지식 베이스 갱신
+        run: node kb/ingest.mjs ${{ inputs.replace_legacy && '--replace-legacy' || '' }}
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

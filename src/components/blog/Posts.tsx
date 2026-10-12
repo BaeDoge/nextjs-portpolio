@@ -20,20 +20,6 @@ export async function Posts({
 }: PostsProps) {
   const locale = await getLocale();
   let allBlogs = getPostsByLocale(["src", "app", "[locale]", "blog", "posts"], locale);
-  // console.log("exclude:", exclude);
-  // console.log("exclude isArray:", Array.isArray(exclude));
-  // console.log(
-  //   getPosts(["src", "app", "[locale]", "blog", "posts"]).map(post => ({
-  //     slug: post?.slug,
-  //     metadata: post?.metadata,
-  //   }))
-  // );
-  // console.log("allBlogs:", allBlogs);
-  // Exclude by slug (exact match)
-  // allBlogs = allBlogs.filter(
-  //   (post): post is NonNullable<typeof post> =>
-  //     !!post && typeof post.slug === "string"
-  // );
   if (exclude.length) {
     allBlogs = allBlogs.filter((post) => !exclude.includes(post.slug));
   }

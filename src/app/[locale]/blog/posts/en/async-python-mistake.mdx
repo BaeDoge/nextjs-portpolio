@@ -1,16 +1,17 @@
 ---
-title: "I Added async and Nothing Got Faster"
+title: "Why FastAPI async Handlers Were Still Slow"
 publishedAt: "2025-09-26"
-summary: "I was blocking the event loop. The keyword isn't magic."
+summary: "Why switching to async def did not improve response times."
 tag: "Troubleshooting"
 ---
 
-## Expectation vs reality
+Today I'll write up a case where using `async def` in FastAPI did not improve performance.
 
-To raise concurrent throughput I converted every FastAPI handler to `async def`.
-Throughput barely moved. Some paths got slower.
+## Situation
 
-## Cause — synchronous libraries inside async handlers
+To increase concurrent throughput, I changed every handler to `async def`. Throughput barely changed, and some paths actually got slower.
+
+## Cause
 
 ```python
 import requests
@@ -22,15 +23,11 @@ async def get_items():
     return res.json()
 ```
 
-A blocking call inside `async def` **stalls the entire event loop**.
-Nothing else is processed while it waits.
+I was making a synchronous, blocking call inside `async def`. That stalls the whole event loop, so no other request is handled in the meantime.
 
-Ironically, leaving it as a plain `def` would have let FastAPI
-push it to a threadpool. Declaring it `async` removed that safety net.
+## Fix
 
-## Fixes
-
-**1. Use an async client**
+**1. Switch to an async client**
 
 ```python
 import httpx
@@ -42,10 +39,7 @@ async def get_items():
     return res.json()
 ```
 
-In practice I reuse one client for the app lifetime rather than creating one per request —
-rebuilding the connection pool each time is wasteful.
-
-**2. If you can't change it, send it to a thread**
+**2. Delegate to a thread pool when switching isn't possible**
 
 ```python
 from fastapi.concurrency import run_in_threadpool
@@ -56,20 +50,10 @@ async def get_report():
     return data
 ```
 
-**3. Move CPU work out entirely**
+**3. Move CPU-bound work to a separate process**
 
-Long CPU-bound work (image processing, say) isn't solved by threads either, because of the GIL.
-That went to separate worker processes.
+CPU-heavy work such as image processing did not improve even with a thread pool, so I moved it to a separate worker process.
 
-## My rules now
+## Conclusion
 
-- If there's nothing to `await`, don't use `async def`
-- Never make a blocking call inside `async def`
-- If blocking is unavoidable, wrap it in `run_in_threadpool`
-
-## Summary
-
-`async` is a tool for **yielding during waits**.
-No waiting, or no yielding, means no benefit.
-
-Changing the keyword alone made nothing faster.
+If there is nothing to `await`, there is no reason to use `async def`, and blocking calls must not be made inside it. When blocking is unavoidable, wrapping the call in `run_in_threadpool` is the safe option.

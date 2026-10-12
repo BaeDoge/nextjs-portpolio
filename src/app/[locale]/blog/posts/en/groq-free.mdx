@@ -1,0 +1,54 @@
+---
+title: "Connecting the Groq Free API to My Portfolio Chatbot"
+publishedAt: "2025-04-15"
+summary: "How I connected the Groq free API to my portfolio chatbot, and how it compared with OpenAI."
+tag: "GenAI"
+---
+
+Today I'll write up how I connected the Groq API to my portfolio chatbot.
+
+## Background
+
+When I added a chatbot to my portfolio, I had to choose an LLM API. OpenAI is proven in terms of quality, but its long-term costs are hard to predict.
+
+## Groq API
+
+Groq is known for fast inference thanks to its LPU (Language Processing Unit). The free plan lets you use Llama 3.3 70B at up to 30 requests per minute and 14,400 tokens per day, which was enough for portfolio traffic.
+
+## Integration Code
+
+```typescript
+const stream = await groq.chat.completions.create({
+  model: "llama-3.3-70b-versatile",
+  messages: [
+    { role: "system", content: SYSTEM_PROMPT },
+    ...messages.slice(-6),
+  ],
+  stream: true,
+  temperature: 0.2,
+  max_tokens: 400,
+});
+```
+
+## Comparison with OpenAI
+
+Groq was faster. In terms of time to first token (TTFT) it felt about 2 to 3 times faster. Answer quality was better than GPT-3.5 and close to GPT-4.
+
+## Notes
+
+The free plan has a daily token limit, so it can run out as traffic grows. I set it up to return a fallback response when an error occurs.
+
+```typescript
+try {
+  const response = await callGroq(messages);
+  return response;
+} catch (error) {
+  return Response.json({
+    answer: "I can't respond right now. Please contact qold0blop@gmail.com."
+  });
+}
+```
+
+## Conclusion
+
+For cases that need answers based on a fixed knowledge base, the Groq API was a practical choice in terms of both cost and speed.

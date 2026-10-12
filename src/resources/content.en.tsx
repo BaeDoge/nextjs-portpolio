@@ -6,6 +6,7 @@
 // 원본에서 항목을 추가하면 영어판에도 자동 반영되고, 번역만 여기서 덧씌우면 됩니다.
 import { Person, About, Home, Gallery } from "@/types";
 import { person, about, home, gallery } from "./content";
+import { CONTACT_EMAIL } from "./contact";
 
 export const personEn: Person = {
   ...person,
@@ -27,7 +28,7 @@ export const aboutEn: About = {
   ...about,
   calendar: {
     ...about.calendar,
-    link: "mailto:doge@kbfg.com?subject=Reaching out after seeing your portfolio&body=",
+    link: `mailto:${CONTACT_EMAIL}?subject=Reaching out after seeing your portfolio`,
   },
   intro: {
     ...about.intro,
@@ -199,7 +200,7 @@ export const aboutEn: About = {
 
 const GALLERY_ALT_EN: Record<string, string> = {
   "/projects/embedded-sw/activity.jpg": "Embedded Software Competition",
-  "/projects/etri-intern/ppg-research.png": "ETRI PPG blood pressure research",
+  "/projects/etri-intern/ppg-research.jpg": "ETRI PPG blood pressure research",
   "/projects/etri-intern/activity.jpg": "ETRI research internship",
   "/projects/etri-intern/activity2.jpg": "ETRI research internship (2)",
   "/projects/dongrami/activity.jpg": "Competition presentation",

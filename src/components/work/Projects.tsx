@@ -1,4 +1,4 @@
-import { getPosts } from "@/utils/utils";
+import { getPostsByLocale } from "@/utils/utils";
 import { Column } from "@once-ui-system/core";
 import { ProjectCard } from "@/components";
 import { getLocale } from "next-intl/server";
@@ -10,7 +10,7 @@ interface ProjectsProps {
 
 export async function Projects({ range, exclude }: ProjectsProps) {
   const locale = await getLocale();
-  let allProjects = getPosts(["src", "app", "[locale]", "work", "projects"]);
+  let allProjects = getPostsByLocale(["src", "app", "[locale]", "work", "projects"], locale);
 
   // Exclude by slug (exact match)
   if (exclude && exclude.length > 0) {

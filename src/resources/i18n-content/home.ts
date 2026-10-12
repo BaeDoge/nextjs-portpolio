@@ -1,12 +1,5 @@
-// src/resources/content/home.ts
-//
-// 예시로 완성까지 채워둔 페이지입니다. 이 파일의 구조를 그대로 복사해서
-// about.ts / work.ts / blog.ts / gallery.ts 를 채워나가면 됩니다.
-//
-// 원본: src/resources/content.tsx 의 `home` 객체
-// headline / featured.title 처럼 JSX(<br/>, <strong> 등)가 섞여 있던 필드는
-// 번역하기 쉽도록 순수 문자열/배열로 풀어놨습니다.
-// (줄바꿈이 필요한 곳은 string[] 로 표현 → 나중에 렌더링할 때 join('<br/>') 하면 됨)
+// 홈 화면 텍스트(ko/en). src/app/[locale]/page.tsx 에서 사용합니다.
+// 줄바꿈이 필요한 필드는 string[] 로 두고, 렌더링할 때 <br/> 로 이어 붙입니다.
 
 import { Dictionary } from "./types";
 

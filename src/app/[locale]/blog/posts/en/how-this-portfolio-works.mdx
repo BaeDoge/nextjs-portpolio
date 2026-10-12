@@ -1,0 +1,114 @@
+---
+title: "How Did I Build This Portfolio?"
+publishedAt: "2026-04-10"
+summary: "How I built a portfolio with a built-in RAG chatbot on Next.js, Vercel, the Groq API, and Supabase, at zero monthly running cost."
+tag: "Portfolio"
+---
+
+<Feedback
+  icon
+  variant="success"
+  title="One-line summary"
+  description="A new 2026 web portfolio that introduces me"
+/>
+
+## Overview
+
+When I was young, my father built a homepage as a growth diary for my older brother and me.
+It had a guestbook where people could leave comments and a gallery page where you could follow how we grew up. (I still remember the URL. He used a free domain, bae-family.zc.bz.)
+
+The site is gone now, but maybe because of that memory, I have always wanted a site of my own.
+
+While preparing for jobs in university, I deployed my first portfolio site with GitHub Pages.
+
+![prev_portpolio.png](/blogs/prev_portpolio.jpg)
+
+[I don't know when it will disappear, but it is still being hosted.](https://bae-seungho.github.io/)
+
+## One Step Further
+
+Time passed, and in 2026, while preparing to change jobs, I felt I needed to build a new portfolio site with my information brought up to date and expanded.
+I looked at many other portfolios for reference.
+
+Then a new idea suddenly came to me: **what if visitors could ask about me directly?**
+
+No matter how much I write in a résumé and a portfolio, what a visitor wants to see can be different.
+So I thought it would be good to lay out the information a portfolio needs, and at the same time build a system where visitors can ask their questions right away through a RAG system built on my own information.
+
+## Tech Stack
+
+What I worried about most was the LLM API cost.
+With OpenAI, every generated answer costs tokens, and I didn't like the idea of paying monthly API fees for a personal portfolio.
+Then I found **Groq**, which provides Llama 3.3 70B for free and responds faster than GPT-4. It has a free plan for moderate usage,
+so it was a good fit for my portfolio.
+
+I also automated server deployment for free through Vercel, and connected Supabase as the database for things like the guestbook.
+
+<Table
+  data={{
+    headers: [
+      { content: "Role", key: "role" },
+      { content: "Tool", key: "tool" },
+      { content: "Cost", key: "cost" }
+    ],
+    rows: [
+      ["Framework", "Next.js 16 + Once UI", "Free"],
+      ["Deployment", "Vercel", "Free"],
+      ["LLM", "Groq — Llama 3.3 70B", "Free"],
+      ["Vector DB", "Supabase pgvector", "Free"],
+      ["Embeddings", "@xenova/transformers", "Free"]
+    ]
+  }}
+/>
+
+## RAG Pipeline
+
+If you simply write "You are Seung Ho Bae's assistant" in the prompt, the AI makes up things that aren't there.
+So I embedded information about myself into a Supabase database to build a knowledge base, then built a context from it and passed it to the AI.
+
+```text
+Visitor question
+    ↓
+Question → vector (MiniLM, 384 dimensions)
+    ↓
+Supabase pgvector cosine similarity search
+    ↓
+Retrieve 4 relevant chunks
+    ↓
+Context + question → Groq API (Llama 3.3 70B)
+    ↓
+Streaming answer
+```
+![supabase](/blogs/supabase.png)
+
+
+```typescript
+// SSE streaming response
+const stream = await groq.chat.completions.create({
+  model: "llama-3.3-70b-versatile",
+  messages: [{ role: "system", content: systemPrompt }, ...messages],
+  stream: true,
+  temperature: 0.2,
+});
+
+for await (const chunk of stream) {
+  const text = chunk.choices[0]?.delta?.content || "";
+  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
+}
+```
+
+## Lessons Learned
+
+The portfolio is still a work in progress, but I think the portfolio itself has become a project experience.
+
+I studied to produce richer results than a plain web résumé, such as an AI agent I built myself and blog posts,
+and I'm very proud to have made a site of my own that costs nothing to run.
+
+Next, I'd like to connect a paid domain and Google Search Console so the site can reach more people.
+
+Try the 💬 button at the bottom right!
+
+<Row gap="8" marginTop="16">
+  <Button href="/work" variant="secondary" label="See more projects" suffixIcon="chevronRight" />
+  <Button href="/blog" variant="tertiary" label="See more posts" suffixIcon="chevronRight" />
+</Row>

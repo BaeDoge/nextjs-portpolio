@@ -1,71 +1,51 @@
 ---
-title: "Why 512 Tokens Wasn't the Right Answer for RAG Chunking"
+title: "Improving My RAG Chunking Strategy"
 publishedAt: "2026-04-28"
-summary: "I rewrote my chunking strategy three times while building RAG over policy documents."
+summary: "How I found the limits of fixed-token chunking in RAG over terms and conditions, and improved it."
 tag: "GenAI"
 ---
 
-## I started by just cutting at 512
+Today I'll write up how I improved the chunking strategy of a RAG system.
 
-Most RAG tutorials start with something like `chunk_size=512, overlap=50`.
-I did the same, and the demo worked fine.
+## Situation
 
-The trouble started with real policy documents.
+I set up chunking with the common defaults, `chunk_size=512, overlap=50`. Applying it to clause-based documents such as terms and conditions caused problems.
 
-## Problem 1 — clauses get cut in half
+## Problem
 
-Korean financial terms and conditions look like this:
+Splitting at 512 tokens sometimes cut between the paragraphs of a clause (①②③). In those cases, only the part saying "cancellation is possible" was retrieved, and the part with the "except for the following restrictions" was missing.
 
-```
-Article 15 (Termination)
-① The customer may terminate the contract at any time.
-② Notwithstanding paragraph ①, termination is restricted in the following cases:
-   1. ...
-```
+## How I improved it
 
-Cutting at 512 tokens sometimes splits between ① and ②.
-Then retrieval surfaces "may terminate" without "is restricted."
-In a financial domain that isn't a quality issue — it's an incident.
+**Attempt 1: Larger overlap**
 
-## Attempt 1 — bigger overlap
+I raised it to `overlap=200`, but similar chunks started being retrieved in duplicate.
 
-I pushed `overlap` to 200. Fewer cuts, but the index grew and near-duplicate chunks
-started crowding the top of the result list.
-
-## Attempt 2 — split by article
+**Attempt 2: Split by article**
 
 ```python
 import re
 
 def split_by_article(text: str) -> list[str]:
-    parts = re.split(r'(Article\s*\d+)', text)
+    parts = re.split(r'(제\s*\d+\s*조)', text)
     chunks = []
     for i in range(1, len(parts), 2):
         chunks.append(parts[i] + parts[i + 1])
     return chunks
 ```
 
-Semantic boundaries held, but length variance became the problem.
-Some articles are two lines, some are three pages. Long ones produce mushy embeddings.
+The meaning units were preserved, but article lengths varied widely, so the embedding quality of long articles dropped.
 
-## What I settled on — two stages
+**Final: Two-step splitting with the parent heading included**
 
-1. Split by article first (preserve the semantic boundary)
-2. If an article is too long, split again by paragraph (①②③)
-3. **Prefix every chunk with its parent article heading**
-
-Step 3 was the key.
+1. Split by article first
+2. Re-split long articles by paragraph
+3. Include the parent article heading in each chunk
 
 ```
-[Article 15 (Termination)] ② Notwithstanding paragraph ①, ...
+[Article 15 (Termination)] ② Notwithstanding paragraph 1, in each of the following cases...
 ```
 
-Now even a split chunk keeps its context. Retrieval accuracy improved noticeably.
+## Conclusion
 
-## What I learned
-
-Chunking isn't a question of "how many tokens." It's a question of
-**"what is the unit of meaning in this document?"**
-
-Policies have articles, meeting notes have agenda items, code has functions.
-The answer differs per domain. The tutorial's 512 is a default for generic text, not a rule.
+Setting the chunking boundary by the document's units of meaning rather than by token count was what improved retrieval accuracy. The right chunking criteria can differ by document type.

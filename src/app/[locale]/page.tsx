@@ -21,6 +21,7 @@ import Timeline from "@/components/Timeline";
 import CasualIntroSection from "@/components/CasualIntroSection";
 import ContactChallenge from "@/components/ContactChallenge";
 import HighlightPanel from "@/components/HighlightPanel";
+import PersonJsonLd from "@/components/PersonJsonLd";
 import { TypewriterRole } from "@/components/TypewriterRole";
 import {
   VisitorCounter,
@@ -30,16 +31,22 @@ import {
   NowWidget,
 } from "@/components/portfolio-widgets";
 
+import { withAlternates } from "@/utils/seo";
+
 export async function generateMetadata() {
   const locale = await getLocale();
   const t = getHomeText(locale as "ko" | "en");
-  return Meta.generate({
-    title: t.title,
-    description: t.description,
-    baseURL: baseURL,
-    path: home.path,
-    image: home.image,
-  });
+  return withAlternates(
+    Meta.generate({
+      title: t.title,
+      description: t.description,
+      baseURL: baseURL,
+      path: home.path,
+      image: home.image,
+    }),
+    home.path,
+    locale,
+  );
 }
 
 export default async function Home() {
@@ -49,6 +56,7 @@ export default async function Home() {
 
   return (
     <Column maxWidth="m" gap="xl" paddingY="12" horizontal="center">
+      <PersonJsonLd />
       <Schema
         as="webPage"
         baseURL={baseURL}
@@ -317,8 +325,6 @@ export default async function Home() {
       ══════════════════════════════════════════ */}
       <RevealFx translateY="16" fillWidth>
         <Column gap="m" fillWidth>
-          {/* <StatusBadge /> */}
-          {/* <NowWidget /> */}
         </Column>
       </RevealFx>
 

@@ -1,67 +1,40 @@
 ---
-title: "What I'm Learning Building Remote Identity Verification"
+title: "Developing a Non-Face-to-Face Real-Name Verification Service"
 publishedAt: "2026-09-05"
-summary: "I work where convenience and security collide head-on."
+summary: "What I found while building the real-name verification feature of a video consultation service."
 tag: "Cloud & Infra"
 ---
 
-## What I picked up
+Today I'll write up what I found while developing a non-face-to-face real-name verification service.
 
-I now work on a channel where customers consult a qualified specialist over video
-and subscribe to financial products without visiting a branch.
+## My responsibilities
 
-My part is **identity verification**.
-Remote trust product sales and non-face-to-face Star Banking subscriptions
-legally require verifying who the customer is.
+I am responsible for the real-name verification feature in a channel where customers can get consultations and sign up for products by video, without visiting a branch. Identity verification is legally required for things like remote sales of trust products and remote sign-ups in Star Banking.
 
-## The hard part
+## Main considerations
 
-Two demands sit in direct opposition.
+Convenience and security often pulled in opposite directions. Adding verification steps raises the drop-off rate, and removing them raises the risk of identity theft. So I designed the flow to apply different levels of verification at different stages.
 
-- Customers want it fast and simple
-- Regulation and security want it certain
+## Finding 1: Failure cases are varied
 
-Add one authentication step and drop-off rises.
-Remove one and impersonation risk rises.
-
-I initially framed this as "find the balance." In practice it's about deciding
-**which segments get strict treatment and which get lenient treatment.**
-
-## Lesson 1 — failure paths vastly outnumber the happy path
-
-There's one success route and dozens of failure routes.
+There is one normal path, but the failure cases were varied.
 
 - Glare on the ID card
-- Face drifts out of frame
-- Poor lighting
-- Network drop
-- Older ID card format
+- Face not detected
+- Insufficient lighting
+- Communication errors
+- Older ID card formats
 
-Treating them all as generic "failure" leaves the customer with no idea what went wrong.
-Each needs a distinct reason and a distinct instruction.
+Giving a different guidance message for each cause of failure took up a major part of the logic.
 
-That accounts for most of the logic complexity.
+## Finding 2: How to handle logs
 
-## Lesson 2 — some things must never be logged
+ID images cannot be stored for security reasons, so I designed the logs to record only metadata such as the verification step, similarity score, and retry count instead of the image.
 
-For debugging I'd love to inspect the failed image. ID images can't be stored.
+## Finding 3: The need for domain knowledge
 
-So instead of images we keep **decisions and metrics**:
+Without understanding relevant regulations such as the Real Name Financial Transactions Act, there were many points where I could not judge the right design direction. I learned that understanding domain requirements has to come before the technical implementation.
 
-- which verification step failed
-- similarity score band
-- retry count
+## Conclusion
 
-Tracing causes without the original artefact means deciding *what to record*
-much more carefully at design time.
-
-## Lesson 3 — domain knowledge is design
-
-You can't write the code without knowing what the Real Name Financial Transactions Act requires.
-Not knowing *why* a step exists leads you to optimise the wrong thing.
-
-This project made it clear that technical skill alone isn't sufficient here.
-
-## Now
-
-Still in progress. I'll write something more concrete once it settles.
+This project is still in progress, and I plan to write up more details once it is finished.

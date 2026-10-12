@@ -6,8 +6,6 @@
 import { useState, useEffect , useRef } from "react";
 import { useLocale } from "next-intl";
 
-
-
 // ══════════════════════════════════════════════════════════════
 // 1. 실시간 방문자 카운터 (Supabase 연동)
 // 사용: <VisitorCounter />
@@ -29,57 +27,6 @@ export function VisitorCounter() {
     </div>
   );
 }
-
-// "use client";
-// import { useEffect, useState } from "react";
-
-// export default function VisitorCounter() {
-//   const [unique, setUnique] = useState<number | null>(null);
-
-//   useEffect(() => {
-//     fetch("/api/pageview?type=unique")
-//       .then(r => r.json())
-//       .then(d => setUnique(d.count));
-//   }, []);
-
-//   if (unique === null) return null;
-
-//   return (
-//     <div style={{
-//       display: "flex", alignItems: "center", gap: 6,
-//       fontSize: 12, color: "var(--neutral-on-background-weak)",
-//     }}>
-//       <div style={{
-//         width: 6, height: 6, borderRadius: "50%",
-//         background: "#1D9E75",
-//         animation: "tlpulse 2s infinite",
-//       }} />
-//       지금까지 {unique.toLocaleString()}명이 다녀갔어요
-//     </div>
-//   );
-// }
-  // const [count, setCount] = useState<number | null>(null);
-
-  // useEffect(() => {
-  //   const fetchCount = async () => {
-  //     // const { data } = await supabase
-  //     //   .from("total_views")
-  //     //   .select("total");
-
-  //     // setCount(data?.[0]?.count ?? 0);
-  //     setCount(1247); // 임시값 필요 없으면 제거
-  //   };
-
-  //   fetchCount();
-  // }, []);
-
-  // return (
-  //   <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:12, color:"var(--neutral-on-background-weak)" }}>
-  //     <div style={{ width:6, height:6, borderRadius:"50%", background:"#1D9E75", animation:"tlpulse 2s infinite" }} />
-  //     {count !== null ? `지금까지 ${count.toLocaleString()}명이 방문했어요` : "..."}
-  //     <style>{`@keyframes tlpulse{0%,100%{opacity:1}50%{opacity:.4}}`}</style>
-  //   </div>
-  // );
 
 // ══════════════════════════════════════════════════════════════
 // 2. 현재 상태 배지 (프리랜서 가능 여부 등)
@@ -418,7 +365,6 @@ export function SpotifyNowPlaying() {
       <div>
         <div style={{ fontSize:11, color:"var(--neutral-on-background-weak)" }}>Spotify 연동 예정</div>
         <div style={{ fontSize:12, color:"var(--neutral-on-background-medium)" }}>
-          {/* {track ? `${track.name} — ${track.artist}` : "오프라인"} */}
           아직 설정 전
         </div>
       </div>

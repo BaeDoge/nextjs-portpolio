@@ -1,0 +1,73 @@
+---
+title: "Deep Learning Model for ADHD Prediction"
+publishedAt: "2022-03-01"
+summary: "A one-year project at the MCL lab. Built a deep learning model that classifies children suspected of ADHD from subtle facial movement patterns in video of elementary school students. Reached 70% classification accuracy and filed a patent."
+images:
+  - "/projects/adhd-research/main.jpg"
+tag: "Medical AI"
+---
+
+<Feedback
+  icon
+  variant="success"
+  title="One-line summary"
+  description="A project to build a model for early ADHD detection from facial movement and gaze shifts in childhood video"
+/>
+
+
+## Research Overview
+
+This was a one-year project at the MCL (Mobile Communication Lab) at Yeungnam University.
+The earlier ADHD (attention-deficit/hyperactivity disorder) is found in childhood, the more effective treatment is,
+but the current approach depends solely on clinical assessment by medical professionals, which limits accessibility.
+
+The idea started from a question: if children are asked to focus on a single point for one minute,
+could we classify children suspected of ADHD early with vision alone, using subtle movement patterns in the facial video
+(**mouth-corner movement, eye movement, head tilting, and so on**)? That could be a real contribution to the medical field.
+
+
+## Data Collection
+
+I recorded one-minute facial videos of third- and fourth-grade elementary school students.
+
+Collected data:
+- Eye movement (eye tracking, blink detection)
+- Subtle changes in facial muscle expressions
+- Head direction and head movement patterns
+- Facial movement from the gyro sensor in a hat the children wore
+
+The ground-truth labels for the ADHD-suspected group were provided by Professor Seung-Pil Jung of the Yeungnam University College of Medicine
+(now president of the Korea Institute of Radiological & Medical Sciences).
+
+## Model
+
+I applied an image-processing-based eye-feature extraction technique
+(a CNN trained on Korean eye data, combined with Dlib facial landmarks).
+
+To capture temporal patterns I used an LSTM-based time-series classifier,
+and I also used facial micro-movement features based on VibraImage Technology as additional features.
+
+## Results
+
+The model reached **70%** classification accuracy for the ADHD-suspected group.
+
+From the analysis, I predicted that performance would improve further with a higher-resolution camera
+or more precise sensing equipment. The camera we used at the time had limits in capturing subtle facial movement.
+
+The study found a meaningful correlation between facial movement in one minute of video, while staying still,
+and early ADHD symptoms.
+
+## Tech Stack
+
+`Python` `TensorFlow` `LSTM` `CNN` `OpenCV` `MediaPipe` `VibraImage`
+
+## Lesson & Learned
+
+This was a long, year-long study.
+
+I visited three elementary schools myself to collect the video data, and I went through the whole research process:
+labeling for training the eye-movement model, model development, and performance analysis.
+
+Because trust in AI and data matters most in the medical field, I came to feel that it demands in-depth research and reliable hypothesis testing.
+
+![testt](/projects/adhd-research/activity.jpg)

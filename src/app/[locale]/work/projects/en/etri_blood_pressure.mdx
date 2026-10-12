@@ -1,0 +1,88 @@
+---
+title: "PPG-Based Deep Learning Blood Pressure Estimation Model"
+publishedAt: "2022-08-01"
+summary: "A blood pressure estimation model built on 100,000 samples from MIMIC-III"
+images:
+  - "/projects/etri-intern/main.jpg"
+  - "/projects/etri-intern/ppg-research.jpg"
+tag: "Medical AI"
+---
+
+<Feedback
+  icon
+  variant="success"
+  title="One-line summary"
+  description="Developing a blood pressure estimation model from PPG and ECG features, based on MIMIC-III data"
+/>
+
+## ETRI Research
+
+In the summer of 2022 I did a two-month internship at the Medical IT Convergence Research Lab of the ETRI Daegyeong Research Center.
+
+My task was to develop a **deep learning model that estimates blood pressure from PPG signals**.
+The goal was to measure blood pressure with just a finger sensor and no cuff (the blood pressure band),
+but the sensor data itself has low precision and high variability, so it was not an easy project.
+
+For developing the model, I used the MIMIC-III medical dataset.
+
+<Feedback
+  icon
+  variant="info"
+  title="MIMIC-III dataset"
+  description="ICU data from Beth Israel Deaconess Medical Center. Biosignals from about 1,600 patients are publicly available. Extracting continuous segments of at least 8 seconds and removing noise yields 101,087 samples."
+/>
+
+## 3-Branch Functional Model
+
+Most earlier studies fed the PPG waveform into an LSTM sequentially.
+But I realized there are more time-domain features that can be extracted from PPG.
+
+<Grid fillWidth columns="2" gap="16" marginBottom="16" marginTop="8">
+  <Column border="neutral-alpha-medium" padding="16" radius="m" gap="8">
+    <Text variant="label-strong-s">Waveform shape (Morphology)</Text>
+    <Text variant="body-default-s" onBackground="neutral-weak">Morphological properties of the waveform itself, such as systolic peak height, diastolic trough position, and the shape of the dicrotic notch</Text>
+  </Column>
+  <Column border="neutral-alpha-medium" padding="16" radius="m" gap="8">
+    <Text variant="label-strong-s">Time-domain features</Text>
+    <Text variant="body-default-s" onBackground="neutral-weak">Time-based statistics such as BPM, inter-beat interval (IBI), rise time, and fall time</Text>
+  </Column>
+</Grid>
+
+When I fed both into a single input, the model could not process the two kinds of features independently and performance did not change,
+so I split it into three branches.
+
+```text
+[PPG waveform]       → Branch 1 (General CNN-LSTM) ─┐
+[PPG waveform]       → Branch 2 (Wide CNN-LSTM)    ─┼→ Dense → SBP prediction
+[Time features]      → Branch 3 (Time-domain DNN)  ─┘
+```
+
+Branches 1 and 2 use different window sizes to capture the local and global characteristics of the sensor data,
+and Branch 3 takes time-domain data extracted with the Heartpy library.
+
+## Performance Comparison
+
+<Table
+  data={{
+    headers: [
+      { content: "Model configuration", key: "model" },
+      { content: "MAE (mmHg)", key: "mae", sortable: true }
+    ],
+    rows: [
+      ["General CNN-LSTM only", "9.9805"],
+      ["+ Wide CNN-LSTM added", "9.4603"],
+      ["Full 3-Branch (final)", "8.9248 ↓ 12% better"]
+    ]
+  }}
+/>
+
+The improvement was largest when the time-domain branch was added.
+It means blood-pressure-related information that the waveform shape alone misses is contained in the time domain.
+
+## Lesson & Learned
+
+"Understanding the data comes before model architecture." I think this was the first project where I properly felt how true that is.
+I came up with the branch structure only by taking the PPG signal apart myself.
+
+I worked at the institute for just two months, but I gained experience building a model that takes time-series data as input,
+and to leave something behind from what I learned, I wrote a short paper and presented it at an academic conference.

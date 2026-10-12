@@ -40,7 +40,7 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         from: "Portfolio <onboarding@resend.dev>",
-        to: ["doge@kbfg.com"],
+        to: ["qold0blop@gmail.com"],
         subject: `[포트폴리오] ${typeLabel[visitorType] ?? "방문자"} 메시지`,
         text: `방문자 유형: ${typeLabel[visitorType] ?? visitorType}
 관심 분야: ${interest || "-"}

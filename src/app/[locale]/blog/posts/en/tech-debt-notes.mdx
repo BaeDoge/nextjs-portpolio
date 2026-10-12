@@ -1,65 +1,47 @@
 ---
-title: "Still Looking for a Good Way to Record Tech Debt"
+title: "How I Record Technical Debt"
 publishedAt: "2025-11-20"
-summary: "Nobody reads TODO comments, so I tried other approaches."
+summary: "How I found the limits of TODO comments and improved the way I record technical debt."
 tag: "Career"
 ---
 
-## The limits of TODO comments
+Today I'll write up how I improved the way I record technical debt.
+
+## Problem
 
 ```python
 # TODO: add caching later
-# FIXME: this logic is a stopgap
+# FIXME: temporary workaround
 ```
 
-I left plenty of these. Months later, grep returned over thirty
-and I couldn't recall the context for most.
+I left many comments like these, but when I looked back later, no background was left, so it was hard to tell whether they still needed to be handled.
 
-`git blame` gives you the *when*, never the *why it was temporary*.
+## Attempt 1: Convert them to issues
 
-## Attempt 1 — convert to issues
+I converted everything into GitHub issues, but without priorities they were pushed aside by new feature work and never handled.
 
-I migrated them all to GitHub issues.
-Result: issues piled up and nothing got done.
-
-Without priority they always lose to new features. Predictable in hindsight.
-
-## Attempt 2 — put the context in the comment
-
-I fixed a format.
+## Attempt 2: Add context to the comment
 
 ```python
-# [debt] 2025-11-20 / Seung Ho Bae
-# Situation: went with a synchronous call due to the deadline
-# Problem: timeout risk as request volume grows. Fine at today's 300/day
-# Trigger: switch to a queue once we pass 1000/day
+# [Debt] 2025-11-20 / Seung Ho Bae
+# Situation: handled with a synchronous call because of the schedule
+# Impact: may time out as requests increase. Currently about 300 per day
+# Condition: switch to a queue structure above 1,000 per day
 ```
 
-**The "trigger" line was the key part.**
-Not "later" but "when this number is hit" —
-the decision criterion now lives in the code.
+By stating the condition for handling it, I could leave the basis for the decision in the code.
 
-## Attempt 3 — a debt list as a document
-
-A `DEBT.md` at the repo root, reviewed periodically.
+## Attempt 3: Manage it in a separate document
 
 ```markdown
-| Item | Trigger | Impact | Recorded |
+| Item | Condition | Impact | Recorded |
 |---|---|---|---|
-| Synchronous file processing | Over 1000/day | Timeouts | 2025-11-20 |
-| Hardcoded categories | New category requested | Requires deploy | 2025-10-02 |
+| Synchronous file processing | Above 1,000/day | Timeout | 2025-11-20 |
+| Hardcoded categories | When a new category is requested | Needs a deploy | 2025-10-02 |
 ```
 
-I review this table once a quarter.
-Only items whose trigger has fired become candidates.
+I review it every quarter and pick items whose conditions have been met as the first to handle.
 
-## Current state
+## Conclusion
 
-Not perfect. I keep forgetting to update the table.
-But since the "when should this be addressed" is written down,
-I at least stopped losing time to "why is this like this?"
-
-## Thought
-
-I've come around to the idea that tech debt isn't eliminated, it's managed.
-What matters isn't paying it down, it's **knowing when it comes due**.
+I concluded that it is more realistic to treat technical debt as something to manage than something to eliminate completely. Stating the condition for handling it was effective in leaving a basis for decisions.

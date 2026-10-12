@@ -1,5 +1,6 @@
 import { About, Blog, Gallery, Home, Newsletter, Person, Social, Work } from "@/types";
 import { Line, Row, Text } from "@once-ui-system/core";
+import { CONTACT_EMAIL } from "./contact";
 
 const person: Person = {
   firstName: "Seung Ho",
@@ -8,21 +9,20 @@ const person: Person = {
   role: "AI Platform Engineer",
   avatar: "/images/avatar.jpg",
   avatar_wide: "/images/avatar_wide.jpg",
-  email: "j04sh926@gmail.com",
+  email: CONTACT_EMAIL,
   location: "Asia/Seoul", // Expecting the IANA time zone identifier, e.g., 'Europe/Vienna'
   languages: ["English", "Korean"], // optional: Leave the array empty if you don't want to display languages
 };
 
+// 구독 폼은 블로그 하단의 BlogFooterWidget(Supabase 저장)을 사용합니다.
+// 아래 항목은 Mailchimp 컴포넌트용 설정이며 사용하지 않아 비활성화했습니다.
 const newsletter: Newsletter = {
-  display: true,
-  title: <>Subscribe to {person.firstName}'s Newsletter</>,
-  description: <>My weekly newsletter about creativity and engineering</>,
+  display: false,
+  title: <>새 글 알림</>,
+  description: <>새 기술 글이 올라오면 이메일로 알려드립니다.</>,
 };
 
 const social: Social = [
-  // Links are automatically displayed.
-  // Import new icons in /once-ui/icons.ts
-  // Set essentials: true for links you want to show on the about page
   {
     name: "GitHub",
     icon: "github",
@@ -71,8 +71,6 @@ const home: Home = {
   },
   subline: (
     <>
-    {/* <Text as="span" size="xl" weight="strong">가득찬 호기심</Text>으로 새로운 결과를 만들어내는<br /><Text as="span" size="xl" weight="strong">이 개발자</Text>를 만나보세요.<br /><br />👇 */}
- 
 </>
   ),
 };
@@ -91,7 +89,7 @@ const about: About = {
   },
   calendar: {
     display: true,
-    link: "mailto:doge@kbfg.com?subject=포트폴리오 보고 연락드립니다.&body=내용",
+    link: `mailto:${CONTACT_EMAIL}?subject=포트폴리오 보고 연락드립니다.`,
   },
   intro: {
     display: true,
@@ -99,8 +97,6 @@ const about: About = {
     description: (
 
       <>
-        {/* <b>AI Platform Engineer입니다.</b>
-        <br /><br /> */}
         KB국민은행에서 Python, Kubernetes, AWS를 활용해<br/>
         대고객 AI 서비스를 설계하고 운영하고 있습니다.<br/><br/>
         ML 기반 챗봇을 생성형 AI·RAG 아키텍처로 고도화하는 작업을<br/>
@@ -116,41 +112,6 @@ const about: About = {
           I focus on shipping systems that actually work in production.
         </span>
       </>
-
-      // <>
-      //   {/* ── 한국어 ── */}
-      //   <strong>도전을 두려워하지 않는 AI Platform Engineer입니다.</strong>
-      //   <br /><br />
-      //   대학 시절 공모전 30회 이상 도전해 10회 이상 수상하고,
-      //   ETRI·Qisens AI 인턴을 마치고, MCL 연구실에서 논문 5편을 발표했습니다.
-      //   졸업 후에는 KB국민은행에서 수백만 고객이 이용하는 AI 서비스를
-      //   Python · Kubernetes · AWS로 설계·개발·운영하고 있습니다.
-      //   <br /><br />
-      //   <em>"정확한 것보다 유의미한 것을 배포한다"</em>
-      //   <br /><br />
-
-      //   {/* ── 구분선 ── */}
-      //   <span style={{ display: "block", borderTop: "0.5px solid var(--neutral-alpha-weak)", margin: "1rem 0", opacity: 0.4 }} />
-
-      //   {/* ── English ── */}
-      //   <span style={{ fontSize: "0.92em", color: "var(--neutral-on-background-weak)" }}>
-      //     <strong>AI Platform Engineer who never stops challenging.</strong>
-      //     <br /><br />
-      //     During university, I entered 30+ competitions and won 10+, completed
-      //     internships at ETRI and Qisens AI, and published 5 research papers.
-      //     Now at KB Kookmin Bank, I design and operate AI services used by
-      //     millions — with Python, Kubernetes, and AWS.
-      //     <br /><br />
-      //     <em>"Ship what is meaningful, not just what is accurate."</em>
-      //   </span>
-      // {/* AI Platform Engineer with 3+ years at KB Kookmin Bank, building
-      // production AI services used by millions. I work across the full
-      // stack — from training ML models and designing Python backends to
-      // deploying containerized services on Kubernetes and AWS.
-      // <br /><br />
-      // Before industry, I won 11 AI & software competitions.
-      // I believe the best engineers don't just
-      // write code — they ship systems that earn trust. */}
     ),
   },
   work: {
@@ -201,7 +162,6 @@ const about: About = {
           </>,
         ],
         images: [
-          // optional: leave the array empty if you don't want to display images
           {
             src: "/news/genai.png",
             alt: "고객용 챗봇 생성형 AI 현대화",
@@ -209,7 +169,7 @@ const about: About = {
             height: 10,
           },
           {
-            src: "/news/ai-lms.png",
+            src: "/news/ai-lms.jpg",
             alt: "AI학습관리시스템 개발",
             width: 4,
             height: 10,
@@ -231,11 +191,6 @@ const about: About = {
             PPG·ECG 생체신호 기반 혈압 추정 딥러닝 모델 개발.<br />
             Multi Camera Calibration · Multi Person Skeleton Detection 연구.
           </>,
-          // <>
-          //   Developed a <strong>deep learning-based blood pressure estimation model</strong>
-          //   using PPG signal shape and time-domain attributes.
-          //   Published as a paper in Korean Communications Society journal.
-          // </>,
         ],
         images: [],
       },
@@ -248,15 +203,6 @@ const about: About = {
             항공 영상 객체 Segmentation 모델 개발 및 최적화.<br />
             그림자 제거 GAN 모델 적용으로 영상 전처리 성능 개선.
           </>,
-
-          // <>
-          //   Developed <strong>Semantic & Instance Segmentation models</strong> for aerial imagery
-          //   — ship detection with bounding-box-to-coordinate projection using QGIS/GDAL.
-          // </>,
-          // <>
-          //   Built full pipeline: data collection → labeling → model training → optimization
-          //   for satellite/aerial image analysis.
-          // </>,
         ],
         images: [],
       },
@@ -274,11 +220,6 @@ const about: About = {
             전체 GPA 4.2 / 4.5<br />
             전액장학금 (Full-ride scholarship)<br />
             MCL 학부연구원 · 한국통신학회·대한임베디드공학회 논문 5편 기여<br /><br />
-            {/* <span style={{ fontSize: "0.9em", color: "var(--neutral-on-background-weak)" }}>
-              B.S. in Information &amp; Communication Engineering. Top-ranked GPA with full scholarship.
-              Undergraduate researcher at MCL. 5 academic papers.
-            </span>
-             */}
           </>
         ),
       },
@@ -323,7 +264,7 @@ const about: About = {
   },
   awards: {
     display: true,
-    title: "Awards", //TODO description 으로 변경
+    title: "Awards",
     items: [
       { title: "AI Agent 개발 경진대회", award: "장려상", year: "2024", org: "KB Kookmin Bank" },
       { title: "임베디드 SW 경진대회", award: "대표이사상", year: "2021", org: "교육부" },
@@ -387,8 +328,6 @@ const blog: Blog = {
   label: "Blog",
   title: `Blogs – ${person.name}`,
   description: `Read what ${person.name} has been up to recently`,
-  // Create new blog posts by adding a new .mdx file to app/blog/posts
-  // All posts will be listed on the /blog route
 };
 
 const work: Work = {
@@ -396,8 +335,6 @@ const work: Work = {
   label: "Work",
   title: `Projects – ${person.name}`,
   description: `Design and dev projects by ${person.name}`,
-  // Create new project pages by adding a new .mdx file to app/blog/posts
-  // All projects will be listed on the /home and /work routes
 };
 
 const gallery: Gallery = {
@@ -408,23 +345,19 @@ const gallery: Gallery = {
 
   images: [
     // KB 활동
-    { src: "/projects/kb-ai-challenge/activity-1.png", alt: "KB AI Challenge1", orientation: "horizontal" },
-    { src: "/projects/kb-ai-challenge/activity-2.png", alt: "KB AI Challenge2", orientation: "horizontal" },
-    // { src: "/projects/kb-lms/screenshot.png",           alt: "AI 학습관리 플랫폼", orientation: "horizontal" },
+    { src: "/projects/kb-ai-challenge/activity-1.jpg", alt: "KB AI Challenge1", orientation: "horizontal" },
+    { src: "/projects/kb-ai-challenge/activity-2.jpg", alt: "KB AI Challenge2", orientation: "horizontal" },
     // 공모전
-    { src: "/projects/sk-ai-challenge/sk-challenge.png",   alt: "SK AI Challenge", orientation: "horizontal" },
+    { src: "/projects/sk-ai-challenge/sk-challenge.jpg",   alt: "SK AI Challenge", orientation: "horizontal" },
     { src: "/projects/embedded-sw/activity.jpg",        alt: "임베디드SW 경진대회", orientation: "horizontal" },
     // 연구 / 인턴
-    { src: "/projects/etri-intern/ppg-research.png",    alt: "ETRI PPG 혈압 연구", orientation: "horizontal" },
+    { src: "/projects/etri-intern/ppg-research.jpg",    alt: "ETRI PPG 혈압 연구", orientation: "horizontal" },
     { src: "/projects/etri-intern/activity.jpg",        alt: "ETRI 연구소 인턴십", orientation: "horizontal" },
     { src: "/projects/etri-intern/activity2.jpg",        alt: "ETRI 연구소 인턴십2", orientation: "horizontal" },
     { src: "/projects/dongrami/activity.jpg",        alt: "공모전 발표", orientation: "horizontal" },
     { src: "/projects/adhd-research/activity.jpg",        alt: "학회 발표", orientation: "vertical" },
     // 활동
-    // { src: "/activities/academic-buddy.png",            alt: "Academic Buddy 멘토 활동", orientation: "horizontal" },
-    // { src: "/activities/mentoring.jpg",                 alt: "취업 멘토링", orientation: "vertical" },
     // 스토리
-    // { src: "/story/story-1.png",                        alt: "나의 이야기 1", orientation: "horizontal" },
     { src: "/story/story-2.jpg",                        alt: "대한임베디드공학회 ISET 2021 학회 포스터 발표", orientation: "vertical" },
     { src: "/story/story-3.png",                        alt: "임베디드 시스템 프로젝트 발표 (초음파 센서 기반 칫솔 사용 감지)", orientation: "horizontal" },
     { src: "/story/prj2.jpg",                        alt: "지하철 혼잡도 예측 프로젝트 발표", orientation: "horizontal" },

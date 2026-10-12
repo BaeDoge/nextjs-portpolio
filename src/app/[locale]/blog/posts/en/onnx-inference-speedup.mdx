@@ -1,55 +1,25 @@
 ---
-title: "Chasing Inference Latency All the Way to ONNX"
+title: "Speeding Up Inference with ONNX Conversion"
 publishedAt: "2025-11-06"
-summary: "How I halved response time without changing the model."
+summary: "How I reduced embedding model inference latency with ONNX conversion and quantization."
 tag: "AI/ML"
 ---
 
+Today I'll write up how I improved the inference speed of an embedding model.
+
 ## Situation
 
-Embedding inference took about 180ms per request,
-a large share of total latency in our RAG pipeline.
+Inference took about 180ms per request, which made up a large share of the RAG pipeline's total latency. I ruled out swapping the model because of concerns about quality loss.
 
-I wanted to avoid switching to a smaller model for quality reasons.
-
-## 1. Measure first
-
-Break down where the time goes.
+## Improvement 1: Batch processing
 
 ```python
-import time
-
-t0 = time.perf_counter()
-tokens = tokenizer(text)
-t1 = time.perf_counter()
-output = model(**tokens)
-t2 = time.perf_counter()
-
-print(f"tokenize: {(t1-t0)*1000:.1f}ms, forward: {(t2-t1)*1000:.1f}ms")
+embed_batch(texts, size=32)  # about 2.4 seconds for 100 items
 ```
 
-Tokenise 15ms, inference 165ms. Inference dominated.
+Batching worked well for bulk jobs such as document indexing, but it was hard to apply to real-time queries where most requests arrive one at a time.
 
-## 2. Batching
-
-Throughput jumped when processing several sentences at once.
-
-```python
-# one at a time
-for text in texts:           # 100 items → ~18s
-    embed(text)
-
-# batched
-embed_batch(texts, size=32)  # 100 items → ~2.4s
-```
-
-That alone solved bulk document indexing.
-
-Live queries arrive one at a time, though, so batching didn't help there.
-
-## 3. Convert to ONNX
-
-Export the PyTorch model and run it on ONNX Runtime.
+## Improvement 2: ONNX conversion
 
 ```python
 from optimum.onnxruntime import ORTModelForFeatureExtraction
@@ -61,11 +31,9 @@ model = ORTModelForFeatureExtraction.from_pretrained(
 model.save_pretrained("./onnx-model")
 ```
 
-Single-request inference: 165ms → about 90ms.
+Single-request inference time dropped from 165ms to about 90ms.
 
-## 4. Quantisation
-
-Then int8 quantisation.
+## Improvement 3: Quantization
 
 ```python
 from optimum.onnxruntime import ORTQuantizer
@@ -76,19 +44,8 @@ config = AutoQuantizationConfig.avx512_vnni(is_static=False, per_channel=True)
 quantizer.quantize(save_dir="./onnx-quantized", quantization_config=config)
 ```
 
-About 90ms → about 55ms, and a quarter of the model size.
+After applying int8 quantization, latency dropped to about 55ms and the model size shrank to about a quarter. On the evaluation set I had built beforehand, the drop in Recall@5 was under 1 percentage point.
 
-I validated quality on the evaluation set I'd built earlier.
-Recall@5 dropped by under one percentage point, which I accepted.
+## Conclusion
 
-## Result
-
-180ms → about 70ms including tokenisation.
-
-## Takeaway
-
-There's usually **more to extract from the runtime than you'd expect**
-before changing models.
-
-More importantly, having built the evaluation set beforehand was decisive.
-Without a way to quantify the quality loss, I'd never have shipped the quantised version.
+In the end, latency improved from 180ms to about 70ms including tokenization. Optimizing the runtime alone, without replacing the model, produced a meaningful improvement, and the evaluation set I had built beforehand played an important role in verifying quality.

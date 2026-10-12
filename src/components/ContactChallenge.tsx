@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLocale } from "next-intl";
 import { createClient } from "@supabase/supabase-js";
+import { CONTACT_EMAIL } from "@/resources/contact";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -174,8 +175,8 @@ export default function ContactChallenge() {
           <p style={{ fontSize: 13, color: "var(--neutral-on-background-weak)", lineHeight: 1.7 }}>
             {isEn ? "Got your message." : "메시지 잘 받았어요."}<br />
             {isEn
-              ? (email ? "I\u2019ll make sure to reply by email :)" : "Feel free to reach me at doge@kbfg.com anytime.")
-              : (email ? "이메일로 꼭 답장 드릴게요 :)" : "언제든지 doge@kbfg.com 으로도 연락 주세요.")}
+              ? (email ? "I\u2019ll make sure to reply by email :)" : `Feel free to reach me at ${CONTACT_EMAIL} anytime.`)
+              : (email ? "이메일로 꼭 답장 드릴게요 :)" : `언제든지 ${CONTACT_EMAIL} 으로도 연락 주세요.`)}
           </p>
         </div>
       )}

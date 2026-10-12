@@ -1,57 +1,32 @@
 ---
-title: "I Decided Not to Monitor Everything"
+title: "Minimizing My Monitoring Dashboards"
 publishedAt: "2025-10-10"
-summary: "I built twenty dashboards and nobody looked at them. Now there are three."
+summary: "A case of cutting down a large set of dashboards based on how often they were actually used."
 tag: "Cloud & Infra"
 ---
 
-## It started with enthusiasm
+Today I'll write up how I cleaned up my monitoring dashboards.
 
-Determined to do observability properly, I built a lot of dashboards.
-CPU, memory, network, disk IO, GC, connection pools...
+## Situation
 
-A month later, during an actual incident, I opened exactly one of them.
+I had set up more than 20 dashboards covering CPU, memory, network, disk I/O, and more, but during real incidents I only looked at one of them.
 
-## What I actually use
+## Metrics I actually used
 
-**1. Error rate**
+**1. Error rate**: number of 5xx responses / total requests
 
-```
-5xx responses / total requests
-```
+**2. p95 latency**: averages don't reflect the delays some users experience, so I switched to p95 and p99.
 
-The first thing I check. If this is healthy, things are usually healthy.
+**3. Throughput**: I look at the change from normal rather than the absolute value.
 
-**2. p95 latency**
+## Metrics I dropped
 
-Averages were useless.
-A 200ms average hides the users experiencing five seconds.
+I dropped the CPU and memory graphs. When those metrics had a problem, it almost always showed up in the three metrics above first.
 
-p95 and p99 immediately expose "some requests are slow."
+## Changing the alert criteria
 
-**3. Throughput**
+I redefined alerts, which came in dozens per day, around "does this need immediate action?" Items that don't need action moved to a dashboard instead of an alert. After applying this, alerts dropped to one or two a day.
 
-If request count suddenly hits zero or ten times normal, something is wrong.
-I watch **change relative to baseline**, not the absolute number.
+## Conclusion
 
-## What I deleted
-
-CPU and memory graphs. That may sound odd, but
-if either is the real problem it shows up in the three above first.
-
-80% CPU with fast responses isn't a problem.
-30% CPU with slow responses isn't a CPU problem.
-
-## I cut alerts too
-
-We once had dozens of alerts a day. Nobody reads those. I didn't either.
-
-I changed the bar to: **"if this fires, must I do something right now?"**
-
-If not, it belongs on a dashboard, not in an alert.
-That filter took us to one or two alerts a day — and I started reading them again.
-
-## Now
-
-I'll add more when I actually need it.
-The dashboards I built preemptively were never the ones I remembered in a crisis.
+Rather than setting up every metric in advance, it was more efficient to first define the metrics I actually check and add more as needed.

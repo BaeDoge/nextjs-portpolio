@@ -1,37 +1,25 @@
 ---
-title: "Where Our LLM API Spend Was Actually Leaking"
+title: "Cutting LLM API Costs"
 publishedAt: "2026-03-03"
-summary: "The monthly bill was triple what I expected. Half of it was tokens we never needed to send."
+summary: "How I analyzed why LLM API costs came in higher than expected and reduced them."
 tag: "GenAI"
 ---
 
-## Discovery
+Today I'll write up how I reduced LLM API costs.
 
-An internal tool's LLM API bill came in far higher than expected.
-Call volume matched projections; token count didn't.
+## Situation
 
-## 1. The system prompt ships every single time
+The LLM API cost of an internal tool came in higher than expected. The number of calls was within the expected range, but token usage was high.
 
-Obvious in hindsight, easy to overlook.
-A 1,500-token system prompt across 10,000 calls is 15 million tokens —
-sent **regardless of conversation content**.
+## Causes and fixes
 
-Rereading the prompt, I found lines like:
+**1. A bloated system prompt**
 
-```
-You are a very kind, professional and accurate assistant.
-You must answer the user's questions sincerely and...
-```
+The system prompt was about 1,500 tokens and was included in every call. I removed unnecessary wording and cut it to 400 tokens, with no noticeable difference in output quality.
 
-None of that measurably affected output quality. I deleted it.
-1,500 → 400 tokens, with no perceptible difference.
+**2. Sending the entire conversation history**
 
-## 2. We sent the entire conversation history
-
-Multi-turn conversations passed the full history every time,
-so tokens grew linearly with turn count.
-
-Now we keep only the last N turns.
+In multi-turn conversations, the entire history was sent every time. I changed it to keep only the most recent N turns.
 
 ```python
 MAX_TURNS = 6
@@ -42,21 +30,13 @@ def trim(messages: list[dict]) -> list[dict]:
     return system + rest[-MAX_TURNS * 2:]
 ```
 
-You can also summarise older turns into a single message, but recent turns
-were sufficient for our use case.
+**3. Too much RAG context**
 
-## 3. Too much RAG context
+I was including the top 10 chunks as context, but only two or three were actually cited. I set `match_count=4` and raised the similarity threshold.
 
-We passed the top 10 chunks via `match_count=10`.
-Logs showed answers typically cited only 2–3 of them.
+**4. One model for everything**
 
-I dropped to `match_count=4` and raised the similarity threshold.
-Answer quality actually improved — irrelevant chunks confuse the model.
-
-## 4. Route by model size
-
-Every request hit the largest model.
-Classification and short summarisation ran fine on a smaller one.
+The same large model was used for every request. I switched tasks like classification and short summaries to a lightweight model.
 
 ```python
 def pick_model(task: str) -> str:
@@ -67,12 +47,8 @@ def pick_model(task: str) -> str:
 
 ## Result
 
-Monthly spend dropped roughly 60%.
-Items 1 and 3 delivered most of the savings.
+The monthly cost dropped by about 60%. Shrinking the system prompt and adjusting the context had the biggest effect.
 
-## Lesson
+## Conclusion
 
-Cost problems are rarely "too many calls" — they're usually
-**too much sent per call**.
-Log token usage per request and the heavy paths become obvious.
-I hadn't, which is why it took me so long.
+The cause of a cost problem was often tokens per call rather than the number of calls. Logging token usage per call helps find the cause.

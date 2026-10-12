@@ -1,0 +1,67 @@
+---
+title: "AI Virtual Agent PoC"
+publishedAt: "2024-06-01"
+summary: "A proof of concept for a cost-efficient AI avatar system connecting Unreal Engine, Nvidia Audio2Face, and a mobile web app"
+images:
+  - "/projects/poc/main.jpg"
+tag: "AI · 3D"
+---
+
+<Feedback
+  icon
+  variant="success"
+  title="One-line summary"
+  description="A PoC for an avatar chatbot built on a photorealistic Metahuman character"
+/>
+
+
+## Background
+
+The AI Financial Assistant service delivered financial services through a photorealistic avatar,
+but it was limited to a small set of gestures because it relied on pre-recorded video.
+
+This project was a PoC of a system that lets customers interact and talk in real time,
+built on high-quality photorealistic Metahuman assets from a game engine.
+
+The real-person model required renewing the portrait rights contract every year,
+so the goal was to verify whether a photorealistic avatar chatbot could be built on a high-quality avatar that is free to use.
+
+## System Architecture
+
+```text
+User voice → STT → LLM answer generation → TTS
+↓
+Nvidia Audio2Face (facial synthesis) ← voice signal
+↓
+Unreal Engine 3D rendering
+↓
+Pixel Streaming → mobile web app
+```
+
+With Pixel Streaming, the Unreal Engine render is streamed
+through a mobile webview with no separate app installation.
+It looks like an app to the user, but it is actually rendered on the server.
+
+## What I Actually Built
+
+- Set up the Unreal Engine + Pixel Streaming pipeline
+- Integrated the Nvidia Audio2Face facial synthesis module
+- Connected the STT/TTS and answer generation pipeline
+- Built a mobile web app frontend (demo) and connected the streaming
+
+## Tech Stack
+
+`Unreal Engine` `Nvidia Audio2Face` `Pixel Streaming` `Python` `Web RTC`
+
+## PoC Results
+
+I confirmed that the approach is technically feasible.
+However, our department had no pool of Unreal developers who could build the motion and lip-syncing, so it was wrapped up as a PoC.
+
+Rendering server cost and streaming latency were also identified as issues, and flexible server scaling for multiple users looked necessary.
+
+## Lesson & Learned
+
+I got to work with Unreal Engine and 3D models, which I had not handled before, and to build a pipeline that streams video pixel by pixel.
+
+I also think it helped me build the ability to approach a problem from different angles when one comes up.

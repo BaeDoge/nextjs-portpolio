@@ -1,0 +1,125 @@
+---
+title: "Deep Learning Toothbrushing Habit Analysis System"
+publishedAt: "2021-11-01"
+summary: "A four-person team project. Analyzes brushing direction and missed areas in real time with an embedded board and an LSTM. Won the Arcdata CEO Award from the Ministry of Trade, Industry and Energy."
+images:
+  - "/projects/embedded-sw/activity.jpg"
+  - "/projects/embedded-sw/movie.mp4"
+tag: "Computer Vision"
+---
+
+<Feedback
+  icon
+  variant="success"
+  title="One-line summary"
+  description="A four-person embedded project that collects a user's brushing pattern with vision and visualizes the analysis results"
+/>
+
+## Project Overview
+
+This is the "Brushing Basics" project, which started from the idea:
+what if we could analyze brushing habits with a single camera, without an expensive smart toothbrush?
+
+The system collects video of the brushing hand with a Raspberry Pi camera on an embedded board,
+analyzes the brush direction and missed areas with an LSTM deep learning model, and shows the result on the web.
+I built it with four colleagues from my lab, and because we divided the roles well from the start, we collaborated smoothly.
+
+## Team Roles
+
+<Table
+  data={{
+    headers: [
+      { content: "Role", key: "role" },
+      { content: "Owner", key: "person" }
+    ],
+    rows: [
+      ["Deep learning model development + TCP communication", "Seung Ho Bae (me)"],
+      ["Embedded board implementation", "Teammate A"],
+      ["Web service + visualization", "Teammate B"],
+      ["Data collection and analysis", "Teammate C"]
+    ]
+  }}
+/>
+
+## System Flow
+
+```text
+Raspberry Pi (camera)
+    ↓ TCP socket
+Python server (MediaPipe preprocessing + LSTM inference)
+    ↓
+GCP cloud
+    ↓
+Web dashboard (brushing score + visualization of missed areas)
+```
+
+<Feedback
+  icon
+  variant="info"
+  title="Why send it to a server"
+  description="It was hard to run OpenCV and a deep learning model together on a Raspberry Pi edge device. We solved it by capturing video on the board and running inference on the server."
+/>
+
+
+## Deep Learning Model
+
+I extract a total of **36 landmark coordinates** from MediaPipe: 21 for the hand and 15 for the face.
+I also collect the Euclidean distance between the current frame and the previous frame.
+This is so the model learns the user's movement pattern rather than absolute positions in the video.
+
+```python
+# Feed 60 frames (about 1 second) of sequential data into the LSTM
+model = Sequential([
+    LSTM(64, return_sequences=False, input_shape=(60, 36*3)),
+    Dense(32, activation='relu'),
+    Dropout(0.3),
+    # + Hidden Layers
+    Dense(4, activation='softmax')  # 4 brushing-direction classes
+])
+```
+
+I trained and fine-tuned on varied conditions (brightness, distance, face direction), including left-handed and right-handed users.
+
+![proposal](/projects/embedded-sw/proposal.jpg)
+
+
+## Tech Stack
+
+<Table
+  data={{
+    headers: [
+      { content: "Area", key: "area" },
+      { content: "Technology", key: "tech" }
+    ],
+    rows: [
+      ["AI model", "TensorFlow / LSTM / MediaPipe"],
+      ["Embedded", "Raspberry Pi / Sensor Engineering"],
+      ["Communication", "TCP Socket (Python)"],
+      ["Infrastructure", "GCP / Bootstrap"]
+    ]
+  }}
+/>
+
+## Awards
+
+<Grid fillWidth columns="2" gap="12" marginTop="8" marginBottom="16">
+  <Column border="neutral-alpha-medium" padding="16" radius="m" gap="4">
+    <Text variant="label-strong-s">🏆 Arcdata CEO Award</Text>
+    <Text variant="body-default-s" onBackground="neutral-weak">19th Embedded SW Contest, hosted by the Ministry of Trade, Industry and Energy</Text>
+  </Column>
+  <Column border="neutral-alpha-medium" padding="16" radius="m" gap="4">
+    <Text variant="label-strong-s">🏆 Outstanding Paper Presentation Award</Text>
+    <Text variant="body-default-s" onBackground="neutral-weak">Korean Institute of Embedded Engineering fall conference</Text>
+  </Column>
+</Grid>
+
+![pt](/story/story-3.png)
+
+## Lesson & Learned
+
+Because we were colleagues from the same lab, we spent three months working through problems together,
+and each person studied their own part and shared what they learned, which let us plan the project solidly.
+
+It was also a project where I strongly felt the value of soft skills: the larger the project, the more it matters to collaborate and complement each other rather than work alone.
+
+![news](/projects/embedded-sw/news.png)

@@ -1,0 +1,99 @@
+---
+title: "Aerial Image Semantic Segmentation Model"
+publishedAt: "2022-06-01"
+summary: "Qisens AI internship. Raised accuracy from 72% to 97% using scribble-based weakly-supervised learning, shadow removal, and data augmentation."
+images:
+  - "/projects/qisens/main.jpg"
+  - "/projects/qisens/activity.jpg"
+tag: "Computer Vision"
+---
+
+<Feedback
+  icon
+  variant="success"
+  title="One-line summary"
+  description="Developing and improving a semantic segmentation model for aerial images"
+/>
+
+
+## Qisens AI
+
+This is a project from a six-month internship at an AI startup in computer vision.
+
+Qisens was founded by the team that placed 3rd in the world (1st in Korea) in the object detection category of the 2017 ILSVRC image recognition competition, and the company has delivered AI solutions to the Korea Expressway Corporation and Japan's NEC.
+
+From March to June 2022 I joined the AI model development team and worked on satellite and aerial image analysis and model improvement.
+
+## Task
+
+Develop and optimize a semantic segmentation model that separates roads, parking lots, and background in aerial photos taken by UAVs (drones).
+
+## Problems
+
+Aerial imagery had difficulties that differ from ordinary classification models.
+
+**Problem 1: Labeling cost**
+
+Pixel-level labeling is accurate, but for irregularly shaped objects like roads and parking lots, drawing every boundary took far too long.
+
+Solution: I introduced **scribble-based weakly-supervised segmentation**. Labeling that is no more than rough lines reaches performance close to pixel-level labels.
+
+[Paper (ScribbleSup)](https://arxiv.org/abs/1604.05144)
+
+**Problem 2: Shadows**
+
+In aerial photos the shadow direction changes with the time of day. The same road with a shadow on it was misclassified as background, and the model's mIoU score came out low.
+
+Solution: I added images with shadows removed by a **Ghost-free Shadow Removal model**, used as preprocessing, to the training data.
+
+[Paper (Ghost-free Shadow Removal)](https://arxiv.org/abs/1911.08718)
+[Paper (Stacked Conditional GAN Shadow Removal)](https://arxiv.org/abs/1712.02478)
+
+![Paper Review](/projects/qisens/paper1.jpg)
+
+**Problem 3: Not enough data**
+
+The 360 images I collected from Google Earth were not enough.
+
+Solution: I used the Imgaug library for augmentation such as brightness and contrast adjustment and horizontal and vertical flips, expanding the set to **3,000 images**.
+
+## Results of the Optimizations
+
+<Column fillWidth gap="4" marginTop="16">
+  <Row fillWidth padding="12" background="neutral-alpha-weak" radius="m-top">
+    <Column flex={2}><Text weight="bold">Optimization applied</Text></Column>
+    <Column flex={1}><Text weight="bold">Accuracy</Text></Column>
+    <Column flex={1}><Text weight="bold">mIoU</Text></Column>
+  </Row>
+  <Row fillWidth padding="12" borderBottom="neutral-alpha-weak">
+    <Column flex={2}><Text>Baseline model (Default)</Text></Column>
+    <Column flex={1}><Text>72.59%</Text></Column>
+    <Column flex={1}><Text>61.11%</Text></Column>
+  </Row>
+  <Row fillWidth padding="12" borderBottom="neutral-alpha-weak">
+    <Column flex={2}><Text>+ Hyperparameter optimization (W&B Sweep)</Text></Column>
+    <Column flex={1}><Text>77.90%</Text></Column>
+    <Column flex={1}><Text>68.76%</Text></Column>
+  </Row>
+  <Row fillWidth padding="12" borderBottom="neutral-alpha-weak">
+    <Column flex={2}><Text>+ Data augmentation</Text></Column>
+    <Column flex={1}><Text>91.28%</Text></Column>
+    <Column flex={1}><Text>91.18%</Text></Column>
+  </Row>
+  <Row fillWidth padding="12" borderBottom="neutral-alpha-weak">
+    <Column flex={2}><Text>+ Shadow removal</Text></Column>
+    <Column flex={1}><Text>98.41%</Text></Column>
+    <Column flex={1}><Text>94.72%</Text></Column>
+  </Row>
+  <Row fillWidth padding="12" radius="m-bottom">
+    <Column flex={2}><Text>+ DenseCRF post-processing (final)</Text></Column>
+    <Column flex={1}><Text>97.80%</Text></Column>
+    <Column flex={1}><Text>93.16%</Text></Column>
+  </Row>
+</Column>
+
+Data augmentation gave the largest single improvement. Increasing quality data was far more effective than changing the model architecture.
+
+## Lesson & Learned
+
+A single shadow-removal preprocessing step brought a bigger gain than any change to a complex model architecture. This project taught me properly that understanding the data comes first.

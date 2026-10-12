@@ -23,31 +23,25 @@ import React from "react";
 import BadgeGrid from "@/components/BadgeGrid";
 
 import PublicationList from "@/components/PublicationList";
-// const AWARD_IMAGES: Record<string, string> = {
-//   "KB국민은행 AI Challenge": "/awards/kb-ai-challenge.jpg",
-//   "SK AI Challenge":         "/awards/sk-challenge.jpg",
-//   "제19회 임베디드SW 경진대회": "/awards/embedded-sw.jpg",
-//   "대한임베디드공학회 우수논문발표상": "/awards/best-paper.jpg",
-//   "경북 공공데이터 AI 공모전": "/awards/pohang-technopark.jpg",
-//   "해양경찰 데이터 활용 공모전": "/awards/coast-guard.jpg",
-//   "인공지능 아이디어 공모전": "/awards/ai-idea.jpg",
-//   "영남대 IoT 경진대회": "/awards/iot-competition.jpg",
-//   "AI Speaker 데이터분석 경진대회": "/awards/ai-speaker.jpg",
-// };
-
-
 
 const about = aboutKo;
 const person = personKo;
 
+import { withAlternates } from "@/utils/seo";
+
 export async function generateMetadata() {
-  return Meta.generate({
-    title: about.title,
-    description: about.description,
-    baseURL: baseURL,
-    image: `/api/og/generate?title=${encodeURIComponent(about.title)}`,
-    path: about.path,
-  });
+  const locale = await getLocale();
+  return withAlternates(
+    Meta.generate({
+      title: about.title,
+      description: about.description,
+      baseURL: baseURL,
+      image: `/api/og/generate?title=${encodeURIComponent(about.title)}`,
+      path: about.path,
+    }),
+    about.path,
+    locale,
+  );
 }
 
 export default async function About() {
@@ -391,12 +385,9 @@ export default async function About() {
               </Heading>
               <Column gap="m">
                 {about.awards.items.map((item, i) => {
-                  // const imgSrc = AWARD_IMAGES[item.title];
                   return (
                   <Flex
                     key={i}
-                    // justifyContent="space-between"
-                    // alignItems="center"
                     paddingY="s"
                     borderBottom="neutral-alpha-weak"
                   >
@@ -460,7 +451,6 @@ export default async function About() {
                 { area: isEn ? "Backend" : "백엔드", items: ["Flask", "FastAPI", "REST API", "MySQL"] },
                 { area: isEn ? "Infrastructure" : "인프라", items: ["Kubernetes", "AWS (EKS/EC2/S3/Lambda)", "Docker", "Jenkins"] },
                 { area: isEn ? "Frontend" : "프론트", items: ["Bootstrap", "HTMX","Next.js","Tailwind CSS"] },
-                // { area: "자격증", items: ["PCCP LV3", "PCCE Master", "ADsP"] },
               ].map((row) => (
                 <Flex key={row.area} gap="m" paddingY="s"
                   borderBottom="neutral-alpha-weak">
@@ -550,46 +540,3 @@ export default async function About() {
     </Column>
   );
 }
-
-// const awards = [
-//   // 🏆 기업/기관 주최 (가장 권위 있는 것 위로)
-//   { title: "KB국민은행 AI Challenge", award: "우수상", year: "2021", org: "KB Kookmin Bank" },
-//   { title: "SK AI Challenge for Our Society", award: "우수상", year: "2021", org: "SK Telecom" },
-//   { title: "AI Agent 개발 경진대회", award: "장려상", year: "2024", org: "-" },
-//   { title: "임베디드 SW 경진대회", award: "아크데이타 대표이사상", year: "2021", org: "교육부 / 임베디드공학회" },
-
-//   // 📊 데이터 & AI 공모전
-//   { title: "경상북도 공공데이터 활용 AI 공모전", award: "우수상", year: "2021", org: "경상북도" },
-//   { title: "해양경찰 데이터 활용 아이디어 공모전", award: "우수상", year: "2021", org: "해양경찰청" },
-//   { title: "인공지능 학습용 데이터 활용 아이디어 공모전", award: "입상", year: "2021", org: "NIA" },
-//   { title: "AI Speaker 활용 데이터분석 경진대회", award: "Creativity 상", year: "2021", org: "-" },
-
-//   // 🎓 교내 & 기타
-//   { title: "영남대학교 IoT 경진대회", award: "최우수상", year: "2021", org: "영남대학교" },
-//   { title: "경찰청 인권영화제 공모전 (제9회)", award: "우수상", year: "2021", org: "경찰청" },
-//   { title: "청소년 안전문화 콘텐츠 공모전", award: "우수상", year: "2021", org: "-" },
-// ];
-
-// // 논문 (학술지 먼저, 학술대회 다음)
-// const publications = [
-//   {
-//     title: "PPG의 형태 및 Time-Domain Attributes를 활용한 딥러닝 기반 혈압 추정 연구",
-//     venue: "한국통신학회 (KCA)", year: "2022",
-//   },
-//   {
-//     title: "비접촉 광학식 주행거리계를 이용한 배관 내부 손상 위치 추정",
-//     venue: "한국통신학회 (KCA)", year: "2022",
-//   },
-//   {
-//     title: "딥러닝 기반 양치질 습관 분석 시스템 개발 (우수논문상)",
-//     venue: "대한임베디드공학회 추계학술대회", year: "2021",
-//   },
-//   {
-//     title: "ADHD Prediction using VibraImage Technology",
-//     venue: "대한임베디드공학회", year: "2022",
-//   },
-//   {
-//     title: "세그멘테이션 기반 항공사진 분석 모델의 최적화 연구",
-//     venue: "대한임베디드공학회", year: "2022",
-//   },
-// ];

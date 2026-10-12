@@ -1,39 +1,36 @@
 ---
-title: "A Hydration Error Caused by Date Formatting"
+title: "What Caused a Next.js Hydration Error"
 publishedAt: "2026-02-04"
-summary: "The console kept throwing red. Server and browser were rendering different text."
+summary: "A hydration error caused by a date format mismatch between server and client."
 tag: "Troubleshooting"
 ---
 
-## Symptom
+Today I'll write up a hydration error I hit in Next.js.
+
+## Problem
 
 ```
 Hydration failed because the server rendered HTML didn't match the client.
 ```
 
-The page looked fine; only the console complained.
-It's the kind of error you want to ignore — and ignoring it eventually breaks real rendering.
+The screen displayed normally, but the console repeatedly showed the error above.
 
-## Finding it
+## Finding the cause
 
-The error does tell you which node mismatched.
-Following it led to the date in the post list.
+Following the error message led to the date display in a post list.
 
 ```tsx
 <span>{new Date(post.publishedAt).toLocaleDateString()}</span>
 ```
 
-`toLocaleDateString()` follows the **runtime's locale**.
-The server (Node, UTC/en-US) and the browser (KST/ko-KR) produce different strings.
+`toLocaleDateString()` follows the locale of the environment it runs in. The server (UTC/en-US) and the browser (KST/ko-KR) produced different strings, which caused the HTML mismatch.
 
 - Server: `3/21/2026`
 - Browser: `2026. 3. 21.`
 
-Different HTML, broken hydration.
-
 ## Fix
 
-Pin locale and timezone explicitly.
+I specified the locale and time zone explicitly.
 
 ```tsx
 function formatDate(iso: string) {
@@ -46,21 +43,20 @@ function formatDate(iso: string) {
 }
 ```
 
-Identical output on both sides.
+After this change, I confirmed that the server and the client output the same result.
 
-## The same family of traps
+## Similar patterns
 
-Hydration errors almost always come from values that differ between server and browser.
+Hydration errors mostly happen when the server and client render different results.
 
 ```tsx
-// Risky
 {Math.random()}
 {new Date().toLocaleString()}
 {typeof window !== "undefined" ? "A" : "B"}
 {localStorage.getItem("theme")}
 ```
 
-If a value genuinely must be decided in the browser, set it after mount.
+For values that can only be determined in the browser, I render them after mount.
 
 ```tsx
 const [mounted, setMounted] = useState(false);
@@ -70,10 +66,6 @@ if (!mounted) return null;
 return <ThemeAwareThing />;
 ```
 
-This renders nothing on the first frame, so layout can jump.
-Reserving the height in advance makes it less noticeable.
+## Conclusion
 
-## Summary
-
-Keep asking "do server and client render the same HTML?" and most of these resolve.
-Dates, randomness, and browser-only APIs are the recurring culprits.
+Making sure the server and client generate the same HTML was the key to preventing hydration errors. Dates, random values, and browser-only APIs were the main causes.

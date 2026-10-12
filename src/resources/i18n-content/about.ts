@@ -1,11 +1,5 @@
-// src/resources/content/about.ts
-//
-// About 페이지 포맷. 섹션 제목처럼 짧은 항목은 미리 채워뒀고,
-// 원문 content.tsx에서 JSX/HTML이 섞여 길게 작성된 항목
-// (intro 본문, 경력별 achievements, 수상 목록, 논문 목록)은
-// TODO로 남겨뒀습니다. content.tsx를 보면서 하나씩 옮기면 됩니다.
-//
-// 원본: src/resources/content.tsx 의 `about` 객체
+// About 페이지 텍스트(ko/en). 현재 About 페이지는 content.tsx / content.en.tsx 를 사용하며,
+// 이 파일은 연결되지 않았습니다.
 
 import { Dictionary } from "./types";
 

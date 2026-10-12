@@ -1,64 +1,56 @@
 ---
-title: "I Changed How I Write Review Comments"
+title: "How I Write Code Review Comments"
 publishedAt: "2026-02-13"
-summary: "My comments were technically correct and consistently ignored."
+summary: "The guidelines I settled on after fixing the problem of review comments not getting applied."
 tag: "Career"
 ---
 
-## Trigger
+Today I'll write up how I improved the way I write code review comments.
 
-My review comments weren't getting acted on.
-I assumed it was the other person — until I collected my own comments and reread them.
+## Problem
+
+My review comments often didn't lead to actual changes. Looking back at them, they looked like this:
 
 ```
-This'll probably cause N+1
+I think this will cause N+1
 ```
 
-Not wrong. But from the receiving end, "where? why? what should I do instead?"
-are all missing.
+The issue I pointed out was correct, but it didn't say where the problem was, why it was a problem, or how to fix it.
 
 ## The format I switched to
 
-Three things, always.
+I changed comments to include three things.
 
-**1. Exactly what's wrong**
-
-```
-The user.profile access inside this loop fires a query per iteration.
-With 100 items that's 101 queries.
-```
-
-**2. Why it matters**
+**1. Where the problem is**
 
 ```
-It's invisible now because the list is short, but the admin screen
-allows fetching up to 500 records — it'll fall over there.
+Accessing user.profile inside this loop runs a query on every iteration.
+With 100 items, that's 101 queries.
 ```
 
-**3. What to do (or an honest "I don't know")**
+**2. The possible impact**
 
 ```
-Adding select_related("profile") fetches it in one go.
+The list is short now, so the problem isn't visible,
+but the admin screen can load up to 500 rows, which could cause delays.
 ```
 
-## I added labels
+**3. A direction for the fix**
 
-Not every comment is blocking, so I prefix them.
+```
+Applying select_related("profile") handles it in one query.
+```
 
-- `[must]` fix before merge
-- `[nit]` taste, feel free to ignore
-- `[question]` not criticism, I genuinely don't know
+## Adding labels
 
-Since adopting `[nit]`, the stress around small remarks dropped on both sides.
-The author immediately knows what they can skip.
+I added labels to separate the priority of comments.
 
-`[question]` turned out surprisingly useful too —
-there was context I was missing more often than I expected.
+- `[must]`: must be fixed before merge
+- `[nit]`: optional
+- `[question]`: a question to confirm something
 
-## Still unsolved
+After adding labels, unnecessary arguments over minor remarks decreased.
 
-Communicating "I think this needs restructuring" remains hard.
-Too big for a PR comment, too nagging to let go.
+## Conclusion
 
-These days I go talk to the person instead.
-In writing it just gets long and both sides get defensive.
+Writing the problem, the impact, and a direction for the fix together raised how often comments were applied. For changes that need structural discussion, I talk directly instead of leaving comments.

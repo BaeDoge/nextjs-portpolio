@@ -17,6 +17,7 @@ import {
 import { baseURL, about, blog, person } from "@/resources";
 import { formatDate } from "@/utils/formatDate";
 import { getPosts, getPostsByLocale } from "@/utils/utils";
+import { withAlternates } from "@/utils/seo";
 import { getLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { Metadata } from "next";
@@ -45,18 +46,24 @@ export async function generateMetadata({
     ? routeParams.slug.join("/")
     : routeParams.slug || "";
 
-  const posts = getPosts(["src", "app", "[locale]", "blog", "posts"]);
+  const locale = await getLocale();
+  const posts = getPostsByLocale(["src", "app", "[locale]", "blog", "posts"], locale);
   let post = posts.find((post) => post.slug === slugPath);
 
   if (!post) return {};
 
-  return Meta.generate({
-    title: post.metadata.title,
-    description: post.metadata.summary,
-    baseURL: baseURL,
-    image: post.metadata.image || `/api/og/generate?title=${post.metadata.title}`,
-    path: `${blog.path}/${post.slug}`,
-  });
+  return withAlternates(
+    Meta.generate({
+      title: post.metadata.title,
+      description: post.metadata.summary,
+      baseURL: baseURL,
+      image:
+        post.metadata.image || `/api/og/generate?title=${encodeURIComponent(post.metadata.title)}`,
+      path: `${blog.path}/${post.slug}`,
+    }),
+    `${blog.path}/${post.slug}`,
+    locale,
+  );
 }
 
 export default async function Blog({ params }: { params: Promise<{ slug: string | string[] }> }) {

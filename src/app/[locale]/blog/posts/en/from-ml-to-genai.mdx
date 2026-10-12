@@ -1,0 +1,57 @@
+---
+title: "Moving from an ML Chatbot to an LLM Chatbot"
+publishedAt: "2026-03-15"
+summary: "What I found while moving a rule-based ML chatbot to an LLM and RAG architecture."
+tag: "GenAI"
+---
+
+<Feedback
+  icon
+  variant="success"
+  title="Summary"
+  description="What I found while moving from an ML chatbot to an LLM chatbot"
+/>
+
+## Overview
+
+At KB Kookmin Bank I worked on moving an existing ML-based chatbot to generative AI. The existing chatbot gave rule-based answers driven by an in-house BERT model.
+
+## Characteristics of the Existing ML Chatbot
+
+An ML chatbot only serves pre-built answers, so its responses are highly predictable. The limitation is that expressions not in the training data fall back to a default response, and even a similar intent is classified as a separate intent if it is phrased differently.
+
+Because a wrong answer carries a large risk in financial services, keeping the existing predictability as much as possible was a key criterion during the transition.
+
+<Table
+  data={{
+    headers: [
+      { content: "Item", key: "item" },
+      { content: "ML chatbot", key: "ml" },
+      { content: "LLM chatbot", key: "llm" }
+    ],
+    rows: [
+      ["Response predictability", "High", "Low"],
+      ["Response speed", "Fast (tens of ms)", "Slow (a few seconds)"],
+      ["Operating cost", "Low", "High"],
+      ["Handling unseen queries", "Fails", "Can handle"]
+    ]
+  }}
+/>
+
+## What I Found During the Transition
+
+**Handling hallucinations**
+
+When retrieval similarity is low, I set a threshold so that the LLM answer is not used and the system falls back instead.
+
+**Prompt management**
+
+I wrote the system prompt strictly so that the model answers only within the information retrieved from the knowledge base.
+
+**Response speed**
+
+Instead of generating the full response and returning it at once, I streamed the output, which improved the perceived response speed.
+
+## Conclusion
+
+The LLM transition improved how well the chatbot handles queries it could not process before, but verifying the consistency of its answers became even more important. Currently we run ML and LLM together depending on the situation.

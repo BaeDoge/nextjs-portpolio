@@ -1,0 +1,38 @@
+---
+title: "Estimating Blood Pressure from PPG with a 3-Branch CNN-LSTM"
+publishedAt: "2025-02-01"
+summary: "A case study of the 3-Branch CNN-LSTM blood pressure estimation model I built during my ETRI internship."
+tag: "AI/ML"
+---
+
+Today I'll write up the PPG-based blood pressure estimation model I developed during my internship at ETRI.
+
+## Background
+
+PPG (photoplethysmography) is a signal that can be measured non-invasively with an optical sensor. Unlike conventional cuff-based methods it allows continuous measurement, which is why it is widely used in blood pressure estimation research.
+
+## Data
+
+I used the MIMIC-III dataset (ICU biosignal data from roughly 1,600 patients). For each patient I extracted up to 100 continuous segments of at least 8 seconds and removed the noisy ones, which left 101,087 samples in total.
+
+## Model Architecture
+
+I started with a single LSTM, but a PPG signal carries two different kinds of information, waveform morphology and time-domain features, and a single input made it hard to reflect both equally.
+
+So I changed the design to a 3-Branch structure.
+
+```text
+[PPG signal] → Branch 1 (CNN-LSTM) →┐
+[PPG signal] → Branch 2 (CNN-LSTM) →├→ Dense → SBP
+[TD features] → Branch 3 (DNN)     →┘
+```
+
+Branches 1 and 2 process the waveform morphology with different receptive fields, and Branch 3 handles time-domain features such as pulse interval and rise/fall time.
+
+## Results
+
+The MAE of 9.98 mmHg from the single CNN-LSTM dropped to 8.92 mmHg with the 3-Branch structure, an improvement of about 12%. Adding the Time-Domain branch made the biggest difference.
+
+## Conclusion
+
+Before designing the model architecture, understanding what kinds of information the input signal contains turned out to be the key factor in improving performance. This work was presented as a paper at the Korean Institute of Communications and Information Sciences (KICS).

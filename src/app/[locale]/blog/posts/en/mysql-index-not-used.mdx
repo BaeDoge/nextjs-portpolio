@@ -1,16 +1,17 @@
 ---
-title: "The Index Exists — So Why Isn't It Being Used?"
+title: "Why MySQL Wasn't Using the Index"
 publishedAt: "2026-03-21"
-summary: "EXPLAIN told me the truth: the index was there, but unusable."
+summary: "A case where EXPLAIN showed why a query was slow even though an index existed."
 tag: "Troubleshooting"
 ---
 
-## Symptom
+Today I'll write up a case where an index existed but query performance did not improve.
 
-A query endpoint suddenly took over three seconds.
-The column definitely had an index on it.
+## Situation
 
-## Start with EXPLAIN
+The response time of a lookup API had slowed to over three seconds. The column already had an index.
+
+## Finding the cause
 
 ```sql
 EXPLAIN SELECT * FROM chat_logs
@@ -23,16 +24,11 @@ key: NULL
 rows: 2841203
 ```
 
-`key: NULL`. The index isn't used at all.
+`key` was NULL, so the index was not being used. When a function such as `DATE(created_at)` is applied to an indexed column, MySQL cannot use the index.
 
-## Cause — the column is wrapped in a function
+## Fix
 
-Wrapping an indexed column in a function like `DATE(created_at)` **disables the index**.
-MySQL has to pull `created_at` from every row and run `DATE()` on it.
-
-## The fixed query
-
-Switch to a range condition:
+I changed the condition to a range search.
 
 ```sql
 SELECT * FROM chat_logs
@@ -46,30 +42,18 @@ key: idx_created_at
 rows: 4210
 ```
 
-3s → 40ms.
+The response time improved from three seconds to 40ms.
 
-I use `>= start, < next day` rather than
-`BETWEEN '... 00:00:00' AND '... 23:59:59'` because sub-second values like
-23:59:59.5 fall outside the latter. The range form is safer.
+## Similar patterns
 
-## Easy ways to make the same mistake
+Conditions like these also skip the index.
 
 ```sql
--- No index
 WHERE YEAR(created_at) = 2026
 WHERE CAST(user_id AS CHAR) = '123'
 WHERE user_id + 0 = 123
-
--- Index used
-WHERE created_at >= '2026-01-01' AND created_at < '2027-01-01'
-WHERE user_id = 123
 ```
 
-Passing a number to a string column triggers a silent cast that kills the index too.
-Match the types.
+## Conclusion
 
-## Habit
-
-When something slows down, don't guess — run `EXPLAIN`.
-Checking whether `key` is NULL and whether `rows` is wildly larger than the result set
-catches most cases.
+Applying a function or type conversion to an indexed column invalidates the index. Since then, when a query gets slow, my first step is to check the `key` and `rows` values with `EXPLAIN`.

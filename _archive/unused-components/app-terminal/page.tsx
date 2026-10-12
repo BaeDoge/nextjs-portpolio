@@ -66,7 +66,7 @@ const COMMANDS: Record<string, (args: string[]) => Promise<string> | string> = {
   adhd-prediction/          [2022] ADHD 예측 모델            MCL 연구실
   this-portfolio/           [2025] AI 챗봇 내장 포트폴리오  현재 보고 계신 이 사이트
 
-  [자세히 보려면] → https://portpolio-bae-seungho.vercel.app/work`,
+  [자세히 보려면] → https://nextjs-portpolio.vercel.app/work`,
 
   "ls skills": () => `── AI & Machine Learning ──────────────────────────────────
   LLM, AI Agent, RAG, PyTorch, TensorFlow, Computer Vision
@@ -100,9 +100,9 @@ const COMMANDS: Record<string, (args: string[]) => Promise<string> | string> = {
   Total: 11개 수상 / 30+ 도전`,
 
   "cat contact.txt": () => `── 연락처 ─────────────────────────────────────────────────
-  Email   : doge@kbfg.com
+  Email   : qold0blop@gmail.com
   GitHub  : https://github.com/Bae-SeungHo
-  Portfolio: https://portpolio-bae-seungho.vercel.app
+  Portfolio: https://nextjs-portpolio.vercel.app
 
   ── 협업 가능한 것들 ──
   ✓ 사이드 프로젝트 협업
@@ -144,7 +144,7 @@ const COMMANDS: Record<string, (args: string[]) => Promise<string> | string> = {
   저도 이렇게 끝까지 파고드는 사람을 좋아합니다 :)
 
   채용이나 협업 제안은 언제든지 환영합니다.
-  doge@kbfg.com 으로 연락 주세요.
+  qold0blop@gmail.com 으로 연락 주세요.
 
   "The best way to predict the future is to create it."
   ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀`,

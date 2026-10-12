@@ -1,36 +1,35 @@
 ---
-title: "Cutting a Docker Image From 1.2GB to 180MB"
+title: "Reducing Docker Image Size from 1.2GB to 180MB"
 publishedAt: "2026-03-12"
-summary: "I started because deploys were slow, but understanding *why* it was big helped more."
+summary: "How I reduced a Docker image from 1.2GB to 180MB."
 tag: "Cloud & Infra"
 ---
 
-## Starting point
+Today I'll write up how I optimized the size of a Docker image.
 
-Image build and push alone took six minutes in CI.
-The image was 1.2GB — excessive for a single Python app.
+## Situation
 
-## What was big
+Building and pushing the image in CI took about six minutes. When I checked the image size, it was 1.2GB.
+
+## Finding the cause
 
 ```bash
 docker history my-app:latest --human --format "{{.Size}}\t{{.CreatedBy}}"
 ```
 
-The layer breakdown answered it:
+The size by layer was as follows.
 
-- Base image `python:3.11` — about 900MB
-- `apt-get install` cache — about 150MB
-- Build tools (gcc etc.) — about 100MB
+- Base image `python:3.11`: about 900MB
+- apt cache: about 150MB
+- Build tools (gcc, etc.): about 100MB
 
-## 1. Swap the base image
+## Fix
 
-`python:3.11` → `python:3.11-slim`. That alone took 900MB down to 130MB.
+**1. Change the base image**
 
-I considered `alpine` but don't recommend it for Python.
-musl libc means you often lose prebuilt wheels and end up compiling from source,
-which makes builds *slower*. I tried it and reverted.
+I changed `python:3.11` to `python:3.11-slim`. That change alone took 900MB down to 130MB.
 
-## 2. Clean the apt cache
+**2. Clean the apt cache**
 
 ```dockerfile
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -38,13 +37,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
 ```
 
-Removing it **in the same layer** with `&&` is the point.
-A separate `RUN rm` on the next line leaves the files in the previous layer,
-so the size never drops.
+The cleanup command has to run in the same layer for the size to actually shrink.
 
-## 3. Multi-stage build
-
-Keep compile-only tools out of the final image.
+**3. Use a multi-stage build**
 
 ```dockerfile
 FROM python:3.11-slim AS builder
@@ -61,11 +56,7 @@ WORKDIR /app
 CMD ["gunicorn", "app:app"]
 ```
 
-Final: 180MB. Build + push: 6 min → 1 min 40 s.
-
-## 4. .dockerignore
-
-This matters more for build cache than size.
+**4. Add a .dockerignore**
 
 ```
 .git
@@ -76,10 +67,10 @@ node_modules
 tests/
 ```
 
-Excluding `.git` alone cut context transfer dramatically.
+## Result
 
-## What I took away
+The final image size was 180MB, and build and push time dropped from six minutes to 1 minute 40 seconds.
 
-More than the size reduction, I took away an understanding of **how layers stack**:
-every Dockerfile line is a layer, and a file that entered one layer doesn't disappear
-when a later layer deletes it. Knowing that made every other image easy to fix.
+## Conclusion
+
+Deleting files from an earlier layer does not remove them from the image size. Understanding the layer structure was the key to optimizing the image.

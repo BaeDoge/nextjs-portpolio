@@ -1,9 +1,4 @@
-// src/resources/content/blog.ts
-//
-// Blog 목록 페이지의 타이틀/설명 포맷. 개별 포스트(src/app/blog/posts/*.mdx)는
-// 별도로 .ko.mdx / .en.mdx로 나누는 걸 권장합니다 (아래 README 참고).
-//
-// 원본: src/resources/content.tsx 의 `blog` 객체
+// Blog 목록 페이지의 제목·설명(ko/en). 글 본문은 blog/posts/*.mdx 와 blog/posts/en/*.mdx 에 있습니다.
 
 import { Dictionary } from "./types";
 

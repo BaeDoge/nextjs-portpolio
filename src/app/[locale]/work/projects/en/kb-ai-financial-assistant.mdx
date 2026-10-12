@@ -1,0 +1,70 @@
+---
+title: "KB AI Financial Assistant Service"
+publishedAt: "2024-03-01"
+summary: "A mobile service where a photorealistic AI avatar guides customers through financial tasks."
+images:
+  - "/projects/kb-ai-assistant/main.jpg"
+tag: "Financial AI"
+---
+
+<Feedback
+  icon
+  variant="success"
+  title="One-line summary"
+  description="A customer-facing chatbot service that delivers financial services through a photorealistic avatar"
+/>
+
+
+## About the Service
+
+The AI Financial Assistant is a customer-facing service in which a photorealistic AI avatar talks directly with customers
+and handles financial tasks as well as everyday conversation about weather, hobbies, and more.
+
+It was first unveiled in March 2021 at the AI Experience Zone in the new building of KB Kookmin Bank in Yeouido,
+and it started from about 100 conversation scenarios and kept being improved.
+
+[Newstomato coverage (2022.06)](https://www.newstomato.com/readNewspaper.aspx?no=1126892) |
+[Electronic Times coverage (2024.03)](https://www.etnews.com/20240306000220)
+
+## My Role
+
+- **Cloud operations and optimization**
+
+I was in charge of orchestrating the NLP, Vision, and Hub servers built on AWS.
+
+After running it for the first few months,
+I found that keeping the servers at full capacity around the clock, even at hours with almost no customer traffic, was costing an enormous amount.
+
+I applied Lambda scheduling to automatically scale pods down outside business hours,
+and configured HPA (Horizontal Pod Autoscaler) to scale up automatically when traffic spikes.
+
+For the GPU servers in particular, which cost a lot per hour, I requested a new Savings Plan,
+which cut operating costs well below the existing on-demand instances.
+
+- **DevOps and CI/CD setup**
+
+I built a CI/CD pipeline based on Jira and Jenkins inside the internal network.
+
+For each new release, a ticket was issued through Jira, a new Docker image was built, and it was deployed to EKS with a rolling update.
+There was no downtime during deployment, so version management could be done safely.
+
+- **Training data management and monitoring**
+
+I analyzed the conversation logs of the AI Financial Assistant and managed the appropriate training queries to improve answer quality.
+
+## Tech Stack
+
+`Kubernetes` `AWS EKS` `Lambda` `HPA` `Docker` `CI/CD` `Python`
+
+## Results
+
+At KB Kookmin Bank, I built and operated a photorealistic-avatar financial assistant that had not existed before, as my first project there.
+
+I gave many presentations at corporate AI forums and conferences, and it was especially expected to be a service that middle-aged and older customers could use comfortably.
+
+
+## Lesson & Learned
+
+I learned that AI services built at a company incur far more server cost than you would imagine. (The monthly bill was more than my salary.)
+
+Cost matters, of course, but this project showed me that the most important goal is building a service that improves the customer experience.

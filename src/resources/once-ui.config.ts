@@ -13,8 +13,7 @@ import {
 } from "@/types";
 import { home } from "./index";
 
-// IMPORTANT: Replace with your own domain address - it's used for SEO in meta tags and schema
-const baseURL: string = "https://portpolio-bae-seungho.vercel.app";
+const baseURL: string = "https://nextjs-portpolio.vercel.app";
 
 const routes: RoutesConfig = {
   "/": true,
@@ -46,6 +45,7 @@ const protectedRoutes: ProtectedRoutesConfig = {
 import { Geist } from "next/font/google";
 import { Geist_Mono } from "next/font/google";
 import { IBM_Plex_Sans_KR } from "next/font/google";
+import { CONTACT_EMAIL } from "./contact";
 
 const korean = IBM_Plex_Sans_KR({
   variable: "--font-korean",
@@ -209,10 +209,10 @@ const mailchimp: MailchimpConfig = {
 // default schema data
 const schema: SchemaConfig = {
   logo: "",
-  type: "Organization",
-  name: "KB Kookmin Bank",
+  type: "Person",
+  name: "Seung Ho Bae",
   description: home.description,
-  email: "doge@kbfg.com",
+  email: CONTACT_EMAIL,
 };
 
 // social links

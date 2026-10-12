@@ -1,11 +1,4 @@
-// src/resources/content/work.ts
-//
-// Work(프로젝트) 페이지 포맷. 목록 페이지 자체의 타이틀/설명만 담고,
-// 프로젝트 개별 내용(src/app/work/projects/*.mdx)은 이 포맷 대상이 아닙니다.
-// MDX 프로젝트 글은 나중에 번역하려면 각 .mdx 파일을 .ko.mdx / .en.mdx로
-// 나누는 방식을 권장합니다 (블로그 포스트와 동일한 패턴).
-//
-// 원본: src/resources/content.tsx 의 `work` 객체
+// Work 목록 페이지의 제목·설명(ko/en). 프로젝트 본문은 work/projects/*.mdx 와 work/projects/en/*.mdx 에 있습니다.
 
 import { Dictionary } from "./types";
 

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { getPosts } from "@/utils/utils";
+import { getPosts, getPostsByLocale } from "@/utils/utils";
+import { withAlternates } from "@/utils/seo";
 import {
   Meta,
   Schema,
@@ -44,18 +45,24 @@ export async function generateMetadata({
     ? routeParams.slug.join("/")
     : routeParams.slug || "";
 
-  const posts = getPosts(["src", "app", "[locale]", "work", "projects"]);
+  const locale = await getLocale();
+  const posts = getPostsByLocale(["src", "app", "[locale]", "work", "projects"], locale);
   let post = posts.find((post) => post.slug === slugPath);
 
   if (!post) return {};
 
-  return Meta.generate({
-    title: post.metadata.title,
-    description: post.metadata.summary,
-    baseURL: baseURL,
-    image: post.metadata.image || `/api/og/generate?title=${post.metadata.title}`,
-    path: `${work.path}/${post.slug}`,
-  });
+  return withAlternates(
+    Meta.generate({
+      title: post.metadata.title,
+      description: post.metadata.summary,
+      baseURL: baseURL,
+      image:
+        post.metadata.image || `/api/og/generate?title=${encodeURIComponent(post.metadata.title)}`,
+      path: `${work.path}/${post.slug}`,
+    }),
+    `${work.path}/${post.slug}`,
+    locale,
+  );
 }
 
 export default async function Project({
@@ -69,7 +76,9 @@ export default async function Project({
     ? routeParams.slug.join("/")
     : routeParams.slug || "";
 
-  let post = getPosts(["src", "app", "[locale]", "work", "projects"]).find((post) => post.slug === slugPath);
+  let post = getPostsByLocale(["src", "app", "[locale]", "work", "projects"], locale).find(
+    (post) => post.slug === slugPath,
+  );
 
   if (!post) {
     notFound();
@@ -126,7 +135,7 @@ export default async function Project({
         </Row>
       </Row>
       {post.metadata.images.length > 0 && (
-        <Media priority aspectRatio="16 / 9" radius="m" alt="image" src={post.metadata.images[0]} />
+        <Media priority aspectRatio="16 / 9" radius="m" alt={post.metadata.title} src={post.metadata.images[0]} />
       )}
       <Column style={{ margin: "auto" }} as="article" maxWidth="xs">
         <CustomMDX source={post.content} />

@@ -1,0 +1,83 @@
+---
+title: "Automating Tech News Collection with AI Agents"
+publishedAt: "2025-04-01"
+summary: "A case study of automating tech news collection and summarization with Crawl4AI, Ollama, and n8n."
+tag: "Automation"
+---
+
+Today I'll write up a case where I automated a repetitive task with AI agents.
+
+## Background
+
+I wanted to cut down the time I spent checking and organizing sources like GeekNews and GitHub Trending every day, so I automated the process.
+
+## Setup
+
+```text
+Every day at 9 AM (n8n scheduler)
+    ↓
+Crawl4AI (crawl GeekNews, YozmIT, GitHub Trending)
+    ↓
+Ollama Qwen2.5:32b (relevance scoring and topic selection)
+    ↓
+Ollama (draft writing)
+    ↓
+Tistory API (auto-publish)
+```
+
+I run the 32B model locally with Ollama on the NVIDIA A5000 GPU of an office PC, so the whole thing runs without any API cost.
+
+## Agents
+
+<Column fillWidth gap="4" marginTop="16">
+  <Row fillWidth padding="12" background="neutral-alpha-weak" radius="m-top">
+    <Column flex={1}><Text weight="bold">Agent</Text></Column>
+    <Column flex={2}><Text weight="bold">Role</Text></Column>
+  </Row>
+  <Row fillWidth padding="12" borderBottom="neutral-alpha-weak">
+    <Column flex={1}><Text>Explorer</Text></Column>
+    <Column flex={2}><Text>Crawls multiple sources and collects the original text</Text></Column>
+  </Row>
+  <Row fillWidth padding="12" borderBottom="neutral-alpha-weak">
+    <Column flex={1}><Text>Analyst</Text></Column>
+    <Column flex={2}><Text>Selects a topic from the collected data</Text></Column>
+  </Row>
+  <Row fillWidth padding="12" borderBottom="neutral-alpha-weak">
+    <Column flex={1}><Text>Writer</Text></Column>
+    <Column flex={2}><Text>Writes a draft based on the selected topic</Text></Column>
+  </Row>
+  <Row fillWidth padding="12" radius="m-bottom">
+    <Column flex={1}><Text>Reviewer</Text></Column>
+    <Column flex={2}><Text>Reviews the draft and optimizes it for SEO</Text></Column>
+  </Row>
+</Column>
+
+## Core Code
+
+```python
+async def agent_analyst(raw_items: list[dict]) -> dict:
+    combined = "\n".join([f"[{i['source']}] {i['raw']}" for i in raw_items])
+
+    prompt = f"""From the tech news below, pick one topic suitable for a blog post.
+Prioritize AI, ML, backend, cloud, and DevOps.
+
+Collected news:
+{combined}
+
+Respond in JSON only:
+{{"title": "...", "topic": "...", "reason": "..."}}"""
+
+    res = requests.post(
+        "http://localhost:11434/api/generate",
+        json={"model": "qwen2.5:32b", "prompt": prompt, "stream": False}
+    )
+    return json.loads(res.json()["response"])
+```
+
+## Results
+
+It started surfacing repositories I would not have come across otherwise, which was a meaningful result. However, the filtering for my areas of interest is still weak, so topics with low relevance sometimes get picked. I plan to add a personalization filter.
+
+## Conclusion
+
+The time I used to spend collecting and organizing news dropped significantly after automation. Next I will work on improving the filtering accuracy.

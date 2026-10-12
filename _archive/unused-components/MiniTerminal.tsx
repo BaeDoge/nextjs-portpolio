@@ -30,7 +30,7 @@ const COMMANDS: Record<string, string> = {
   dream:   "내가 기여하는 AI 서비스를 수백만 명이 쓰는 것.\n은행의 챗봇을 개발하며 조금은 이룬것 같아요.",
   left_right: '좌우명:\n" 할수 있을때 하고 배울수 있을때 배우자. "\n',
   fun:     "재미있는 사실들:\n• 입행 4년차지만 아직도 부서 남자중에서 막내에요.\n• 사투리를 아직도 조금 씁니다.\n• 터미널은 그냥 멋있어서 넣었습니다.",
-  contact: "• 이메일: doge@kbfg.com\n• GitHub: github.com/Bae-SeungHo\n• 포트폴리오: 지금 보고 계신 이 사이트",
+  contact: "• 이메일: qold0blop@gmail.com\n• GitHub: github.com/Bae-SeungHo\n• 포트폴리오: 지금 보고 계신 이 사이트",
   // name:    "배승호 (Bae Seung-Ho) 🇰🇷",
   // age:     "만 27세 — 1998년생",
   // mbti:    "INTJ\n계획 세우는 걸 좋아하고, 혼자 깊이 생각하는 타입이에요.\n근데 일 얘기 나오면 갑자기 ENTJ 됩니다.",
@@ -39,7 +39,7 @@ const COMMANDS: Record<string, string> = {
   // food:    "마라탕 🥵  |  삼겹살 🥩  |  카레 🍛\n매운 거 잘 못 먹는데 마라탕은 예외입니다.",
   // dream:   "내가 만든 AI 서비스를 수백만 명이 쓰는 것.\n사실 이미 조금 이루고 있는 중이에요.",
   // fun:     "재미있는 사실들:\n• 대학 4년 동안 공모전을 30번 넘게 도전했어요\n• 이 포트폴리오도 AI로 반쯤 만들었어요\n• 터미널이 그냥 멋있어서 넣었습니다",
-  // contact: "이메일: doge@kbfg.com\nGitHub: github.com/Bae-SeungHo\n포트폴리오: 지금 보고 계신 이 사이트",
+  // contact: "이메일: qold0blop@gmail.com\nGitHub: github.com/Bae-SeungHo\n포트폴리오: 지금 보고 계신 이 사이트",
 };
 
 const BOOT_SEQUENCE = [

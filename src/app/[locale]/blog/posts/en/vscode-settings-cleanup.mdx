@@ -1,69 +1,53 @@
 ---
-title: "I Wiped My Editor Config and Rebuilt It"
+title: "Cleaning Up My VS Code Settings"
 publishedAt: "2026-01-07"
-summary: "settings.json hit 300 lines, so I deleted everything and only re-added what I missed."
+summary: "How I reset accumulated editor settings and rebuilt only what I need."
 tag: "Tooling"
 ---
 
-## Why
+Today I'll write up how I cleaned up my VS Code settings.
 
-Setting up a new laptop, I opened my old `settings.json` and stopped.
-Over 300 lines, half of which I couldn't explain.
+## Background
 
-I started empty and agreed to add a line only when something annoyed me.
+While setting up a new laptop, I checked my old `settings.json` and found it had grown past 300 lines, and I couldn't remember what many of the entries were for.
 
-## What remained after two weeks
+## Approach
+
+I reset the settings and rebuilt them by adding items only when I needed them.
+
+## Settings that remained after two weeks
 
 ```jsonc
 {
-  // Format on save — added on day one
   "editor.formatOnSave": true,
-
-  // Show whitespace. Needed when debugging mixed indentation
   "editor.renderWhitespace": "boundary",
-
-  // Hide build artefacts in the explorer
   "files.exclude": {
     "**/__pycache__": true,
     "**/.pytest_cache": true,
     "**/node_modules": true
   },
-
-  // Exclude from search — separate from the above.
-  // Took me a while to realise these are two different settings
   "search.exclude": {
     "**/dist": true,
     "**/.next": true,
     "**/package-lock.json": true
   },
-
-  // Minimap off. Losing screen width cost more than it gave
   "editor.minimap.enabled": false,
-
-  // Auto-save off — I want to choose when to save
   "files.autoSave": "off"
 }
 ```
 
-That's it. About twenty lines.
+It came down to about 20 lines.
 
-## Things I dropped and remember
+## What I dropped
 
-- Font ligatures: looked nice, but `!=` merging into one glyph confused me
-- Custom bracket colours: the defaults were already fine
-- Assorted theme tweaks: picking one theme made the rest unnecessary
+- Font ligatures: showing certain operators in a different form actually hurt readability
+- Custom bracket colors: the defaults were enough
+- Many theme-related settings: unnecessary once I settled on a theme
 
-## Extensions too
+## Cleaning up extensions
 
-From 35 down to 9.
-The criterion was "did I consciously use this at least once in the last two weeks?"
+I cut 35 extensions down to 9, using "whether I actually used it in the last two weeks" as the criterion.
 
-A surprising number of extensions were memorable only as *installed*,
-never actually used.
+## Conclusion
 
-## Reflection
-
-Config accumulating is natural, but without periodic clearing
-you end up in a state you can't explain.
-
-I'll do it again next year.
+Settings tend to accumulate over time, and if they aren't cleaned up periodically, they become hard to make sense of. I plan to keep reviewing them regularly.

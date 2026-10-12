@@ -1,13 +1,15 @@
 ---
-title: "I Trusted FastAPI BackgroundTasks — Then This Happened"
+title: "Lost Jobs with FastAPI BackgroundTasks"
 publishedAt: "2026-03-30"
-summary: "Responses were 200 but the work never ran. It took half a day to find out why."
+summary: "Some jobs run through BackgroundTasks were lost at deploy time."
 tag: "Troubleshooting"
 ---
 
-## Setup
+Today I'll write up a problem I ran into while using FastAPI's `BackgroundTasks`.
 
-I used `BackgroundTasks` to post-process uploaded files asynchronously.
+## Situation
+
+I used `BackgroundTasks` to handle post-processing such as parsing and embedding asynchronously after a file upload.
 
 ```python
 from fastapi import BackgroundTasks, FastAPI
@@ -21,47 +23,35 @@ async def upload(file: UploadFile, bg: BackgroundTasks):
     return {"status": "accepted"}
 ```
 
-Immediate 200. Worked fine locally.
+It worked fine in local testing.
 
-## The problem
+## Problem
 
-After deploying, only about half the documents came out processed.
-No error logs, and every response was 200.
+After deploying, only about half of the documents had been processed. There were no error logs, and every API response was 200.
 
-## Two causes
+Comparing against the deploy logs, the lost jobs lined up with the times of redeploys and scale-ins.
 
-**1. Restarting workers discard queued tasks**
+## Cause
 
-`BackgroundTasks` runs **inside the same process**, after the response is sent.
-If the process dies — deploy, scale-in, OOM — pending tasks simply evaporate.
-Nothing is recorded anywhere.
+There were two causes.
 
-**2. Exceptions are swallowed silently**
+**1. Jobs are lost when a worker restarts**
 
-If a background task raises, the client already received a 200.
-Without explicit logging there's no trace at all.
+`BackgroundTasks` runs in the same process that returned the response. If the process ends because of a deploy, scale-in, or OOM, pending jobs disappear without any record.
 
-## What I changed
-
-**Short tasks got wrapped in logging:**
+**2. Weak exception handling**
 
 ```python
-import logging
-
-logger = logging.getLogger(__name__)
-
 def process_document(path: str):
-    try:
-        ...
-    except Exception:
-        logger.exception("document processing failed: %s", path)
-        raise
+    # Even if an exception is raised here, the client has already received 200
+    ...
 ```
 
-**Long tasks moved to a queue.**
+Without separate logging, there was no way to know whether a job had failed.
 
-Anything taking more than a few seconds, or that must not be lost,
-now writes a job record to the DB for a worker to pick up.
+## Fix
+
+I changed the structure so that job state is recorded in the DB and a separate worker processes pending jobs.
 
 ```python
 @app.post("/upload")
@@ -74,11 +64,8 @@ async def upload(file: UploadFile):
     return {"status": "queued"}
 ```
 
-Crude, but being able to query "how far did this get?" matters a lot.
+After this change I could check processing status directly with a query, so finding the cause got faster even when the same problem came up.
 
-## Summary
+## Conclusion
 
-`BackgroundTasks` is right for **short work that's fine to lose** —
-writing an email-sent log, say. Anything you can't afford to lose needs a real queue.
-
-I've picked up the habit of asking what guarantees a convenient-looking feature *doesn't* make.
+I concluded that `BackgroundTasks` is only appropriate for short jobs that can fail without harm. Jobs that must not be lost are safer designed on a queue or DB-based structure from the start.

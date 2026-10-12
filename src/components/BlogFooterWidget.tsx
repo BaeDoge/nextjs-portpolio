@@ -2,6 +2,7 @@
 "use client";
 import { useState } from "react";
 import { useLocale } from "next-intl";
+import { CONTACT_EMAIL } from "@/resources/contact";
 
 export default function BlogFooterWidget() {
   const isEn = useLocale() === "en";
@@ -96,8 +97,8 @@ export default function BlogFooterWidget() {
             marginBottom: 12, lineHeight: 1.6 }}>
             {isEn ? "Feedback or questions are always welcome." : "피드백이나 질문이 있으면 언제든지 연락 주세요."}
           </div>
-{/*           
-            href="mailto:doge@kbfg.com"
+<a
+            href={`mailto:${CONTACT_EMAIL}`}
             style={{
               display: "inline-block", padding: "7px 14px", borderRadius: 8,
               border: "0.5px solid var(--neutral-alpha-medium)",
@@ -105,8 +106,8 @@ export default function BlogFooterWidget() {
               textDecoration: "none", fontSize: 12,
             }}
           >
-            doge@kbfg.com →
-          </a> */}
+            {CONTACT_EMAIL} →
+          </a>
         </div>
 
         {/* 포트폴리오 챗봇 유도 */}

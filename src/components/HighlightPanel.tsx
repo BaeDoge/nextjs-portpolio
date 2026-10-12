@@ -91,7 +91,6 @@ export default async function HighlightPanel() {
           {isEn ? "Currently working on" : "지금 하는 일"}
         </div>
         <div style={{ fontSize: 13, lineHeight: 1.55, color: "var(--neutral-on-background-strong)" }}>
-          {/* TODO: 담백하게 직접 수정하세요 (1~2문장) */}
           {isEn
             ? "Building an in-house generative AI financial assistant and its RAG pipeline."
             : "사내 생성형 AI 금융 어시스턴트와 RAG 파이프라인을 만들고 있습니다."}

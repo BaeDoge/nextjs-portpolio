@@ -1,80 +1,64 @@
 ---
-title: "Writing Docs for Myself Six Months From Now"
+title: "My Code Documentation Habits"
 publishedAt: "2025-09-12"
-summary: "Rules I adopted after repeatedly failing to read my own code."
+summary: "The documentation principles I settled on after not understanding code I had written myself."
 tag: "Career"
 ---
 
-## Trigger
+Today I'll share the principles I settled on for documenting code.
 
-I had to modify a batch job I'd written the previous year.
-My own code, and I couldn't remember why I'd done it that way.
+## What started it
 
-This part was especially awkward:
+I had to modify batch code I wrote last year, and there were parts where I couldn't tell what I had intended at the time.
 
 ```python
 if retry_count > 3 and elapsed < 60:
     time.sleep(5)
 ```
 
-Where did 3, 60, and 5 come from? No idea.
-With no basis for judging whether they could change, I left it alone.
+The reasons for the numbers 3, 60, and 5 were not recorded, so I couldn't judge whether it was safe to change.
 
-## Rule 1 — justify the numbers
+## Principle 1: Leave the reason for numbers
 
 ```python
-# The upstream API is rate limited to 60 calls/min. Three consecutive
-# failures most likely means we hit the limit, so back off 5 seconds.
-# (5s is the measured average recovery time.)
+# The external API is limited to 60 calls per minute. After 3 or more
+# consecutive failures, rate limiting is likely, so wait 5 seconds and retry.
+# (5 seconds is the average recovery time I measured)
 if retry_count > 3 and elapsed < 60:
     time.sleep(5)
 ```
 
-Code shows *what*. Comments are where the **why** goes.
-
-## Rule 2 — record the choices you didn't make
+## Principle 2: Record the options I didn't choose
 
 ```python
-# Considered SQS here, but at ~300 jobs/day the operational overhead
-# outweighed the benefit, so we poll the DB instead.
-# Revisit if volume grows substantially.
+# I also considered introducing a queue (SQS), but at about 300 items per day
+# the benefit looked low compared to the operational complexity, so I chose
+# DB polling. Revisit if throughput grows.
 ```
 
-This proved most useful.
-"Why didn't we use a queue?" now has an immediate answer,
-and nobody has to redo the evaluation.
-
-## Rule 3 — put "how do I run this" at the top of the README
-
-What people need in the moment isn't an architecture overview —
-it's how to get it running locally.
+## Principle 3: Put how to run it at the top of the README
 
 ```markdown
-## Local run
+## Run locally
 
-1. `cp .env.example .env` and fill in values
+1. Copy `.env.example` to `.env` and fill in the values
 2. `docker compose up -d db`
 3. `python -m app.migrate`
 4. `uvicorn app.main:app --reload`
 
-If it fails: it's usually step 3 because the DB isn't up yet. Retry after 10s.
+If something goes wrong: it is usually step 3 running before the DB is up. Retry after 10 seconds.
 ```
 
-That last line saves real time.
-
-## Rule 4 — label stopgaps as stopgaps
+## Principle 4: Date temporary workarounds
 
 ```python
-# [temporary] 2025-09-12
-# Retrying to work around upstream returning 500.
-# Remove once their team replies.
+# [Temporary] 2025-09-12
+# Retry logic for handling 500 errors from the external API.
+# To be removed after the owner replies.
 ```
 
-Dating it tells you how long "temporary" has lasted.
-A two-year-old stopgap is permanent code.
+With a date recorded, you can see how long the workaround has been in place.
 
-## Summary
+## Conclusion
 
-Rather than trying to write good documentation, it's more practical to
-**pre-answer the questions future-me will ask**.
-They're fairly predictable: why is it like this, can I change it, how do I run it.
+What mattered in documentation was not the format but leaving answers to the questions that would come later. Why it was implemented this way, whether it's safe to change, and how to run it were the three things needed most often.

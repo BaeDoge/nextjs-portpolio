@@ -1,0 +1,126 @@
+---
+title: "AI Learning Management Platform"
+publishedAt: "2026-04-01"
+summary: "An in-house AI platform that centralizes the training data of KB Kookmin Bank's chatbots and callbots and cut operations staffing by half."
+images:
+  - "/projects/kb-lms/main.jpg"
+tag: "Enterprise AI"
+---
+
+<Feedback
+  icon
+  variant="success"
+  title="One-line summary"
+  description="A project to build an integrated platform that analyzes training and log data from multiple channels and provides insights"
+/>
+
+When I moved from the Financial AI Center to the Customer Contact Innovation Department and was getting up to speed on the new team's work,
+I found that a great many unit tasks were fragmented and managed by hand.
+
+Our department runs several bot engines for customers and employees
+(mainly the customer chatbot, the callbot, and the employee chatbot).
+Each channel had its own owner and its own solution,
+and each kept training data and management ledgers separately in Excel on local storage.
+
+As a result, the same question could get different answers depending on the channel,
+and whenever a new product launched, the owner of every channel had to update their own data, which was an awkward way to work.
+
+
+
+<Feedback
+  icon
+  variant="warning"
+  title="Problems found"
+  description="Silos between channels caused inconsistent answers to the same query. Change history could not be traced. Launching a new product required repeated manual work across channels."
+/>
+
+## Development Process
+
+I started with a simple single-page Flask dashboard,
+but requirements piled up as the business owners began using it.
+Things like "I want query statistics by time of day" and "group similar questions together."
+
+So I fine-tuned an embedding model myself with PEFT for sentence similarity analysis and set up a separate inference server,
+and I redesigned the frontend from scratch as a **FastAPI + HTMX + JavaScript MPA**, a template-based structure
+that makes it light and fast to build multiple pages.
+
+## Tech Stack
+
+<Table
+  data={{
+    headers: [
+      { content: "Area", key: "area" },
+      { content: "Technology", key: "tech" },
+      { content: "Role", key: "role" }
+    ],
+    rows: [
+      ["Backend", "FastAPI (Python)", "REST API and business logic"],
+      ["Frontend", "HTMX + JavaScript", "MPA-style web UI"],
+      ["Database", "MySQL, Redis", "Stores training data and conversation logs"],
+      ["AI", "Embedding model + AI Agent", "Query clustering and similarity analysis"],
+      ["Infra", "AWS EKS + Kubernetes + Docker", "Container orchestration"],
+      ["Network", "NLB (Inbound) / Transit Gateway (Outbound)", "Communication inside and outside the bank network"]
+    ]
+  }}
+/>
+
+## System Architecture
+
+```text
+Operator's browser (HTMX + JS)
+    ↓
+Internal network Region Proxy
+    ↓
+AWS EKS (Kubernetes Deployment)
+    ↓
+FastAPI backend
+    ├── MySQL (training data / conversation logs)
+    ├── Redis (in-memory cache, temporary task storage)
+    └── Embedding model (query similarity analysis)
+```
+
+Because of the bank's network, configuring communication between the raw data in other AWS accounts and this project's data was quite tricky.
+Coordinating firewall openings, security groups, and load balancer setup with the infrastructure team took longer than I expected.
+
+## Key Features
+
+<AccordionGroup
+  items={[
+    {
+      title: "Integrated monitoring dashboard",
+      content: <Text variant="body-default-s" onBackground="neutral-weak">See the conversation status of every channel (customer chatbot, employee chatbot, callbot) on one screen. Query volume by time of day, frequent question types, and unanswered queries are monitored in real time.</Text>
+    },
+    {
+      title: "Automatic clustering of similar queries",
+      content: <Text variant="body-default-s" onBackground="neutral-weak">Similar queries are grouped automatically based on embeddings. The system detects duplicates and inconsistencies first, so owners no longer have to hunt for them one by one.</Text>
+    },
+    {
+      title: "Automatic change history",
+      content: <Text variant="body-default-s" onBackground="neutral-weak">Who edited which answer and when is recorded automatically. With version control in place, there is now a rollback point whenever a problem occurs.</Text>
+    }
+  ]}
+/>
+
+## Results
+
+<Table
+  data={{
+    headers: [
+      { content: "Item", key: "item" },
+      { content: "Change", key: "change" }
+    ],
+    rows: [
+      ["Operations staffing", "Reduced by 50% compared with before"],
+      ["Speed of applying changes", "A new product launch can be reflected in all channels at once"],
+      ["Data consistency", "Channel silos removed, centralized version control"]
+    ]
+  }}
+/>
+
+The owners responded positively after it was built. The comment I remember most is "So we don't have to use Excel anymore?"
+
+
+## Lesson & Learned
+I got to listen to what the business teams needed, build the analysis features myself, and go through everything from web server development to deploying on cloud services.
+
+In particular, handling customer data that sometimes exceeded a million records a day, and standardizing the many channel-specific tables with different schemas into one unified standard, was hard but valuable work.

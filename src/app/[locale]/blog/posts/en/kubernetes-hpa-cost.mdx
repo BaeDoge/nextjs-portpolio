@@ -1,0 +1,71 @@
+---
+title: "Cutting Cloud Costs on Kubernetes"
+publishedAt: "2025-02-20"
+summary: "A case of reducing AI service operating costs by combining Lambda scheduling with HPA."
+tag: "Cloud & Infra"
+---
+
+Today I'll write up a cloud cost optimization case from the KB Kookmin Bank AI Financial Assistant service.
+
+## Situation
+
+Traffic was concentrated during business hours (weekdays, 9 AM to 6 PM) and almost nonexistent at night and on weekends. Keeping pods at the same spec around the clock meant paying the same cost even during idle hours.
+
+## Fix 1: Lambda Scheduling
+
+I used AWS Lambda to adjust the number of pods by time of day.
+
+```python
+def scale_eks_deployment(replicas: int, deployment: str):
+    k8s_client.patch_namespaced_deployment_scale(
+        name=deployment,
+        namespace="production",
+        body={"spec": {"replicas": replicas}}
+    )
+```
+
+<Feedback
+  icon
+  variant="info"
+  title="Scale-up timing"
+  description="Considering pod startup time, I set the scale-up to run 10 minutes before business hours begin."
+/>
+
+## Fix 2: HPA Configuration
+
+To handle unpredictable traffic increases, I also configured HPA.
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+spec:
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+```
+
+## Division of Roles
+
+<Table
+  data={{
+    headers: [
+      { content: "Method", key: "method" },
+      { content: "Role", key: "role" },
+      { content: "Basis", key: "basis" }
+    ],
+    rows: [
+      ["Lambda Scheduling", "Handles predictable traffic patterns", "Time"],
+      ["HPA", "Handles unpredictable traffic increases", "CPU utilization 70%"]
+    ]
+  }}
+/>
+
+## Conclusion
+
+I applied a structure where regular patterns are handled by Lambda scheduling and sudden traffic by HPA. Details such as thresholds and wait times were tuned against real traffic data.

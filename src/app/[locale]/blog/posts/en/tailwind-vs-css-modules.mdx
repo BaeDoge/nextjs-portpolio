@@ -1,50 +1,37 @@
 ---
-title: "Between Tailwind and CSS Modules"
+title: "When I Use Tailwind and When I Use CSS Modules"
 publishedAt: "2025-08-29"
-summary: "I used both in the same project. Here's the split I landed on."
+summary: "The criteria I settled on after using Tailwind and CSS Modules together."
 tag: "Tooling"
 ---
 
+Today I'll share the criteria I settled on after using Tailwind and CSS Modules together.
+
 ## Background
 
-Building my portfolio site, I ended up mixing both.
-Not by design — the template used CSS Modules, while the components
-I added used inline styles and Tailwind.
+I ended up using both approaches in my portfolio project, so I sorted out which situations suit each one.
 
-Writing down where each worked better, partly to clean it up.
+## When Tailwind fits
 
-## Where Tailwind was better
-
-**One-off layout**
+**Simple layouts**
 
 ```tsx
 <div className="flex items-center gap-2 px-4 py-2 rounded-lg">
 ```
 
-Naming a class and creating another file for this is overkill.
-The naming itself is the expensive part.
-
-**Responsive work**
+**Responsive handling**
 
 ```tsx
 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
 ```
 
-Not writing media queries is a real gain.
+I could handle this without writing separate media queries.
 
-## Where CSS Modules was better
+## When CSS Modules fit
 
 **Components with many states**
 
-Once hover, focus, disabled and active start combining,
-the class string becomes unreadable.
-
-```tsx
-// Past this point it's unreadable
-className="bg-white hover:bg-gray-50 disabled:bg-gray-200 disabled:cursor-not-allowed focus:ring-2 ..."
-```
-
-In a CSS file it's just a selector.
+When hover, focus, disabled, and other states combine, the class strings got long and hard to read.
 
 ```css
 .button:disabled {
@@ -53,19 +40,17 @@ In a CSS file it's just a selector.
 }
 ```
 
-**Animation**
+**Animations**
 
-Anything involving keyframes is clearly easier in a CSS file.
+Styles that include keyframes were more efficient to keep in a CSS file.
 
-## The split I use now
+## The criteria I apply
 
 - Layout, spacing, alignment → Tailwind
-- Component-specific styling, state changes, animation → CSS Modules
-- Values referenced through **CSS variables** on both sides
+- Component-specific styles, state changes, animations → CSS Modules
+- Color values shared through CSS variables
 
-The last point mattered most.
-Defining colours separately in the Tailwind config and in CSS files
-makes dark mode drift apart.
+Without shared color values, dark mode ended up with mismatched values, so I made both sides reference common variables like this.
 
 ```css
 :root {
@@ -76,9 +61,6 @@ makes dark mode drift apart.
 }
 ```
 
-Pointing both at the same variables made the problem disappear.
-
 ## Conclusion
 
-It wasn't a question of choosing one, but of **deciding where each applies**.
-I assumed mixing them would be messy; with clear boundaries it's fine.
+Rather than choosing one of the two, clearly separating where each applies was more efficient for maintenance.

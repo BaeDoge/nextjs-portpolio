@@ -1,48 +1,33 @@
 ---
 title: "Six Months of Watching GitHub Trending"
 publishedAt: "2026-02-22"
-summary: "Star count isn't skill, but the currents are visible. Here are my notes."
+summary: "The criteria I settled on after checking GitHub Trending weekly for six months."
 tag: "Career"
 ---
 
-## Why
+Today I'll share what I sorted out after watching GitHub Trending for six months.
 
-I was frustrated at hearing about new tools late, so I checked GitHub Trending
-weekly for about six months. Daily was too noisy.
+## Background
 
-## Observation 1 — lots of wrappers
+I often came across new tools late, so I checked GitHub Trending once a week for six months.
 
-Projects that lightly wrap an existing library show up constantly.
-Install them and you often find two or three functions.
+## Observation 1: Many projects just wrap existing libraries
 
-Not inherently bad. But I now calculate
-"how many lines would this be if I just did it myself?" first.
-At fifty lines, doing it myself wins. Every dependency is maintenance debt.
+Many projects wrapped an existing library with convenience features. Before adopting one, I added a step of checking how much code it would take to implement the same thing myself.
 
-## Observation 2 — stars and maintenance are unrelated
+## Observation 2: Stars and maintenance are separate things
 
-Plenty of 10k-star repos have a last commit eight months old.
-Meanwhile some 300-star projects ship weekly.
+Many repositories had lots of stars but old recent commits. I now check things in this order:
 
-My order of inspection now:
+1. Date of the latest commit
+2. Issue resolution rate
+3. Number of maintainers
+4. Number of stars
 
-1. Date of the last commit
-2. Closed vs. open issue ratio
-3. Number of maintainers (one is a risk)
-4. Star count
+## Observation 3: README structure and usefulness
 
-Stars come last.
+In repositories with many badges and comparison tables, the core purpose was sometimes unclear. A short README made up of the problem, the solution, installation, and examples was usually the more practical one.
 
-## Observation 3 — long READMEs are suspicious
+## Conclusion
 
-The more badges and comparison tables a project has,
-the less likely I could find "why does this exist?"
-
-Good READMEs tend to be short: problem, solution, install, example.
-
-## What I actually adopted
-
-Two things, in six months. A low hit rate,
-but those two paid for the whole exercise.
-
-The rest stayed as "so that approach exists too." That's fine as well.
+Of the projects I watched over six months, two were actually adopted at work. The adoption rate was low, but the habit of following trends helped me build criteria for choosing technology.

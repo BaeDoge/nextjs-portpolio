@@ -1,0 +1,66 @@
+---
+title: "Running LLM Services in Production"
+publishedAt: "2025-01-15"
+summary: "What I learned about chunking, prompt management, and monitoring while operating AI services at KB Kookmin Bank."
+tag: "GenAI"
+---
+
+Today I'll write up what I found while running an LLM service in production.
+
+## 1. How to Build Chunks
+
+In the financial FAQ domain, chunking by question-answer pair gave better retrieval accuracy than splitting by character count.
+
+```python
+def chunk_by_qa(document: str) -> list[str]:
+    chunks = []
+    qa_pairs = re.split(r'\n(?=Q:)', document)
+    for pair in qa_pairs:
+        if pair.strip():
+            chunks.append(pair.strip())
+    return chunks
+```
+
+## 2. Prompt Versioning
+
+```python
+v1.0 (2024-01)
+  You are a customer support AI for KB Kookmin Bank.
+v1.4 (2024-04) — addressing hallucination issues
+  Do not answer questions you don't have information on; direct the customer to a staff member.
+v1.7 (2024-07) — reflecting customer complaint cases
+  Do not predict or guarantee investment returns.
+```
+
+## 3. What I Monitor
+
+<Table
+  data={{
+    headers: [
+      { content: "Item", key: "item" },
+      { content: "Purpose", key: "check" }
+    ],
+    rows: [
+      ["Retrieval similarity distribution", "Check the share below the threshold and reinforce the knowledge base"],
+      ["TTFT", "Check response speed"],
+      ["Queries with negative feedback", "Identify failure patterns"],
+      ["Daily token usage", "Track cost and detect anomalies"]
+    ]
+  }}
+/>
+
+## 4. Handling Streaming
+
+```typescript
+const stream = await groq.chat.completions.create({
+  model: "llama-3.3-70b-versatile",
+  messages: [...],
+  stream: true,
+});
+```
+
+Setting `stream: true` outputs the response in real time, which shortened the perceived waiting time.
+
+## Conclusion
+
+Building a RAG system and operating one turned out to be separate problems. The chunking strategy, prompt history management, and monitoring setup had a direct effect on operational stability.

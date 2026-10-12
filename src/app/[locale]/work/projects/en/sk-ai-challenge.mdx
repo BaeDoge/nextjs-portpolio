@@ -1,0 +1,57 @@
+---
+title: "SK AI Challenge: Autonomous Driving Object Detection Model"
+publishedAt: "2021-10-01"
+summary: "A competition hosted by SK Inc. Built a semi-supervised object detection model that detects road elements in camera footage from autonomous vehicles. Won the Excellence Award."
+images:
+  - "/projects/sk-ai-challenge/main-cover.jpg"
+  - "/projects/sk-ai-challenge/diagram1.png"
+tag: "Computer Vision"
+---
+
+<Feedback
+  icon
+  variant="success"
+  title="One-line summary"
+  description="A project from a competition on object detection models for autonomous vehicles"
+/>
+
+
+## About the Competition
+
+The SK AI Challenge for Our Society was an AI competition hosted by SK Inc.
+The task was to use camera footage from autonomous vehicles
+to build a model that detects road elements such as lanes, traffic lights, and pedestrians.
+
+I entered the contest with my favorite dog "Doge" (back then it was not the name of a cryptocurrency!) plus vision.
+
+## Core Approach: Semi-Supervised Learning
+
+The central challenge of this contest was the **shortage of labeled data**.
+Labeled data was limited, while unlabeled data was abundant.
+
+Training with fully supervised learning alone would limit performance because of the lack of data.
+To address this, I built a model based on **semi-supervised learning**.
+
+I generated pseudo labels from the unlabeled data
+and used only high-confidence predictions for training,
+which effectively expanded the labeled data.
+
+## Tech Stack
+
+`Python` `PyTorch` `YOLO` `Semi-Supervised Learning` `Pseudo Labeling` `OpenCV`
+
+## Results
+
+**Excellence Award** (SK AI Challenge for Our Society, 2021)
+
+## Lesson & Learned
+
+I figured that real autonomous driving data would be overwhelmingly unlabeled.
+
+It was a project that taught me that unsupervised and semi-supervised methods, such as semi-supervised and self-supervised learning,
+are essential for solving real-world problems.
+
+I entered this one alone while preparing for other competitions.
+The two months of the project were very hard, but I was able to leave a result behind, so I think it was a very rewarding experience.
+
+![leaderboard](/projects/sk-ai-challenge/leaderboard.jpg)

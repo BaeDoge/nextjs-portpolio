@@ -3,23 +3,26 @@ import GalleryView from "@/components/gallery/GalleryView";
 import { baseURL, gallery, person } from "@/resources";
 import AwardStrip from "@/components/AwardStrip";
 import { getLocale } from "next-intl/server";
-// import Image from "next/image";
+
+import { withAlternates } from "@/utils/seo";
 
 export async function generateMetadata() {
-  return Meta.generate({
-    title: gallery.title,
-    description: gallery.description,
-    baseURL: baseURL,
-    image: `/api/og/generate?title=${encodeURIComponent(gallery.title)}`,
-    path: gallery.path,
-  });
+  const locale = await getLocale();
+  return withAlternates(
+    Meta.generate({
+      title: gallery.title,
+      description: gallery.description,
+      baseURL: baseURL,
+      image: `/api/og/generate?title=${encodeURIComponent(gallery.title)}`,
+      path: gallery.path,
+    }),
+    gallery.path,
+    locale,
+  );
 }
-
-
 
 export default function Gallery() {
   return (
-    // direction="column" 추가 — 세로 스택으로 변경
     <Flex maxWidth="l" direction="column" gap="0">
       <Schema
         as="webPage"
@@ -52,20 +55,6 @@ export default function Gallery() {
   );
 }
 
-// ── 데이터 정의 ────────────────────────────────
-// const AWARD_ITEMS = [
-//   { src: "/awards/kb-ai-challenge.jpg",   label: "KB Future Finance AI Challenge" },
-//   { src: "/awards/sk-challenge.jpg",      label: "SK AI Challenge" },
-//   { src: "/awards/embedded-sw.jpg",       label: "임베디드SW 경진대회 우수상" },
-//   { src: "/awards/best-paper.jpg",        label: "우수논문발표상" },
-//   { src: "/awards/pohang-technopark.jpg", label: "경북 공공데이터 AI 공모전" },
-//   { src: "/awards/coast-guard.jpg",       label: "해양경찰청 데이터 공모전" },
-//   { src: "/awards/iot-competition.jpg",   label: "IoT 경진대회 최우수상" },
-//   { src: "/awards/ai-speaker.jpg",        label: "AI Speaker 경진대회" },
-//   { src: "/awards/police-film.jpg",       label: "경찰청 인권영화제 공모전" },
-//   { src: "/awards/ai-idea.jpg",           label: "인공지능 아이디어 공모전" },
-//   { src: "/awards/slogan.jpg",            label: "표어 공모전 우수상" },
-// ];
 const AWARD_ITEMS = [
   { src: "/awards/ai-idea.jpg",           label: "인공지능 학습용 데이터 공모전" },
   { src: "/awards/ai-speaker.jpg",        label: "AI Speaker 데이터분석 경진대회" },
@@ -78,16 +67,13 @@ const AWARD_ITEMS = [
   { src: "/awards/sk-challenge.jpg",      label: "SK AI Challenge for Our Society" },
   { src: "/awards/police-film.jpg",       label: "경찰청 인권영화제 공모전" },
   { src: "/awards/slogan.jpg",            label: "청소년 안전문화 콘텐츠 공모전" },
-  // { src: "/certificates/ai-applications.jpg",    label: "AI 교육이수증" },
 ];
 const CERT_ITEMS = [
   { src: "/certificates/ai-application.jpg",  label: "인공지능 응용 60H" },
   { src: "/certificates/ai-basic.jpg",         label: "인공지능 기본 60H" },
   { src: "/certificates/ai-employment.jpg",    label: "AI 취업교육" },
-  // { src: "/certificates/ai-speaker.jpg",       label: "AI Speaker" },
   { src: "/certificates/qisens-intern.jpg",    label: "Qisens AI 인턴 수행확인서" },
   { src: "/certificates/etri-career.png",      label: "ETRI 연구 경력증명서" },
-  // { src: "/certificates/info-processing.jpg",  label: "정보처리기능사" },
   { src: "/certificates/ai-cert.jpg",          label: "인공지능 자격증" },
   { src: "/certificates/transcript.jpg",       label: "성적증명서" },
   { src: "/certificates/work-record.png",      label: "근로내역증명서" },
