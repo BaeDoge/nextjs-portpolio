@@ -7,6 +7,8 @@ const SY = 2017, EY = 2026.9, TM = (EY - SY) * 12;
 const mo = (y: number, m: number) => (y - SY) * 12 + (m - 1);
 const pc = (o: number) => `${(o / TM * 100).toFixed(2)}%`;
 const sp = (s: number, e: number) => `${((e - s) / TM * 100).toFixed(2)}%`;
+// "현재" 표시 위치와 진행 중인 항목의 끝 시점. 달이 바뀌면 이 값만 고칩니다.
+const NOW_YEAR = 2026, NOW_MONTH = 10;
 const YEARS = [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026];
 
 const CATS = [
@@ -82,13 +84,13 @@ export const TIMELINE_ACTS = [
     sy:2025,sm:3,  ey:2025,em:10, d:"업무와 병행하며 IT / 언어 자격증 취득", dEn:"Earned IT and language certifications alongside full-time work",
     g:["PCCP","PCCE","ADSP","DASP","SQLD","OPIC"], gEn:["PCCP","PCCE","ADSP","DASP","SQLD","OPIC"] },
   { c:"kb",     t:"학습관리시스템 개발",   en:"Learning Management System",
-    sy:2025,sm:6,  ey:2026,em:4,  d:"다수 챗봇 통합 운영 · 관리 플랫폼 개발 · 클라우드 환경 구축", dEn:"Unified operation of multiple chatbots, management platform development, cloud environment setup",
+    sy:2025,sm:6,  ey:2026,em:3,  d:"다수 챗봇 통합 운영 · 관리 플랫폼 개발 · 클라우드 환경 구축", dEn:"Unified operation of multiple chatbots, management platform development, cloud environment setup",
     g:["FastAPI","Flask","MySQL","AWS","Redis","DL","JS","HTMX"], gEn:["FastAPI","Flask","MySQL","AWS","Redis","DL","JS","HTMX"] },
   { c:"kb",     t:"생성형 AI 챗봇 고도화",   en:"Enhancing Generative AI Chatbots",
-    sy:2026,sm:4,  ey:2026,em:5,  d:"RAG 기반 생성형 AI 챗봇 시스템 구축 (직원용 챗봇 -> 고객용 챗봇)", dEn:"Built a RAG-based generative AI chatbot system (employee-facing to customer-facing)",
+    sy:2026,sm:4,  ey:2026,em:5,  d:"rule-based 챗봇을 생성형 답변 Agent로 전환 — Agent 개발, 상품설명서·약관 지식베이스 구축, 성능평가", dEn:"Moved a rule-based chatbot to a generative agent: agent development, product-document knowledge bases, performance evaluation",
     g:["RAG","AI Agent","LLM"], gEn:["RAG","AI Agent","LLM"] },
-  { c:"kb",     t:"KB 화상상담시스템 개발·운영",   en:"KB Video Consultation System",
-    sy:2026,sm:6,  ey:2026,em:9,  d:"지점 방문 없이 금융 상담·상품 가입이 가능한 비대면 채널. 신탁상품 및 스타뱅킹 비대면 가입에 필요한 실명확인 서비스 운영", dEn:"A remote channel for financial consultation and product subscription without visiting a branch. Operated the identity-verification service required for trust products and non-face-to-face Star Banking subscriptions",
+  { c:"kb",     t:"KB 화상상담시스템 신규 기능 개발·운영",   en:"KB Video Consultation System — New Features & Operations",
+    sy:2026,sm:5,  ey:NOW_YEAR,em:NOW_MONTH,  d:"KB 대표 비대면 상품가입 시스템의 신규 기능 개발·운영. 인증 후 상품 설명을 거쳐 신탁상품·예금계좌 개설 등 가입과 금융서비스 제공", dEn:"New feature development and operations for KB's flagship non-face-to-face subscription system: verification, product explanation, then subscription (trust products, deposit accounts) and financial services",
     g:["실명확인","신탁 비대면","Vision","DevOps"], gEn:["Identity verification","Remote trust sales","Vision","DevOps"] },
   { c:"act",    t:"KB IT's Your Life 멘토링",   en:"KB IT's Your Life Mentoring",
     sy:2026,sm:7,  ey:2026,em:8,  d:"취업준비생 대상 3주간 IT 프로젝트 멘토링 및 최종 팀 프로젝트 심사위원", dEn:"Three weeks of IT project mentoring for job seekers, plus serving as a judge for the final team projects",
@@ -275,7 +277,7 @@ function TimelineMatrix() {
   const [active, setActive] = useState<Act | null>(null);
   const catMap = Object.fromEntries(CATS.map(c => [c.id, c]));
   const rowMap = Object.fromEntries(CATS.map(c => [c.id, TIMELINE_ACTS.filter(a => a.c === c.id)]));
-  const nowOff = mo(2026, 4);
+  const nowOff = mo(NOW_YEAR, NOW_MONTH);
   const { ref, style } = useFadeIn(0);
 
   return (

@@ -67,7 +67,7 @@ const home: Home = {
         </Text>
       </Row>
     ),
-    href: "/work/building-once-ui-a-customizable-design-system",
+    href: "/work/ai-lms-platform",
   },
   subline: (
     <>
@@ -124,19 +124,19 @@ const about: About = {
         role: "AI Platform Engineer (대리, 고객컨택혁신부)",
         achievements: [
           <>
-            <strong>[2026.06~현재]</strong> KB 화상상담시스템 개발·운영<br/>
-            지점 방문 없이 전문 상담직원과 금융 상담 및 상품 가입이 가능한 비대면 채널.<br/>
-            신탁상품 비대면 판매와 스타뱅킹 비대면 상품 가입에 필요한 실명확인 서비스를 운영하며,<br/>
-            신분증 진위확인과 얼굴 대조를 결합한 인증 절차를 담당.
+            <strong>[2026.05~현재]</strong> KB 화상상담시스템 신규 기능 개발·운영<br/>
+            KB의 대표 비대면 상품가입 시스템으로, 고객이 비대면으로 인입해 인증과 상품 설명을 거친 뒤<br/>
+            신탁상품 가입, 예금계좌 개설 등 상품 가입과 계좌 비밀번호 변경 등 금융서비스를 이용하는 채널.<br/>
+            신규 기능 개발과 운영을 담당하며, 신분증 진위확인과 얼굴 대조를 결합한 인증 절차를 포함.
             <a href="https://www.bizwnews.com/news/articleView.html?idxno=134113" target="_blank" rel="noopener noreferrer"
                style={{ color: "var(--brand-on-background-medium)" }}>
               &nbsp;&nbsp;Link &rarr;
             </a>
           </>,
           <>
-            <strong>[2026.03~현재]</strong> KB 대고객 챗봇 현대화<br/>
-            기존의 Pattern-base ML 챗봇을 생성형 AI로 전환하며,<br/>
-            RAG 구축에 필요한 약관·규정·상품설명서 파싱 및 지식베이스 구축.
+            <strong>[2026.04~2026.05]</strong> KB 고객용 챗봇 생성형 AI 전환<br/>
+            기존 rule-based 챗봇을 생성형 답변 챗봇으로 전환하는 프로젝트에서 Agent 개발,<br/>
+            주제별 지식베이스(상품설명서·약관 등) 임베딩 구축, Agent 성능평가를 담당.
             <a href="https://www.etnews.com/20260326000047" target="_blank" rel="noopener noreferrer"
               style={{ color: "var(--brand-on-background-medium)" }}>
               &nbsp;&nbsp;Link &rarr;
@@ -145,7 +145,7 @@ const about: About = {
           <>
             <strong>[2025.06~2026.03]</strong> 직원 업무 효율화 플랫폼 개발<br/>
             다수 챗봇 통합 운영의 수기 업무와 중복 관리로 인한 비효율을 개선하는 AI 학습관리 플랫폼.<br/>
-            그룹 내 자체개발 프로젝트로, DB 모델링, 웹 풀스택 개발, 클라우드 인프라 구축 등 개발 전반 담당.
+            후배 개발자 1명과 함께한 그룹 내 자체개발 프로젝트로, 인프라·클라우드·웹서버·AI 모델·분석 아이템 개발 등 개발 대부분을 담당.
             <a href="https://www.etnews.com/20250914000047" target="_blank" rel="noopener noreferrer"
                style={{ color: "var(--brand-on-background-medium)" }}>
               &nbsp;&nbsp;Link &rarr;

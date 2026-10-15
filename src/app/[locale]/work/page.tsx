@@ -14,14 +14,14 @@ const components = {
   ImageGrid,
 };
 
-import { withAlternates } from "@/utils/seo";
+import { PAGE_DESCRIPTIONS, withAlternates } from "@/utils/seo";
 
 export async function generateMetadata() {
   const locale = await getLocale();
   return withAlternates(
     Meta.generate({
       title: work.title,
-      description: work.description,
+      description: PAGE_DESCRIPTIONS.work[locale === "en" ? "en" : "ko"],
       baseURL: baseURL,
       image: `/api/og/generate?title=${encodeURIComponent(work.title)}`,
       path: work.path,

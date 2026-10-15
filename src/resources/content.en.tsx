@@ -58,14 +58,17 @@ export const aboutEn: About = {
         role: "AI Platform Engineer (Senior Associate, Customer Contact Innovation Dept.)",
         achievements: [
           <>
-            <strong>[Jun 2026 — Present]</strong> KB Video Consultation System
+            <strong>[May 2026 — Present]</strong> KB Video Consultation System — new
+            features and operations
             <br />
-            A remote channel where customers consult a qualified specialist and
-            subscribe to financial products without visiting a branch.
+            KB&apos;s flagship non-face-to-face product subscription system. Customers
+            join remotely, go through verification and a product explanation, then
+            subscribe to products such as trust products and new deposit accounts, or
+            use financial services such as account password changes.
             <br />
-            I operate the identity-verification service required for remote trust
-            product sales and non-face-to-face Star Banking subscriptions, covering
-            ID authenticity checks combined with real-time face matching.
+            I develop new features and operate the system, including the
+            verification flow that combines ID authenticity checks with face
+            matching.
             <a
               href="https://www.bizwnews.com/news/articleView.html?idxno=134113"
               target="_blank"
@@ -76,12 +79,11 @@ export const aboutEn: About = {
             </a>
           </>,
           <>
-            <strong>[Mar 2026 — Present]</strong> Modernising KB&apos;s
-            customer-facing chatbot
+            <strong>[Apr 2026 — May 2026]</strong> Generative AI customer chatbot at KB
             <br />
-            Migrating a pattern-based ML chatbot to generative AI, including parsing
-            of terms, regulations and product documents to build the RAG knowledge
-            base.
+            In the project to turn a rule-based chatbot into a generative one, I
+            developed the agent, built topic-based knowledge bases by embedding
+            product descriptions and terms, and evaluated the agent&apos;s performance.
             <a
               href="https://www.etnews.com/20260326000047"
               target="_blank"
@@ -95,9 +97,9 @@ export const aboutEn: About = {
             <strong>[Jun 2025 — Mar 2026]</strong> Internal productivity platform
             <br />
             An AI learning-management platform that removed the manual work and
-            duplicated effort of running multiple chatbots. An in-house project where
-            I covered DB modelling, full-stack web development and cloud
-            infrastructure.
+            duplicated effort of running multiple chatbots. An in-house project built with
+            one junior developer, where I covered most of the development: infrastructure,
+            cloud, web server, AI models and analysis features.
           </>,
           <>
             <strong>[Dec 2022 — Sep 2024]</strong> Financial AI Center — photorealistic

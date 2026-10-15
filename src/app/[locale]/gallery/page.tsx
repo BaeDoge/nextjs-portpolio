@@ -4,14 +4,14 @@ import { baseURL, gallery, person } from "@/resources";
 import AwardStrip from "@/components/AwardStrip";
 import { getLocale } from "next-intl/server";
 
-import { withAlternates } from "@/utils/seo";
+import { PAGE_DESCRIPTIONS, withAlternates } from "@/utils/seo";
 
 export async function generateMetadata() {
   const locale = await getLocale();
   return withAlternates(
     Meta.generate({
       title: gallery.title,
-      description: gallery.description,
+      description: PAGE_DESCRIPTIONS.gallery[locale === "en" ? "en" : "ko"],
       baseURL: baseURL,
       image: `/api/og/generate?title=${encodeURIComponent(gallery.title)}`,
       path: gallery.path,

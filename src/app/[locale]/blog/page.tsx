@@ -7,14 +7,14 @@ import { baseURL, blog, person, newsletter } from "@/resources";
 import { getPostsByLocale } from "@/utils/utils";
 import { getLocale } from "next-intl/server";
 
-import { withAlternates } from "@/utils/seo";
+import { PAGE_DESCRIPTIONS, withAlternates } from "@/utils/seo";
 
 export async function generateMetadata() {
   const locale = await getLocale();
   return withAlternates(
     Meta.generate({
       title: blog.title,
-      description: blog.description,
+      description: PAGE_DESCRIPTIONS.blog[locale === "en" ? "en" : "ko"],
       baseURL: baseURL,
       image: `/api/og/generate?title=${encodeURIComponent(blog.title)}`,
       path: blog.path,
