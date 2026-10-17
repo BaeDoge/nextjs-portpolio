@@ -1,0 +1,63 @@
+---
+title: "[트러블슈팅] Python attempted relative import 에러 해결"
+publishedAt: "2026-10-17"
+summary: "Python에서 직접 실행된 스크립트 내 상대 임포트 시 발생하는 에러의 원인과 해결 방안을 정리합니다."
+tag: "Troubleshooting"
+---
+
+## 현상
+
+Python 스크립트에서 상대 임포트를 사용하다 다음과 같은 에러가 발생합니다. 이 에러는 모듈을 패키지의 일부로 인식하지 못할 때 나타납니다.
+
+```
+ImportError: attempted relative import with no known parent package
+```
+
+에러를 재현하는 최소 코드는 다음과 같습니다. `package/subpackage1/moduleX.py` 파일에서 `package/moduleA.py`를 상대 경로로 임포트하려고 할 때 발생합니다.
+
+```
+# package/subpackage1/moduleX.py
+from ..moduleA import spam
+```
+
+이 코드를 `python package/subpackage1/moduleX.py` 명령어로 직접 실행하면 에러가 발생합니다.
+
+## 원인
+
+Python은 파일을 로드하는 방식에 따라 모듈의 이름을 다르게 부여합니다. 파일을 직접 실행(`python myfile.py`)하면 `__name__`이 `__main__`이 되며, 이는 최상위 스크립트로 간주됩니다. 상대 임포트는 모듈의 `__name__` 속성을 통해 패키지 계층 구조를 파악하는데, `__main__`은 패키지 정보가 없으므로 상대 임포트를 해결할 수 없습니다. 따라서 파일의 실제 디렉토리 위치와 무관하게 최상위 모듈로 취급되어 에러가 발생합니다.
+
+## 해결 방법
+
+상대 임포트를 사용하는 모듈을 직접 실행하지 않고, 패키지의 루트 디렉토리에서 `-m` 옵션을 사용하여 모듈로 실행해야 합니다. 이렇게 하면 Python이 모듈을 패키지의 일부로 인식하여 `__name__`을 올바르게 설정합니다.
+
+수정 전 (에러 발생):
+
+```bash
+python package/subpackage1/moduleX.py
+```
+
+수정 후 (해결):
+
+```bash
+cd package
+python -m subpackage1.moduleX
+```
+
+## 다른 해결 방법
+
+상대 임포트를 절대 임포트로 변경하는 방법입니다. 패키지의 구조를 명확히 알고 있다면, 상대 경로 대신 전체 모듈 경로를 사용하여 임포트할 수 있습니다.
+
+```
+# package/subpackage1/moduleX.py
+from package.moduleA import spam
+```
+
+이 방법은 스크립트를 직접 실행하더라도 에러가 발생하지 않지만, 패키지 구조가 변경될 경우 임포트 경로도 함께 수정해야 하는 단점이 있습니다.
+
+## 추가 참고사항
+
+상대 임포트는 주로 패키지의 내부 모듈 간 결합도를 높이기 위해 사용되므로, 테스트용 스크립트나 진입점(entry point)에서는 절대 임포트를 사용하는 것이 권장됩니다. 또한, `__init__.py` 파일이 누락되면 Python이 해당 디렉토리를 패키지로 인식하지 못하므로, 패키지를 구성할 때 반드시 포함해야 합니다.
+
+## 출처
+
+- StackOverflow: [How to resolve the Python error &#39;attempted relative import&#39;](https://stackoverflow.com/questions/14132789/how-to-resolve-the-python-error-attempted-relative-import) — 작성자: user1881400(질문), BrenBarn(답변) (CC BY-SA)
