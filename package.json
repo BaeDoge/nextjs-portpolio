@@ -29,6 +29,7 @@
     "react-icons": "5.7.0",
     "remark-gfm": "4.0.1",
     "sass": "1.93.3",
+    "skia-canvas": "^4.0.0",
     "transliteration": "2.3.5",
     "typewriter-effect": "2.22.0"
   },
