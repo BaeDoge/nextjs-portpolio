@@ -2,10 +2,6 @@
 
 AI 기능을 실제 서비스에 연결하고 운영하는 엔지니어입니다. 금융 상담 서비스, 생성형 AI 챗봇, 데이터 처리 파이프라인과 클라우드 기반 애플리케이션 개발 경험을 정리한 개인 포트폴리오입니다.
 
-- **Portfolio:** https://baeseungho.vercel.app/
-- **GitHub:** https://github.com/BaeDoge
-- **LinkedIn:** https://www.linkedin.com/in/seung-ho-bae-7392b7282/
-
 ## 주요 기능
 
 | 영역 | 설명 |
