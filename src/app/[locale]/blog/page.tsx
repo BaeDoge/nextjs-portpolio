@@ -9,6 +9,8 @@ import { getLocale } from "next-intl/server";
 
 import { PAGE_DESCRIPTIONS, withAlternates } from "@/utils/seo";
 
+const PINNED_POST_SLUGS = ["how-this-portfolio-works", "college-life"];
+
 export async function generateMetadata() {
   const locale = await getLocale();
   return withAlternates(
@@ -27,12 +29,20 @@ export async function generateMetadata() {
 export default async function Blog() {
   const locale = await getLocale();
   const allPosts = getPostsByLocale(["src", "app", "[locale]", "blog", "posts"], locale)
-    .sort(
-      (a, b) =>
-        new Date(b.metadata.publishedAt).getTime() - new Date(a.metadata.publishedAt).getTime(),
-    )
-    // Post 카드에 필요한 필드만 클라이언트로 넘김 (본문 content는 제외 — 페이로드 절약)
-    .slice(1) // 맨 위 featured 1건은 아래서 <Posts range={[1,1]} /> 로 별도 표시
+    .sort((a, b) => {
+      const aPinnedIndex = PINNED_POST_SLUGS.indexOf(a.slug);
+      const bPinnedIndex = PINNED_POST_SLUGS.indexOf(b.slug);
+
+      if (aPinnedIndex !== -1 || bPinnedIndex !== -1) {
+        if (aPinnedIndex === -1) return 1;
+        if (bPinnedIndex === -1) return -1;
+        return aPinnedIndex - bPinnedIndex;
+      }
+
+      return new Date(b.metadata.publishedAt).getTime() - new Date(a.metadata.publishedAt).getTime();
+    })
+    // 카드에 필요한 메타데이터만 클라이언트로 전달
+    .slice(PINNED_POST_SLUGS.length)
     .map(({ slug, metadata }) => ({ slug, metadata }));
 
   return (
@@ -54,7 +64,7 @@ export default async function Blog() {
         {blog.title}
       </Heading>
       <Column fillWidth flex={1} gap="40">
-        <Posts range={[1, 1]} thumbnail />
+        <Posts range={[1, 2]} pinnedSlugs={PINNED_POST_SLUGS} thumbnail />
         <BlogFooterWidget />
         <Heading as="h2" variant="heading-strong-xl" marginLeft="l">
           {locale === "en" ? "All posts" : "전체 글"}
