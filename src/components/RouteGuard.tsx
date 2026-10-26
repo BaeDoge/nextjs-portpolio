@@ -120,6 +120,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
     );
   }
 
+  // console.info("[RouteGuard] Rendering children:", pathname);
   return <>{children}</>;
 };
 

@@ -13,7 +13,7 @@ import {
 } from "@/types";
 import { home } from "./index";
 
-const baseURL: string = "https://nextjs-portpolio.vercel.app";
+const baseURL: string = "https://baeseungho.vercel.app";
 
 const routes: RoutesConfig = {
   "/": true,
