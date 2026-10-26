@@ -218,7 +218,7 @@ export default async function About() {
             )}
             <Row paddingTop="12" horizontal="center" fitWidth>
               <Button
-                href={isEn ? "/resume.en.pdf" : "/resume.pdf"}
+                href={isEn ? "/resume.en.pdf" : "/resume.kr.pdf"}
                 prefixIcon="document"
                 label={isEn ? "Download Resume" : "이력서 다운로드"}
                 size="s"
@@ -449,7 +449,7 @@ export default async function About() {
                 { area: isEn ? "Languages" : "언어", items: ["Python ★★★", "JavaScript ★★", "C/C++ ★★", "Kotlin ★"] },
                 { area: "AI/ML", items: ["PyTorch", "TensorFlow", "LLM", "Hugging Face", "OpenCV", "RAG"] },
                 { area: isEn ? "Backend" : "백엔드", items: ["Flask", "FastAPI", "REST API", "MySQL"] },
-                { area: isEn ? "Infrastructure" : "인프라", items: ["Kubernetes", "AWS (EKS/EC2/S3/Lambda)", "Docker", "Jenkins"] },
+                { area: isEn ? "Infrastructure" : "인프라", items: ["Kubernetes", "AWS", "Docker", "Jenkins"] },
                 { area: isEn ? "Frontend" : "프론트", items: ["Bootstrap", "HTMX","Next.js","Tailwind CSS"] },
               ].map((row) => (
                 <Flex key={row.area} gap="m" paddingY="s"

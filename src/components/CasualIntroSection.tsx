@@ -7,7 +7,7 @@ const CARDS_KO = [
     emoji: "🏦",
     label: "빠른 실무 경험",
     content:
-      "25살에 첫 인턴\n26살부터 현재까지 \nKB 국민은행에서 AI 서비스를 개발·운영하고 있습니다.",
+      "25살에 첫 실무를 시작하여\nKB 국민은행에서 4년간 AI 서비스를 개발·운영하고 있습니다.",
     accent: "#378ADD",
     accentBg: "#E6F1FB",
   },
@@ -15,7 +15,7 @@ const CARDS_KO = [
     emoji: "🤖",
     label: "대규모 대고객서비스",
     content:
-      "일 트래픽 5만건 이상의\nKB 챗봇,콜봇 및\n비대면 화상상담시스템의\n개발과 운영 업무를 수행하였습니다.",
+      "일 트래픽 5만건 이상의\nKB 챗봇 기반 서비스 \n및 KB 화상상담시스템의\n개발 업무를 수행하였습니다.",
     accent: "#7F77DD",
     accentBg: "#EEEDFE",
   },
@@ -23,7 +23,7 @@ const CARDS_KO = [
     emoji: "🏆",
     label: "열정가",
     content:
-      "4.4/4.5 전공 학점과\n연구실 및 대외근로,\n인턴, 공모전 등\n좋은 결과를 남기기 위해 \n노력하였습니다.",
+      "30번이 넘게 공모전을 도전하며\n수많은 실패를 경험하고\n새로운 도전에 재미를\n붙이게 되었습니다.",
     accent: "#EF9F27",
     accentBg: "#FAEEDA",
   },
@@ -31,7 +31,7 @@ const CARDS_KO = [
     emoji: "🌱",
     label: "넓은 업무 커버리지",
     content:
-      "AI Modeling & LLM\nK8S & Docker\nWeb 개발\n업무자동화 등\n새로운 기술에 관심이 많습니다.",
+      "금융,의료,항공 등\n다양한 도메인 및 업무 경험을\n가지고 있습니다.",
     accent: "#D85A30",
     accentBg: "#FAECE7",
   },

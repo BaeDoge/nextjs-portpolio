@@ -119,7 +119,7 @@ export default function BlogFooterWidget() {
         }}>
           <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 6,
             color: "var(--neutral-on-background-strong)" }}>
-            {isEn ? "\uD83E\uDD16 Ask the AI" : "🤖 AI에게 물어보기"}
+            {isEn ? "\uD83E\uDD16 Ask the AI" : "🤖 승호 AI에게 물어보기"}
           </div>
           <div style={{ fontSize: 12, color: "var(--neutral-on-background-weak)",
             marginBottom: 12, lineHeight: 1.6 }}>

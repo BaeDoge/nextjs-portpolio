@@ -41,6 +41,14 @@ export default function BadgeGrid() {
         fg: "#085041",
         year: "2024",
       },
+      {
+        label: "금융 보험판매자격",
+        sub: "생명·손해·제3보험 판매자격",
+        color: "#1D9E75",
+        bg: "#E1F5EE",
+        fg: "#085041",
+        year: "2026",
+      },
     ];
   
     return (

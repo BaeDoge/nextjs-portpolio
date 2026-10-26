@@ -74,7 +74,7 @@ const COMMANDS: Record<string, (args: string[]) => Promise<string> | string> = {
 
 ── Backend & Infrastructure ───────────────────────────────
   Python (Flask, FastAPI), Node.js, REST API 설계
-  Kubernetes, AWS (EKS/EC2/S3/Lambda), Docker, CI/CD, HPA
+  Kubernetes, AWS, Docker, CI/CD, HPA
 
 ── Frontend & Database ────────────────────────────────────
   React, Next.js, Tailwind CSS

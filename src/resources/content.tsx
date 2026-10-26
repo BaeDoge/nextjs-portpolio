@@ -163,21 +163,33 @@ const about: About = {
         ],
         images: [
           {
+            src: "/news/hwasang.png",
+            alt: "KB화상상담시스템",
+            width: 5,
+            height: 10,
+          },
+          {
+            src: "/news/chatbot.png",
+            alt: "직원용 챗봇 생성형 AI 현대화",
+            width: 5,
+            height: 10,
+          },
+          {
             src: "/news/genai.png",
             alt: "고객용 챗봇 생성형 AI 현대화",
-            width: 4,
+            width: 5,
             height: 10,
           },
           {
             src: "/news/ai-lms.jpg",
             alt: "AI학습관리시스템 개발",
-            width: 4,
+            width: 5,
             height: 10,
           },
           {
             src: "/news/ai-assistant.png",
             alt: "AI금융비서 서비스 개발",
-            width: 4,
+            width: 5,
             height: 10,
           },
         ],

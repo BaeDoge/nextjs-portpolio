@@ -92,8 +92,8 @@ export default async function HighlightPanel() {
         </div>
         <div style={{ fontSize: 13, lineHeight: 1.55, color: "var(--neutral-on-background-strong)" }}>
           {isEn
-            ? "Building an in-house generative AI financial assistant and its RAG pipeline."
-            : "사내 생성형 AI 금융 어시스턴트와 RAG 파이프라인을 만들고 있습니다."}
+            ? "I develop chatbot systems for internal customers and employees, as well as a KB video consultation system."
+            : "사내 고객용/직원용 챗봇 시스템과 KB 화상상담시스템을 개발하고 있습니다."}
         </div>
       </div>
 
