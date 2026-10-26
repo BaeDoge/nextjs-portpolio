@@ -27,22 +27,34 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
       setIsAuthenticated(false);
 
       const checkRouteEnabled = () => {
-        if (!pathname) return false;
+        if (pathname == null) return false;
 
-        if (pathname in routes) {
-          return routes[pathname as keyof typeof routes];
+        // 경로를 정규화: 빈 문자열과 끝의 슬래시 처리
+        const normalizedPath =
+          pathname === "" ? "/" : pathname.replace(/\/+$/, "") || "/";
+
+        // 진단 로그: 브라우저 개발자 도구 Console에서 확인
+        console.info("[RouteGuard]", {
+          pathname,
+          normalizedPath,
+          enabled: routes[normalizedPath as keyof typeof routes],
+        });
+
+        // 정적 경로 확인
+        if (Object.prototype.hasOwnProperty.call(routes, normalizedPath)) {
+          return routes[normalizedPath as keyof typeof routes];
         }
 
+        // 동적 경로는 경로 경계까지 확인
         const dynamicRoutes = ["/blog", "/work"] as const;
-        for (const route of dynamicRoutes) {
-          if (pathname?.startsWith(route) && routes[route]) {
-            return true;
-          }
-        }
 
-        return false;
+        return dynamicRoutes.some(
+          (route) =>
+            (normalizedPath === route ||
+              normalizedPath.startsWith(`${route}/`)) &&
+            routes[route],
+        );
       };
-
       const routeEnabled = checkRouteEnabled();
       setIsRouteEnabled(routeEnabled);
 
