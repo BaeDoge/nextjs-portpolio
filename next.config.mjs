@@ -4,9 +4,9 @@ import createNextIntlPlugin from "next-intl/plugin";
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // ⬇️ [추가] 빌드 시 TypeScript 타입 에러가 있어도 무시하고 강제로 배포를 완료하는 옵션입니다.
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // typescript: {
+  //   ignoreBuildErrors: true,
+  // },
 
   images: {
     formats: ["image/avif", "image/webp"],
