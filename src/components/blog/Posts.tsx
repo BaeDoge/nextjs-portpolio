@@ -9,6 +9,7 @@ interface PostsProps {
   thumbnail?: boolean;
   direction?: "row" | "column";
   exclude?: string[];
+  pinnedSlugs?: string[];
 }
 
 export async function Posts({
@@ -16,6 +17,7 @@ export async function Posts({
   columns = "1",
   thumbnail = false,
   exclude = [],
+  pinnedSlugs = [],
   direction,
 }: PostsProps) {
   const locale = await getLocale();
@@ -25,6 +27,15 @@ export async function Posts({
   }
 
   const sortedBlogs = allBlogs.sort((a, b) => {
+    const aPinnedIndex = pinnedSlugs.indexOf(a.slug);
+    const bPinnedIndex = pinnedSlugs.indexOf(b.slug);
+
+    if (aPinnedIndex !== -1 || bPinnedIndex !== -1) {
+      if (aPinnedIndex === -1) return 1;
+      if (bPinnedIndex === -1) return -1;
+      return aPinnedIndex - bPinnedIndex;
+    }
+
     return new Date(b.metadata.publishedAt).getTime() - new Date(a.metadata.publishedAt).getTime();
   });
 
