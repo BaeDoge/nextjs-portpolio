@@ -69,7 +69,7 @@ function getMDXData(dir: string) {
 }
 
 export function getPosts(customPath = ["", "", "", ""]) {
-  const postsDir = path.join(process.cwd(), ...customPath);
+  const postsDir = path.join(/*turbopackIgnore: true*/ process.cwd(), ...customPath);
   return getMDXData(postsDir);
 }
 
@@ -83,7 +83,8 @@ export function getPostsByLocale(customPath: string[], locale: string) {
   const koPosts = getPosts(customPath);
   if (locale !== "en") return koPosts;
 
-  const enDir = path.join(process.cwd(), ...customPath, "en");
+  // 이 부분도 마찬가지로 ignore 주석을 추가합니다.
+  const enDir = path.join(/*turbopackIgnore: true*/ process.cwd(), ...customPath, "en");
   if (!fs.existsSync(enDir)) return koPosts;
 
   const enPosts = getMDXData(enDir);
