@@ -1,0 +1,70 @@
+---
+title: "[Coding Test] Finding Modes in a Binary Search Tree"
+publishedAt: "2026-10-17"
+summary: "Find all values with the highest frequency in a binary search tree."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given a binary search tree (BST) that may contain duplicate values, return all modes: the value or values that occur most frequently. If there are multiple modes, they can be returned in any order. In this problem, values in the left subtree are less than or equal to the current node, and values in the right subtree are greater than or equal to it. The tree can contain up to `10^4` nodes, with values between `-10^5` and `10^5`. A follow-up asks for a solution using constant extra space.
+
+## Approach
+
+An **in-order traversal** of a BST visits values in sorted order. Equal values therefore appear consecutively, allowing us to count each run without a hash map or a separate sorting step. Track the current value (`current_val`), its consecutive count (`current_count`), the highest count seen (`max_count`), and the list of modes.
+
+During traversal, increment the current count when the value matches the previous value; otherwise, reset the count to one. If the count exceeds `max_count`, update the maximum and replace the mode list with the current value. If it equals `max_count`, append the current value.
+
+## Solution
+
+```python
+class Solution:
+    def findMode(self, root: Optional[TreeNode]) -> List[int]:
+        self.current_val = None
+        self.current_count = 0
+        self.max_count = 0
+        self.modes = []
+
+        def inorder(node):
+            if not node:
+                return
+            inorder(node.left)
+            
+            # Process the current node's value
+            if self.current_val is not None:
+                if node.val == self.current_val:
+                    self.current_count += 1
+                else:
+                    self.current_count = 1
+                    self.current_val = node.val
+            else:
+                self.current_val = node.val
+                self.current_count = 1
+
+            # Update the modes
+            if self.current_count > self.max_count:
+                self.max_count = self.current_count
+                self.modes = [self.current_val]
+            elif self.current_count == self.max_count:
+                self.modes.append(self.current_val)
+                
+            inorder(node.right)
+
+        inorder(root)
+        return self.modes
+```
+
+**Time complexity:** `O(N)), because every node is visited once.  
+**Space complexity:** `O(H)), for the recursive call stack, where `H` is the height of the tree.
+
+## Alternative Approaches
+
+A hash map or `Counter` can count the frequency of every value during any tree traversal, after which the values with the highest frequency can be collected. This takes `O(N)) time and `O(N)) extra space. It is straightforward and works for general trees, but does not meet the constant-space follow-up.
+
+## Additional Notes
+
+To meet the constant-space follow-up more closely, **Morris traversal** can be used instead of recursion. It temporarily links a node to its predecessor to create a traversal path without a recursion stack or explicit stack. This enables `O(1)) auxiliary space. Also note that the BST definition in this problem allows duplicate values on either side of a node.
+
+## Sources
+
+- LeetCode: [LeetCode 501 - Find Mode in Binary Search Tree](https://leetcode.com/problems/find-mode-in-binary-search-tree/)
