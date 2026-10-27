@@ -1,0 +1,70 @@
+---
+title: "[Coding Test] Validating a Mountain Array"
+publishedAt: "2026-10-20"
+summary: "Determine whether an array strictly increases to one peak and then strictly decreases."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given an integer array `arr`, determine whether it is a valid **mountain array**. A valid mountain array must satisfy these conditions:
+
+- Its length is at least three.
+- There is an index `i`, where `0 < i < arr.length - 1`, such that `arr[0] < arr[1] < ... < arr[i]` and `arr[i] > arr[i + 1] > ... > arr[arr.length - 1]`.
+
+In other words, the array must have exactly one peak, and the peak cannot be at either endpoint. Flat sections, arrays that only increase, and arrays that only decrease are invalid.
+
+## Approach
+
+The most direct approach is to start at the left side, move through the increasing segment, and then verify the decreasing segment.
+
+1. Start with index `i = 0` and advance while `arr[i] < arr[i + 1]`.
+2. If `i` is still zero or has reached the last index, the peak is not in the required interior position, so return `false`.
+3. Continue advancing while `arr[i] > arr[i + 1]`.
+4. Return `true` only if the scan reaches the final index.
+
+## Solution
+
+The following implementation uses one loop for the increasing segment and another for the decreasing segment.
+
+```python
+class Solution:
+    def validMountainArray(self, arr: List[int]) -> bool:
+        n = len(arr)
+        if n < 3:
+            return False
+        
+        i = 0
+        
+        # Scan the increasing segment
+        while i + 1 < n and arr[i] < arr[i + 1]:
+            i += 1
+            
+        # The peak cannot be the first or last element
+        if i == 0 or i == n - 1:
+            return False
+            
+        # Scan the decreasing segment
+        while i + 1 < n and arr[i] > arr[i + 1]:
+            i += 1
+            
+        # The scan must reach the final element
+        return i == n - 1
+```
+
+- **Time complexity:** `O(N)), because the array is scanned at most once.
+- **Space complexity:** `O(1)), because no additional data structure is used.
+
+## Alternative Approaches
+
+Two pointers can scan from both ends. Advance a left pointer through the increasing segment and a right pointer backward through the decreasing segment. The array is valid if both pointers meet at the same interior index. This method also takes `O(N)) time and `O(1)) extra space, while identifying the peak from both directions.
+
+## Additional Notes
+
+- If adjacent elements are equal (`arr[i] == arr[i + 1]`), the array is invalid. The strict comparisons in the loops stop at a flat section, and the final position check rejects it.
+- Arrays shorter than three elements must be rejected immediately.
+- This problem is useful practice for sequential scanning and boundary-condition handling.
+
+## Sources
+
+- LeetCode: [LeetCode 941 - Valid Mountain Array](https://leetcode.com/problems/valid-mountain-array/)

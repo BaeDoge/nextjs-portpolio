@@ -1,0 +1,63 @@
+---
+title: "[Troubleshooting] Fixing Python's 'Attempted Relative Import' Error"
+publishedAt: "2026-10-17"
+summary: "Why relative imports fail in Python scripts executed directly, and how to fix the issue."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+Using a relative import in a Python script can produce this error when Python does not recognize the module as part of a package:
+
+```
+ImportError: attempted relative import with no known parent package
+```
+
+A minimal example is importing `package/moduleA.py` from `package/subpackage1/moduleX.py` using a relative path:
+
+```python
+# package/subpackage1/moduleX.py
+from ..moduleA import spam
+```
+
+Running the file directly with `python package/subpackage1/moduleX.py` causes the error.
+
+## Cause
+
+Python assigns a module name based on how a file is loaded. When a file is executed directly with `python myfile.py`, its `__name__` becomes `__main__`, and Python treats it as a top-level script. Relative imports rely on the module's package information to determine the package hierarchy. Because `__main__` does not provide that package context, Python cannot resolve the relative import. This happens regardless of the file's actual directory.
+
+## Solution
+
+Instead of executing the module file directly, run it as a module with the `-m` option from the package's root directory. Python will then recognize it as part of the package and set its module information correctly.
+
+Before (causes the error):
+
+```bash
+python package/subpackage1/moduleX.py
+```
+
+After (works):
+
+```bash
+cd package
+python -m subpackage1.moduleX
+```
+
+## Alternative Solutions
+
+Change the relative import to an absolute import. If the package structure is known, use the full module path instead:
+
+```python
+# package/subpackage1/moduleX.py
+from package.moduleA import spam
+```
+
+This can avoid the error when the script is executed directly, but the import path must also be updated if the package structure changes.
+
+## Additional Notes
+
+Relative imports are commonly used between modules inside a package. For test scripts and application entry points, absolute imports are often easier to reason about. Also, make sure the package contains the required `__init__.py` files when your project structure relies on regular Python packages.
+
+## Sources
+
+- StackOverflow: [How to resolve the Python error 'attempted relative import'](https://stackoverflow.com/questions/14132789/how-to-resolve-the-python-error-attempted-relative-import) — Authors: user1881400 (question), BrenBarn (answer) (CC BY-SA)

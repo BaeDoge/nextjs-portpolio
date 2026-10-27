@@ -1,0 +1,52 @@
+---
+title: "[Coding Test] Finding the Next Greater Element with a Monotonic Stack"
+publishedAt: "2026-10-15"
+summary: "For each element in nums1, efficiently find the first greater element to its right in nums2 using a monotonic stack and a hash map."
+tag: "Algorithm"
+---
+
+## Problem
+
+You are given two arrays of distinct integers, `nums1` and `nums2`, where `nums1` is a subset of `nums2`. For each element in `nums1`, find the first element greater than it that appears to its right in `nums2`. If no greater element exists, return `-1`. Return the results in an array. All elements are unique, and every element of `nums1` is guaranteed to exist in `nums2`.
+
+## Approach
+
+Searching to the right of every element in `nums2` separately for each value in `nums1` is inefficient. Instead, traverse `nums2` once and precompute each element's next greater value in a hash map. A stack keeps track of earlier elements that are smaller than the current one. When the current element is greater than the stack's top, it is the next greater element for the value popped from the stack. Store that relationship in the map. Each lookup for an element in `nums1` can then be completed in average `O(1)) time.
+
+## Solution
+
+Initialize an empty hash map and stack. Iterate over each value in `nums2`. While the stack is not empty and the current value is greater than its top, pop the top value and map it to the current value. Then push the current value onto the stack. Once the traversal is complete, look up each value in `nums1` and build the result array. Use `-1` when a value has no mapping.
+
+```python
+def nextGreaterElement(nums1, nums2):
+    stack = []
+    next_greater_map = {}
+    
+    for num in nums2:
+        while stack and stack[-1] < num:
+            prev = stack.pop()
+            next_greater_map[prev] = num
+        stack.append(num)
+    
+    result = []
+    for num in nums1:
+        result.append(next_greater_map.get(num, -1))
+        
+    return result
+```
+
+**Time complexity:** `O(N + M)`, where `N` is the length of `nums2` and `M` is the length of `nums1`. Every element in `nums2` is pushed onto and popped from the stack at most once, and each lookup in `nums1` takes average `O(1)) time.
+
+**Space complexity:** `O(N)`, because the stack and hash map can each store up to `N` elements.
+
+## Alternative Approaches
+
+A brute-force solution finds each value's index in `nums2`, then scans to the right until it finds a greater value. For lengths `M` and `N`, this takes `O(M × N)) time. It may pass under the problem's constraints of `N ≤ 1000`, but it does not scale as well. A stack-only variation is also possible, but the computed next-greater relationships still need to be stored in a hash map or array.
+
+## Additional Notes
+
+This is the first problem in the *Next Greater Element* series and a classic application of the **monotonic stack** technique. Keeping elements in decreasing order on the stack makes it possible to find the next greater value through comparisons with the current element. Because `nums2` contains no duplicates, each value can be used directly as a hash-map key. If duplicates were allowed, indices or additional handling would be needed.
+
+## Sources
+
+- LeetCode: [LeetCode 496 - Next Greater Element I](https://leetcode.com/problems/next-greater-element-i/)
