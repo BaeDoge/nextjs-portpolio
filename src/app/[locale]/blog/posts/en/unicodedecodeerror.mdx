@@ -1,0 +1,68 @@
+---
+title: "[Troubleshooting] Resolving UnicodeDecodeError Encoding Issues"
+publishedAt: "2026-10-27"
+summary: "How to handle UTF-8 decoding failures during file reading by specifying encoding or using binary mode."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+When reading a file using the `open()` function, a `UnicodeDecodeError` occurs if bytes that do not conform to the UTF-8 standard are found in the file content.
+
+```python
+for line in open('u.item'):
+    # Read each line
+```
+
+```
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe9 in position 2892: invalid continuation byte
+```
+
+## Cause
+
+The `open()` function in Python 3 reads files using the system's default encoding (usually UTF-8) by default. If the target file is saved in an encoding other than UTF-8 (e.g., ISO-8859-1, Windows-1252, etc.), the UTF-8 decoder cannot interpret the bytes and raises an error. For example, in Windows-1252 encoding, the byte `0xe9` represents the character `é`, but in UTF-8, it is not a valid continuation byte, causing an error.
+
+## Solution
+
+Resolve the issue by explicitly specifying the file's actual encoding. If the file was written in `ISO-8859-1` encoding, add the `encoding` parameter to specify it.
+
+```python
+for line in open('u.item', encoding='ISO-8859-1'):
+    # Read each line
+```
+
+## Alternative Solutions
+
+If you cannot determine the exact encoding of the file, or if you want to read the file while ignoring decoding errors, you can use the `errors='ignore'` option. Additionally, if you want to completely bypass encoding issues and read the data as binary, you can use the `'rb'` mode.
+
+```python
+# Ignore decoding errors
+for line in open('u.item', encoding='utf8', errors='ignore'):
+    pass
+
+# Read in binary mode
+for line in open('u.item', 'rb'):
+    pass
+```
+
+## Additional Notes
+
+To check the file's encoding, you can use the `file` command in a Linux environment.
+
+```bash
+file --mime-encoding <filename>
+```
+
+Also, when reading CSV files using the `pandas` library, encoding issues are common. In such cases, specifying `encoding='latin-1'` or `encoding='ISO-8859-1'` is effective.
+
+```python
+import pandas as pd
+
+pd.read_csv('u.item', sep='|', names=m_cols, encoding='latin-1')
+```
+
+## Sources
+
+- StackOverflow: ["for line in..." results in UnicodeDecodeError: 'utf-8' codec can't decode byte](https://stackoverflow.com/questions/19699367/for-line-in-results-in-unicodedecodeerror-utf-8-codec-cant-decode-byte) — Author: SujitS(question), SujitS(answer) (CC BY-SA)
+- Tistory: [줄을 서야 한다." 결과 UnicodeDecodeError: 'utf-8' 코덱이 바이트를 디코딩할 수 없습니다.](https://bestcode.tistory.com/866) — Author: bestcode
+- Tistory: [【Python】 파이썬 주요 트러블슈팅 [41-60]](https://nate9389.tistory.com/2292) — Author: 정빈이의 공부방
