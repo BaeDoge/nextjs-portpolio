@@ -1,0 +1,54 @@
+---
+title: "[Coding Test] Counting Connected Components"
+publishedAt: "2026-10-27"
+summary: "This note outlines an algorithm to count the number of connected city groups (provinces) in a graph represented by an adjacency matrix."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given `n` cities and an adjacency matrix `isConnected`, return the total number of 'provinces', which are groups of cities connected directly or indirectly. If `isConnected[i][j]` is 1, it means city `i` and city `j` are directly connected. The matrix is symmetric, and the connection to oneself is given as 1. The number of cities `n` is at most 200.
+
+## Approach
+
+This problem is equivalent to finding the number of 'connected components' in graph theory. We can view all cities as vertices and their connections as edges. Starting from an unvisited city, performing a Depth First Search (DFS) or Breadth First Search (BFS) allows us to visit all cities belonging to one province in a single traversal. By iterating through all cities and counting the number of times we initiate a traversal, we can determine the final number of provinces.
+
+## Solution
+
+We implement a solution using DFS to traverse from each city as a root. We use a `visited` array to record visited cities. For every index from `0` to `n-1`, we check if it has been visited. If not, we increment the province counter and execute DFS starting from that city. Inside the DFS, we recursively mark all adjacent cities connected to the current city as visited.
+
+```python
+class Solution:
+    def findCircleNum(self, isConnected: list[list[int]]) -> int:
+        n = len(isConnected)
+        visited = [False] * n
+        provinces = 0
+        
+        def dfs(city: int) -> None:
+            visited[city] = True
+            for neighbor in range(n):
+                if isConnected[city][neighbor] == 1 and not visited[neighbor]:
+                    dfs(neighbor)
+        
+        for i in range(n):
+            if not visited[i]:
+                provinces += 1
+                dfs(i)
+                
+        return provinces
+```
+
+Time Complexity: $O(n^2)$. The size of the adjacency matrix is $n \times n$. Although checking the connection status of each city takes constant time, we may reference the entire matrix, so it is proportional to $n^2$.
+Space Complexity: $O(n)$. This is required for the array storing visitation status and the depth of the recursive call stack, which is at most $n$.
+
+## Alternative Approaches
+
+Breadth First Search (BFS) can be used. Unlike DFS, BFS uses a Queue to sequentially visit connected cities instead of recursive calls. BFS can be more stable for very deep graphs where stack overflow risks exist. Additionally, the Union-Find (Disjoint Set) data structure can be used to merge connected cities. Union-Find starts with each city in its own set and repeatedly merges the roots of two connected cities. The answer is obtained by counting the number of root nodes at the end. For Union-Find, the time complexity is close to $O(n^2 \alpha(n))$, and the implementation can be longer, but it is useful when the graph structure changes dynamically.
+
+## Additional Notes
+
+The constraint `isConnected[i][j] == isConnected[j][i]` ensures that the graph is undirected. Also, since `isConnected[i][i] == 1`, every city is connected to itself, making it always a valid starting point for traversal. Since the range of `n` is small (at most 200), DFS, BFS, and Union-Find all perform efficiently. If the graph were represented by an adjacency list instead of a matrix, it could be optimized to $O(V+E)$ depending on the number of edges $E$, but since the problem input is in matrix form, using the matrix directly is the natural approach.
+
+## Sources
+
+- LeetCode: [LeetCode 547 - Number of Provinces](https://leetcode.com/problems/number-of-provinces/)
