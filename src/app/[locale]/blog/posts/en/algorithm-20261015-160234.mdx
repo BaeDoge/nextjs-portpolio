@@ -1,0 +1,55 @@
+---
+title: "[Coding Test] Detecting an Increasing Triplet Subsequence"
+publishedAt: "2026-10-15"
+summary: "Determine in O(n) time and O(1) extra space whether an array contains indices i < j < k such that nums[i] < nums[j] < nums[k]."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given an integer array `nums`, return `true` if there are indices `i < j < k` such that `nums[i] < nums[j] < nums[k]`; otherwise, return `false`. The array can contain up to `5 × 10^5` elements, and each value is within the 32-bit integer range. The key requirement is to solve the problem in `O(n)) time and `O(1)) extra space.
+
+## Approach
+
+This is a special case of the Longest Increasing Subsequence (LIS) problem, where we only need a subsequence of length three. Computing a general LIS takes `O(n log n)) or `O(n^2)) time, so it does not meet the linear-time requirement. Instead, use a greedy strategy with two variables, `first` and `second`, in a single pass.
+
+- `first` stores the smallest value encountered so far.
+- `second` stores the smallest value found that is greater than `first`.
+
+If a new value is greater than `second`, an increasing triplet has been found. If it is smaller than or equal to `first`, update `first`. Otherwise, if it is smaller than or equal to `second`, update `second`. Each element is processed once, giving `O(n)) time complexity.
+
+## Solution
+
+```python
+class Solution:
+    def increasingTriplet(self, nums: List[int]) -> bool:
+        first = float('inf')
+        second = float('inf')
+        
+        for num in nums:
+            if num <= first:
+                first = num
+            elif num <= second:
+                second = num
+            else:
+                return True
+                
+        return False
+```
+
+**Time complexity:** `O(n)), because the array is traversed once and each iteration performs constant-time operations.
+
+**Space complexity:** `O(1)), because only the two variables `first` and `second` are maintained.
+
+## Alternative Approaches
+
+1. **Dynamic programming:** For each index, precompute the smallest value to its left and the largest value to its right. This can be done in `O(n)) time, but requires auxiliary arrays and therefore `O(n)) space.
+2. **Longest Increasing Subsequence:** A standard LIS algorithm can determine whether a subsequence of length three exists, but it takes `O(n log n)) time and does not meet the required `O(n)) bound.
+
+## Additional Notes
+
+The condition `num <= first` deliberately includes equality. Equal values cannot form a strictly increasing triplet. If `first` is `2` and the next value is also `2`, the first candidate should be updated rather than allowing the same value to serve as both `first` and `second`. When `second` is updated, it is greater than `first`, which means a valid smaller candidate has already been found.
+
+## Sources
+
+- LeetCode: [LeetCode 334 - Increasing Triplet Subsequence](https://leetcode.com/problems/increasing-triplet-subsequence/)
