@@ -1,0 +1,48 @@
+---
+title: "[Coding Test] Finding a Peak Element with Binary Search"
+publishedAt: "2026-10-17"
+summary: "Find the index of a peak element, which is greater than its adjacent elements, in O(log n) time."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given a zero-indexed integer array `nums`, return the index of a peak element. A peak is an element that is strictly greater than its adjacent elements. Treat both ends of the array as if they were negative infinity (`-inf), so an endpoint can also be a peak. If multiple peaks exist, returning any one of their indices is acceptable. The algorithm must run in `O(log n)) time.
+
+## Approach
+
+The `O(log n)) requirement suggests using **binary search**. The array does not need to be fully sorted: compare the middle element with its right neighbor. If the sequence is rising at that point, there must be a peak to the right. If it is falling, a peak exists at the middle or to its left. This lets us discard half of the remaining search range at each step.
+
+## Solution
+
+Initialize `left` to `0` and `right` to `len(nums) - 1`. While `left < right`, calculate `mid`. If `nums[mid] < nums[mid + 1]`, the slope rises to the right, so move `left` to `mid + 1`. Otherwise, a peak is at `mid` or to its left, so move `right` to `mid`. When the loop ends, both pointers identify the peak index.
+
+```python
+def findPeakElement(nums):
+    left = 0
+    right = len(nums) - 1
+    
+    while left < right:
+        mid = (left + right) // 2
+        if nums[mid] < nums[mid + 1]:
+            left = mid + 1
+        else:
+            right = mid
+            
+    return left
+```
+
+**Time complexity:** `O(log n)).  
+**Space complexity:** `O(1)).
+
+## Alternative Approaches
+
+A linear search can solve the problem in `O(n)) time by scanning from the first element and checking whether the current value is greater than the next one, treating the final element as a peak when appropriate. It is simpler, but does not satisfy the required `O(log n)) complexity.
+
+## Additional Notes
+
+The constraint `nums[i] != nums[i + 1]` means there are no flat plateaus to handle. The key insight is that at least one side of the midpoint must contain a peak. Since `nums[-1]` and `nums[n]` are treated as `-inf`, at least one peak is guaranteed to exist.
+
+## Sources
+
+- LeetCode: [LeetCode 162 - Find Peak Element](https://leetcode.com/problems/find-peak-element/)
