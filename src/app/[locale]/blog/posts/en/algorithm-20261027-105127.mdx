@@ -1,0 +1,75 @@
+---
+title: "[Coding Test] Finding Pivot Index"
+publishedAt: "2026-10-27"
+summary: "An algorithm to find the index in an array where the sum of elements to the left is equal to the sum of elements to the right."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given an integer array `nums`, calculate the pivot index. A pivot index is the index where the sum of all the numbers strictly to the left of the index is equal to the sum of all the numbers strictly to the right of the index. If the index is on the left edge of the array, then the left sum is 0 because there are no elements to the left. This also applies to the right edge of the array. Return the leftmost pivot index. If there is no such index, return -1.
+
+## Approach
+
+First, calculate the total sum of the array. Then, iterate through the array from left to right while maintaining the sum of elements to the left of the current index. The sum of elements to the right of the current index can be calculated as `total_sum - left_sum - current_element_value`. Check if the left sum equals the right sum, and return the first index where this condition is met.
+
+## Solution
+
+After calculating the total sum, find the index that satisfies the condition in a single pass.
+
+```python
+class Solution:
+    def pivotIndex(self, nums: List[int]) -> int:
+        total_sum = sum(nums)
+        left_sum = 0
+        
+        for i, num in enumerate(nums):
+            # right_sum = total_sum - left_sum - current_value
+            right_sum = total_sum - left_sum - num
+            
+            if left_sum == right_sum:
+                return i
+            
+            left_sum += num
+            
+        return -1
+```
+
+Time Complexity: O(N), Space Complexity: O(1)
+
+## Alternative Approaches
+
+You can approach this by pre-building a prefix sum array. Create separate arrays for the left cumulative sum and the right cumulative sum, then compare the sums at each index. While this method makes the code more intuitive, it increases the space complexity to O(N) because it uses additional arrays.
+
+```python
+class Solution:
+    def pivotIndex(self, nums: List[int]) -> int:
+        n = len(nums)
+        if n == 0:
+            return -1
+            
+        left_sum = [0] * n
+        right_sum = [0] * n
+        
+        for i in range(1, n):
+            left_sum[i] = left_sum[i-1] + nums[i-1]
+            
+        for i in range(n-2, -1, -1):
+            right_sum[i] = right_sum[i+1] + nums[i+1]
+            
+        for i in range(n):
+            if left_sum[i] == right_sum[i]:
+                return i
+                
+        return -1
+```
+
+Time Complexity: O(N), Space Complexity: O(N)
+
+## Additional Notes
+
+This problem is identical to LeetCode 1991. The constraints specify that the array length is at most 10^4 and each element's value is between -1000 and 1000, so integer overflow does not need to be considered. The first solution is superior in terms of space efficiency.
+
+## Sources
+
+- LeetCode: [LeetCode 724 - Find Pivot Index](https://leetcode.com/problems/find-pivot-index/)
