@@ -1,0 +1,74 @@
+---
+title: "[Troubleshooting] ModuleNotFoundError: No module named 'tkinter'"
+publishedAt: "2026-10-27"
+summary: "This note explains the causes of the ModuleNotFoundError when importing the Tkinter module in Python 3 and provides solutions involving system package installation."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+When attempting to import the `tkinter` module in a Python 3 environment, the error `ModuleNotFoundError: No module named 'tkinter'` occurs. In a Python 2 environment, the same error appears when importing `Tkinter` (with a capital T). This indicates that the GUI library is either not installed on the system or is inaccessible to the Python interpreter.
+
+```python
+import tkinter
+# ModuleNotFoundError: No module named 'tkinter'
+```
+
+## Cause
+
+Tkinter is Python's standard interface to the Tcl/Tk GUI toolkit. While it is included by default with Python installations, it cannot be accessed if the Tcl/Tk libraries are not built at the operating system level. In particular, many Linux distributions manage Python packages separately from the system's Tcl/Tk development libraries. Therefore, if only the Python interpreter is installed and the host system's GUI-related system packages are missing, Python will be unable to find the module.
+
+## Solution
+
+In most Linux distributions, you must install the Tkinter package corresponding to your Python version via the system package manager. On Ubuntu or Debian-based systems, install the `python3-tk` package. On Fedora-based systems, install the `python3-tkinter` or `python3-tk` package.
+
+```bash
+# Ubuntu/Debian based
+sudo apt-get install python3-tk
+
+# Fedora based
+sudo dnf install python3-tkinter
+```
+
+After installation, verify that the import works correctly in your Python script using the following code:
+
+```python
+import tkinter as tk
+print(tk.TkVersion)
+```
+
+![Solution screenshot](/blogs/modulenotfounderror-no-module-named-tkinter-1.png)
+
+## Alternative Solutions
+
+If you are using a virtual environment (virtualenv/venv), you may need to recreate the virtual environment after installing the system package or link the system package to the virtual environment. Directly installing the `tkinter` package via pip, the Python package manager, is generally not supported. Since Tkinter is a C extension module that depends on system libraries, it cannot be resolved using `pip install`.
+
+```bash
+# Direct installation via pip is not supported
+pip install tkinter  # Error occurs or is ignored
+
+# If the system package is already installed,
+# it should be importable within the virtual environment as well
+```
+
+To ensure compatibility between Python 2 and 3, you can use a pattern that checks the version before importing.
+
+```python
+import sys
+if sys.version_info[0] == 3:
+    import tkinter as tk
+else:
+    import Tkinter as tk
+```
+
+## Additional Notes
+
+On macOS, Tcl/Tk is often installed alongside Python when installed via Homebrew, but additional configuration may be required if using the official Python installer. On Windows, the 'tcl/tk and IDLE' option is included by default if checked during the Python installation. When using visualization libraries such as matplotlib, the Tkinter backend is required; therefore, if the aforementioned error occurs, you must install the GUI packages first.
+
+## Sources
+
+- StackOverflow: [ImportError: No module named 'Tkinter'](https://stackoverflow.com/questions/25905540/importerror-no-module-named-tkinter) — Author: RasmusGP(question), d-coder(answer) (CC BY-SA)
+- Tistory: [[Tkinter, Python] ImportError: No module named tkinter](https://hydroponicglass.tistory.com/entry/Tkinter-Python-ImportError-No-module-named-tkinter) — Author: 코드 다이어리
+- Tistory: [ImportError: No module named '_tkinter', please install the python3-tk package](https://intuitive-robotics.tistory.com/100) — Author: Intuitive-Robotics
+
+Images are taken from the sources above.
