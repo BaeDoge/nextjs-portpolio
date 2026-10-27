@@ -1,0 +1,79 @@
+---
+title: "[Coding Test] Reversing a Singly Linked List"
+publishedAt: "2026-10-27"
+summary: "This note summarizes iterative and recursive approaches to reversing the order of nodes in a singly linked list."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given the `head` of a singly linked list, reverse the list and return the new `head`.
+The input example `[1,2,3,4,5]` should be converted to `[5,4,3,2,1]`.
+If the list is empty (`[]`), return an empty list.
+The number of nodes ranges from 0 to 5,000, and each node's value is an integer between -5,000 and 5,000.
+This problem can be solved using two methods: iteration and recursion.
+
+## Approach
+
+To reverse a linked list, the direction of each node's pointer to the next node must be flipped.
+Use `prev` to point to the current node and `next` to point to the next node, traversing the list and reassigning pointers.
+When the loop ends, `prev` points to the last node of the original list, which becomes the new `head` of the reversed list.
+In the recursive approach, recursion proceeds to the end of the list, and pointers are flipped as the call stack unwinds.
+
+## Solution
+
+This code implements the solution using iteration.
+It uses three pointers (`prev`, `curr`, `next`) to reverse the node connections in a single pass.
+
+```python
+class Solution:
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        prev = None
+        curr = head
+        
+        while curr:
+            next_node = curr.next
+            curr.next = prev
+            prev = curr
+            curr = next_node
+            
+        return prev
+```
+
+Time complexity: $O(N)$ (visits every node once.)
+Space complexity: $O(1)$ (does not use additional memory space.)
+
+## Alternative Approaches
+
+A linked list can be reversed using recursion.
+The recursive function calls itself based on the next node (`curr.next`) of the current node (`curr`).
+The base case returns the current node as the new `head` if `curr` is `None` or `curr.next` is `None`.
+When the recursive call returns, the direction is flipped by setting `curr.next.next` to `curr`.
+Finally, `curr.next` is set to `None` to prevent circular links.
+
+```python
+class Solution:
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        if not head or not head.next:
+            return head
+        
+        new_head = self.reverseList(head.next)
+        head.next.next = head
+        head.next = None
+        
+        return new_head
+```
+
+Time complexity: $O(N)$
+Space complexity: $O(N)$ (uses memory proportional to the depth of the recursive call stack.)
+
+## Additional Notes
+
+The iterative approach is generally preferred because it avoids the risk of stack overflow and is more space-efficient.
+The recursive approach results in cleaner code but may cause errors due to call stack limits if the number of nodes is very large.
+Both approaches are accepted as correct solutions in LeetCode problems, but the iterative method is more recommended in practice.
+The range or count of node values does not significantly affect the algorithm logic; the accuracy of pointer manipulation is key.
+
+## Sources
+
+- LeetCode: [LeetCode 206 - Reverse Linked List](https://leetcode.com/problems/reverse-linked-list/)
