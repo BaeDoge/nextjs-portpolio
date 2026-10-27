@@ -1,0 +1,100 @@
+---
+title: "[Troubleshooting] Resolving __init__ Argument Missing Error"
+publishedAt: "2026-10-27"
+summary: "Explains the cause and solution for the `TypeError` that occurs when a required argument is missing during Python class instantiation."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+An error occurs when instantiating a class without passing the arguments required by the `__init__` method. Below is the minimal code to reproduce the error and the original output.
+
+```python
+class DHT:
+    def __init__(self, data):
+        self.data = data
+
+    def showData(self):
+        print(self.data)
+
+if __name__ == '__main__':
+    DHT().showData()
+```
+
+```text
+Traceback (most recent call last):
+  File "test.py", line 9, in <module>
+    DHT().showData()
+TypeError: __init__() missing 1 required positional argument: 'data'
+```
+
+![Symptom screenshot](/blogs/init-1.png)
+
+## Cause
+
+This is presumed to occur because the number of required parameters defined in the `__init__` method, which Python automatically calls when creating an object, does not match the number of arguments passed during the call. Although a positional argument named `data` was specified in the class definition, no value was passed when calling `DHT()` to create the object, causing the Python interpreter to return a `TypeError`.
+
+## Solution
+
+Resolve the issue by specifying a default value for the parameter in the `__init__` method or by passing the correct argument when creating the object.
+
+Before modification:
+
+```python
+class DHT:
+    def __init__(self, data):
+        self.data = data
+        
+    def showData(self):
+        print(self.data)
+
+DHT().showData()
+```
+
+After modification:
+
+```python
+class DHT:
+    def __init__(self, data=None):
+        self.data = data if data is not None else {}
+        
+    def showData(self):
+        print(self.data)
+
+# Instantiate with an argument or using the default value
+DHT({'six': 6}).showData()
+```
+
+![Solution screenshot](/blogs/init-2.png)
+
+## Alternative Solutions
+
+Instead of using default values, you can use an alternative constructor pattern with `@classmethod` to separate object creation logic based on whether arguments are provided.
+
+```python
+class DHT:
+    def __init__(self, data):
+        self.data = data
+
+    @classmethod
+    def create_default(cls):
+        return cls({'one': '1', 'two': '2', 'three': '3'})
+
+    def showData(self):
+        print(self.data)
+
+# Call without arguments via the alternative constructor
+DHT.create_default().showData()
+```
+
+## Additional Notes
+
+Be careful not to omit `self` as the first argument for instance methods or `cls` for class methods, as this can lead to argument count mismatch errors. When designing objects, clearly distinguish between required and optional arguments, and it is good practice to implement default values or defensive logic to handle unexpected inputs.
+
+## Sources
+
+- StackOverflow: [__init__() missing 1 required positional argument](https://stackoverflow.com/questions/19929626/init-missing-1-required-positional-argument) — Author: odbhut.shei.chhele(question), Michael(answer) (CC BY-SA)
+- Tistory: [[DAY 4] 파이썬 기초 문법 III](https://blahblahlab.tistory.com/111) — Author: 잡담연구소
+- Tistory: [Python 26-01(방특)](https://kimyws.tistory.com/197) — Author: kimyws
+
+Images are taken from the sources above.
