@@ -1,0 +1,71 @@
+---
+title: "[Coding Test] Dynamic Programming Coin Change"
+publishedAt: "2026-10-30"
+summary: "This problem asks for the minimum number of coins needed to make a specific amount using dynamic programming."
+tag: "Algorithm"
+---
+
+## Problem
+
+You are given an array `coins` with different denominations and a target `amount`. Each coin can be used infinitely, and you must return the minimum number of coins needed to make up the `amount`. If it is impossible to make up the amount, return -1.
+
+The input constraints are as follows: The length of `coins` is at most 12, and the value of each coin is at most 2^31 - 1. The `amount` is between 0 and 10^4 inclusive.
+
+For example, if `coins = [1, 2, 5]` and `amount = 11`, the minimum number of coins is 3 (using the combination 5 + 5 + 1). If `coins = [2]` and `amount = 3`, it is impossible to make the amount since only multiples of 2 can be formed, so return -1.
+
+## Approach
+
+This is an optimization problem with overlapping subproblems, so Dynamic Programming (DP) is applicable. Define `dp[i]` as the minimum number of coins needed to make amount `i`.
+
+The base case is `dp[0] = 0`, as 0 coins are needed to make amount 0. Initialize all other `dp[i]` values to infinity (or a value representing an impossible state).
+
+The state transition equation is `dp[i] = min(dp[i], dp[i - c] + 1)` for each coin `c`. This means that if the last coin used to make amount `i` was `c`, the minimum number of coins is 1 plus the minimum number of coins needed to make amount `i - c`. We take the minimum of this value and the current `dp[i]`.
+
+## Solution
+
+Create a `dp` array of size `amount + 1`, initialize the first element to 0, and set the rest to `amount + 1` (a value representing impossibility).
+
+Iterate through amounts `i` from 1 to `amount` in the outer loop, and iterate through each coin `c` in the inner loop. If `i - c` is non-negative and `dp[i - c]` is not in the impossible state, update `dp[i]`.
+
+Finally, if `dp[amount]` is less than the initial impossible value, return it; otherwise, return -1.
+
+```python
+class Solution:
+    def coinChange(self, coins: List[int], amount: int) -> int:
+        # dp[i] is the minimum number of coins to make amount i
+        # Initial value is amount + 1 (representing impossibility)
+        dp = [amount + 1] * (amount + 1)
+        dp[0] = 0
+        
+        for i in range(1, amount + 1):
+            for c in coins:
+                if i - c >= 0:
+                    dp[i] = min(dp[i], dp[i - c] + 1)
+                    
+        return dp[amount] if dp[amount] <= amount else -1
+```
+
+Time Complexity: O(amount * n), where n is the length of `coins`. For each amount from 1 to `amount`, we check all coins, resulting in a multiplicative complexity.
+Space Complexity: O(amount). We only need one `dp` array, requiring linear space.
+
+## Alternative Approaches
+
+Breadth-First Search (BFS) can also be used. Treat each node as the remaining amount and move to the next amount by subtracting a coin.
+
+Since BFS finds the shortest path, the step at which `amount` is first reached corresponds to the minimum number of coins. Use a `visited` array to optimize by avoiding revisiting amounts.
+
+The worst-case time complexity is O(amount * n), similar to dynamic programming. However, it may be faster on average because it can terminate early once the answer is found. The space complexity is O(amount) due to the queue and visited array.
+
+## Additional Notes
+
+This problem can be viewed as a variation of the Unbounded Knapsack Problem (Complete Knapsack Problem), where the weight of items is the coin value and the value is fixed at 1.
+
+The algorithm works correctly even if the `coins` array is not sorted. Sorting ensures a consistent processing order (smallest coins first), but it does not affect the correctness of the algorithm.
+
+If `amount` is 0, the number of coins is 0, so 0 should be returned immediately. The code handles this naturally because `dp[0]` is initialized to 0.
+
+If the elements in `coins` are very large, `i - c` will be negative, and the condition check will filter them out, ensuring safety. However, if `amount` is very large, a time limit exceeded error may occur, so implementation within the given constraints is important.
+
+## Sources
+
+- LeetCode: [LeetCode 322 - Coin Change](https://leetcode.com/problems/coin-change/)
