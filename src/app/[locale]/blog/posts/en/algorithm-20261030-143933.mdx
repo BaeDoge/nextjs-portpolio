@@ -1,0 +1,67 @@
+---
+title: "[Coding Test] Finding the Longest Substring of Identical Characters Using Sliding Window"
+publishedAt: "2026-10-30"
+summary: "This problem asks for the length of the longest substring consisting of identical characters, allowing up to k character replacements."
+tag: "Algorithm"
+---
+
+## Problem
+
+You are given a string `s` and an integer `k`. You can change any character in the string to any other uppercase English letter, performing this operation at most `k` times. You must return the maximum length of a substring that consists of only one identical character after these changes.
+
+For example, if `s` is "ABAB" and `k` is 2, changing two 'A's to 'B's (or vice versa) results in the entire string "BBBB", which has a length of 4. If `s` is "AABABBA" and `k` is 1, changing the middle 'A' to 'B' results in "AABBBBA", where the substring "BBBB" has a length of 4.
+
+The length of string `s` is at most 10^5, and it consists only of uppercase English letters. `k` is an integer between 0 and the length of `s`, inclusive.
+
+## Approach
+
+This problem is equivalent to finding the longest substring that contains at most `k` different characters. We can use the sliding window technique to move the start and end points of the substring to find the maximum length that satisfies the condition.
+
+Let `max_freq` be the count of the most frequently occurring character within the current window. When the current window size is `window_size`, we check if the cost to change the remaining `window_size - max_freq` characters to the most frequent character is less than or equal to `k`. If the required cost exceeds `k`, we must move the start point to the right to maintain or reduce the window size. While the condition is satisfied, we move the end point to the right and update the maximum length.
+
+Since the window size does not need to shrink in this approach, we can efficiently find the maximum length as the end point moves to the end of the string.
+
+## Solution
+
+We iterate through the string while maintaining a sliding window. We use a hash map (or an array) to record the frequency of each character in the current window. As we expand the end of the window one step at a time, we update the frequency of the most common character. If the number of characters that need to be changed in the current window (`window_size - max_freq`) exceeds `k`, we move the start point to the right to keep the window size constant or reduce it. The maximum window size recorded during this process is the answer.
+
+```python
+def characterReplacement(s: str, k: int) -> int:
+    count = {}
+    max_freq = 0
+    start = 0
+    
+    for end in range(len(s)):
+        # Increment the count of the current character
+        count[s[end]] = count.get(s[end], 0) + 1
+        # Update the frequency of the most frequent character in the window
+        max_freq = max(max_freq, count[s[end]])
+        
+        # If the number of characters other than the most frequent one
+        # in the current window is greater than k,
+        # we need to move the start point to the right
+        if (end - start + 1) - max_freq > k:
+            count[s[start]] -= 1
+            start += 1
+            
+    return len(s) - start
+```
+
+Time Complexity: O(N), where N is the length of string `s`. The end pointer iterates through the string once, and the start pointer moves at most N times.
+Space Complexity: O(1). Since there are only 26 uppercase English letters, the size of the hash map is constant.
+
+## Alternative Approaches
+
+A Brute Force approach could calculate the replacement cost for all possible substrings. For each start point `i` and end point `j`, we calculate the character frequencies of the substring and check if it can be made identical with at most `k` changes. Since frequency calculations are performed repeatedly, the time complexity would be O(N^3) or O(N^2), which may exceed the time limit.
+
+Another approach is to fix the start point and expand the end point to find the maximum length satisfying the condition (O(N^2)). However, the sliding window technique leverages the property that the window size does not decrease, allowing the problem to be solved in a single pass with O(N) time complexity, which is much more efficient.
+
+## Additional Notes
+
+The key to this problem is efficiently tracking the "number of characters that need to be changed." It is important to maintain the current value of `max_freq` without recalculating it when moving the start point. This is because even if the window size shrinks, the frequency of the most frequent character will never increase; it will either decrease or stay the same. For finding the maximum length, the historically recorded maximum value of `max_freq` serves as a useful lower bound.
+
+Since the string length can be up to 10^5, algorithms with O(N^2) or higher complexity may result in a Time Limit Exceeded (TLE) error. Therefore, the O(N) sliding window approach is essential. Additionally, since the input string consists only of uppercase English letters, you can implement this using an array of size 26 instead of a hash map.
+
+## Sources
+
+- LeetCode: [LeetCode 424 - Longest Repeating Character Replacement](https://leetcode.com/problems/longest-repeating-character-replacement/)
