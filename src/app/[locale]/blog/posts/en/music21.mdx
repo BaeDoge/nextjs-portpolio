@@ -1,0 +1,91 @@
+---
+title: "[Open Source Analysis] music21: Python Toolkit for Musicology Research"
+publishedAt: "2026-10-30"
+summary: "music21 is an open-source, Python-based library that supports the structural analysis, manipulation, and visualization of musical data."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+`music21` is a Python library designed for Computer-Aided Musical Analysis and Computational Musicology. Beyond simply playing or outputting musical scores, this project models musical structures in an object-oriented manner, enabling the application of complex analysis algorithms.
+
+Musicologists and developers often face the challenge of programmatically extracting specific pitch frequencies, rhythm patterns, and harmonic progressions by loading score files (MusicXML, MIDI, etc.). `music21` abstracts these musical elements into Python objects, providing an environment where researchers can batch-process thousands of scores or perform statistical analysis. Launched in 2006, the project is distributed under the `BSD-3-Clause` license and is widely used in academic research and education.
+
+## Key Concepts Needed to Understand It
+
+To understand `music21`, one must grasp the following core concepts:
+
+1. **Stream**: A container for musical elements (notes, rests, chords, etc.). It represents a measure or an entire part of a score and can have a hierarchical structure.
+2. **Offset**: The relative starting position of an element within a `Stream`. `music21` manages musical events on a timeline based on these offsets.
+3. **AVL Tree-based Search**: To efficiently explore large score datasets, `music21.tree.core` uses `AVLNode` and `AVLTree`. This is an optimized data structure that sorts musical events in chronological order and allows searching for elements within a specific time range with `O(log n)` complexity.
+
+```python
+# Example of AVLTree structure from music21/tree/core.py
+class AVLNode[PayloadType](common.SlottedObjectMixin):
+    r'''
+    An AVL Tree Node, not specialized in any way, just contains positions.
+    '''
+```
+
+## Repository Structure and Actual Flow
+
+The repository is clearly divided into core library logic, documentation, and the testing environment.
+
+* `music21/`: Contains the core source code of the library. It is divided into modules reflecting musical domain knowledge, such as `stream/`, `meter/`, and `tree/`.
+* `documentation/`: Includes the documentation build system using `Sphinx`, generating usage instructions and developer guides.
+* `.github/workflows/`: Establishes a continuous integration (CI) environment through files like `maincheck.yml` to manage code quality.
+
+The typical workflow involves the user loading a score file, which creates a `Stream` object. This is then converted into a `TimespanTree` via the `asTimespans()` method to perform high-speed searching and analysis.
+
+## A Concrete Example of Its Design Choices
+
+`music21` demonstrates sophisticated design choices balancing performance and flexibility. In particular, the `meter.core` module uses `MeterTerminal` and `MeterSequence` to efficiently handle nested rhythmic structures when defining meter signatures.
+
+```python
+# MeterTerminal initialization in music21/meter/core.py
+def __init__(self, slashNotation: str|None = None, weight: int|float = 1):
+    self._duration: Duration|None = None
+    self._numerator: int = 0
+    self._denominator: int = 1
+    # ... (omitted)
+    self._ratioChanged()
+```
+
+As seen in the code above, `MeterTerminal` manages meter information by separating the numerator and denominator, updating the internal state via `_ratioChanged()`. This design reduces unnecessary computations when calculating complex compound meters and maintains data consistency. Additionally, implementing `__deepcopy__` directly to optimize performance reflects consideration for overhead when handling large score datasets.
+
+## Trade-offs Compared with Alternatives
+
+As a music analysis tool, `music21` has the following characteristics:
+
+* **Pros**: Deeply embedded musicological domain knowledge allows for high-level analysis (e.g., harmonic analysis, counterpoint rule checking) that is far more advanced than libraries simply handling MIDI data. Extensive documentation and test coverage are also key strengths.
+* **Cons**: Due to its high level of musicological abstraction, it may be too heavy for applications requiring low-latency processing, such as audio signal processing or real-time performance. In such cases, lightweight libraries like `mido` might be more suitable.
+
+## Security, Licensing, and Adoption Checks
+
+* **License**: Follows `BSD-3-Clause`, allowing free commercial use and modification. However, caution is required as some external datasets or corpora included in the repository may have separate licenses.
+* **Security**: As stated in `CONTRIBUTING.md`, contributors must declare the use of AI when contributing code. This policy clarifies the origin and responsibility of the code.
+* **Adoption**: As indicated in `pyproject.toml`, it requires Python 3.12 or higher. When integrating into existing projects, Python version compatibility must be verified.
+
+## Limitations and Who Should Use It
+
+`music21` is the optimal tool for musicologists, developers aiming to implement music theory programmatically, and creators of music education software. However, it is not suitable if the primary goal is real-time audio synthesis or developing high-performance game music engines.
+
+Since this library focuses on the "structural understanding of musical data," it provides a powerful foundation for users analyzing music through a data science approach. Before adoption, it is recommended to verify via the official documentation's `User's Guide` whether your analysis objectives align with `music21`'s abstraction model.
+
+---
+**Main Sources:**
+- [music21 GitHub Repository](https://github.com/cuthbertLab/music21)
+- [README.md](https://github.com/cuthbertLab/music21/blob/master/README.md)
+- [CONTRIBUTING.md](https://github.com/cuthbertLab/music21/blob/master/CONTRIBUTING.md)
+- [music21/tree/core.py](https://github.com/cuthbertLab/music21/blob/master/music21/tree/core.py)
+- [music21/meter/core.py](https://github.com/cuthbertLab/music21/blob/master/music21/meter/core.py)
+
+## Sources
+
+- GitHub: [cuthbertLab/music21](https://github.com/cuthbertLab/music21) — Author: cuthbertLab
+- GitHub: [cuthbertLab/music21 / LICENSE](https://github.com/cuthbertLab/music21/blob/master/LICENSE) — Author: cuthbertLab
+- GitHub: [cuthbertLab/music21 / pyproject.toml](https://github.com/cuthbertLab/music21/blob/master/pyproject.toml) — Author: cuthbertLab
+- GitHub: [cuthbertLab/music21 / CONTRIBUTING.md](https://github.com/cuthbertLab/music21/blob/master/CONTRIBUTING.md) — Author: cuthbertLab
+- GitHub: [cuthbertLab/music21 / music21/tree/core.py](https://github.com/cuthbertLab/music21/blob/master/music21/tree/core.py) — Author: cuthbertLab
+- GitHub: [cuthbertLab/music21 / music21/meter/core.py](https://github.com/cuthbertLab/music21/blob/master/music21/meter/core.py) — Author: cuthbertLab
+- GitHub: [cuthbertLab/music21 / music21/stream/core.py](https://github.com/cuthbertLab/music21/blob/master/music21/stream/core.py) — Author: cuthbertLab
