@@ -1,0 +1,96 @@
+---
+title: "[Open Source Analysis] HoldSpeak: Local AI Workbench"
+publishedAt: "2026-10-31"
+summary: "HoldSpeak is an agent-first AI operating system that integrates meetings, projects, and coding agents via a local hub on macOS and Linux."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+HoldSpeak is an 'Agentic-first' web-based AI operating system running on macOS and Linux environments. This project aims to store users' work context (notes, meetings, projects, code) in a local hub and enable AI agents to perform tasks based on that context.
+
+The primary challenge it addresses is the 'integration of fragmented work environments.' Users often switch between multiple tools for meeting transcripts, code edits, and project management. HoldSpeak consolidates these into a single 'Desk' interface, providing an environment where privacy is protected using local models (like Whisper) while still leveraging AI assistance. It aims to serve as a 'workbench' that goes beyond simple voice typing, enabling AI to understand the user's work context and perform substantive tasks.
+
+## Key Concepts Needed to Understand It
+
+To understand HoldSpeak, three key concepts are important:
+
+1. **Local Hub:** All data is stored in the user's local environment. This ensures data sovereignty and serves as the foundation for users to selectively connect local models (GGUF, MLX) or cloud engines.
+2. **Agentic Workflow:** Users can 'hand off' tasks to AI agents rather than just asking questions. Through various skills defined in the `agent/skills/` directory, agents perform tasks such as code editing, meeting summarization, and project updates.
+3. **Desk and Workbench:** An interface inspired by the Amiga Workbench, where tasks are visually arranged via windows, tools, and menus. As seen in `web/src/main.tsx`, users access this desktop via a web browser, which synchronizes in real-time with the hub.
+
+## Repository Structure and Actual Flow
+
+The repository consists of the core logic `holdspeak/` module, the web interface `web/`, and the `agent/` directory for extending agent functionality.
+
+- `agent/skills/`: Features available to agents are modularized. For example, `holdspeak-dictation` handles voice-to-text transcription, while `holdspeak-meetings` manages meeting-related processing.
+- `aipi-lite/`: Contains hardware bridge-related code, handling connections with voice input devices or external hardware. Files like `audio.py` and `lcd.py` inside `aipi-lite/bridge/` handle hardware-level control.
+- `web/`: Houses the React-based frontend code. It communicates with the local hub API via `web/src/lib/api.ts`, forwarding all user actions to the backend service.
+
+The operational flow works as follows: When a user issues a command via voice or text, the `holdspeak` hub receives it and forwards it to the appropriate engine (local model or API). The results are then reflected back in the desktop interface.
+
+## A Concrete Example of Its Design Choices
+
+HoldSpeak actively leverages the `MCP (Model Context Protocol)` for scalability. As shown in `aipi-lite/docs/LCD_SYMBOLS.md`, the system uses specific symbol maps to provide visual feedback on hardware status.
+
+Additionally, the `apiFetch` function in `web/src/lib/api.ts` manages authentication tokens, ensuring secure communication between the hub and the web interface.
+
+```typescript
+export async function apiFetch<T = JsonRecord>(
+  input: string,
+  init: RequestInit & { json?: unknown } = {},
+): Promise<T> {
+  const { json, ...request } = init;
+  const headers = authenticatedHeaders(request.headers);
+  // ... omitted
+  const response = await apiRequest(input, { ...request, headers, body: ... });
+  // ... response handling
+}
+```
+
+This design demonstrates that while users control their local hub via a web browser, security is maintained through token-based authentication.
+
+## Trade-offs Compared with Alternatives
+
+HoldSpeak differentiates itself from simple voice typing tools (e.g., macOS built-in dictation) or cloud-based project management tools (e.g., Notion AI).
+
+- **Advantages:** Since all data is stored locally, privacy is strongly guaranteed. Furthermore, it offers developer-friendly workflows that go beyond simple text generation, including Git worktree control and agent delegation.
+- **Disadvantages:** The installation process is complex. It requires various dependencies such as `uv`, `Node.js`, and `CMake`, and is optimized for macOS and Linux, making direct support difficult for Windows users. Additionally, sufficient hardware resources (such as Apple Silicon) are required to run local models.
+
+## Security, Licensing, and Adoption Checks
+
+- **License:** Follows the Apache-2.0 license, allowing relatively free use in enterprise environments.
+- **Security:** Security policies can be reviewed via `docs/SECURITY.md`. Special attention is paid to local security, such as using `keyring` to store sensitive keys in the system keychain.
+- **Adoption Notes:** You must check the environment setup using the `holdspeak doctor` command. System audio capture requires additional drivers like `BlackHole` (macOS) or `PipeWire` (Linux), so the dependency list in the documentation must be verified before installation.
+
+## Limitations and Who Should Use It
+
+HoldSpeak is currently in the pre-alpha stage (version 0.4.0), with significant potential for interface and API changes. Therefore, it is better suited for developers or technically proficient users who want to construct their own work environments and boost productivity using AI agents, rather than those expecting a stable commercial service.
+
+**Recommended For:**
+- Developers who want to automate coding and project management using AI agents in a local environment.
+- Users who prioritize data privacy and are hesitant to upload work content to cloud services.
+- Users who prefer classic desktop metaphors like the Amiga Workbench and want to reinterpret them for the AI era.
+
+**Not Suitable For:**
+- Users who want a ready-to-use, high-quality commercial software without complex setup.
+- Users who primarily use the Windows operating system.
+- Users who need to run AI models in environments with limited hardware resources.
+
+Source:
+- [HoldSpeak GitHub Repository](https://github.com/karolswdev/HoldSpeak)
+- [README.md](https://github.com/karolswdev/HoldSpeak/blob/main/README.md)
+- [pyproject.toml](https://github.com/karolswdev/HoldSpeak/blob/main/pyproject.toml)
+- [CONTRIBUTING.md](https://github.com/karolswdev/HoldSpeak/blob/main/CONTRIBUTING.md)
+- [LCD_SYMBOLS.md](https://github.com/karolswdev/HoldSpeak/blob/main/aipi-lite/docs/LCD_SYMBOLS.md)
+
+## Sources
+
+- GitHub: [karolswdev/HoldSpeak](https://github.com/karolswdev/HoldSpeak) — Author: karolswdev
+- GitHub: [karolswdev/HoldSpeak / LICENSE](https://github.com/karolswdev/HoldSpeak/blob/main/LICENSE) — Author: karolswdev
+- GitHub: [karolswdev/HoldSpeak / pyproject.toml](https://github.com/karolswdev/HoldSpeak/blob/main/pyproject.toml) — Author: karolswdev
+- GitHub: [karolswdev/HoldSpeak / CONTRIBUTING.md](https://github.com/karolswdev/HoldSpeak/blob/main/CONTRIBUTING.md) — Author: karolswdev
+- GitHub: [karolswdev/HoldSpeak / web/src/main.tsx](https://github.com/karolswdev/HoldSpeak/blob/main/web/src/main.tsx) — Author: karolswdev
+- GitHub: [karolswdev/HoldSpeak / uat/web/src/api.js](https://github.com/karolswdev/HoldSpeak/blob/main/uat/web/src/api.js) — Author: karolswdev
+- GitHub: [karolswdev/HoldSpeak / web/src/lib/api.ts](https://github.com/karolswdev/HoldSpeak/blob/main/web/src/lib/api.ts) — Author: karolswdev
+- GitHub: [karolswdev/HoldSpeak / aipi-lite/docs/LCD_SYMBOLS.md](https://github.com/karolswdev/HoldSpeak/blob/main/aipi-lite/docs/LCD_SYMBOLS.md) — Author: karolswdev
