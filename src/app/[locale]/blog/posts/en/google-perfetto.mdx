@@ -1,0 +1,68 @@
+---
+title: "[Open Source Analysis] Google Perfetto System Tracing and Analysis Tool"
+publishedAt: "2026-10-31"
+summary: "Perfetto is an end-to-end open-source tracing platform for recording, visualizing, and analyzing performance data of complex software systems."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+Perfetto is the standard tracing system for the Android and Chromium projects, serving as a toolset for collecting and analyzing system-wide performance data. Modern software systems experience numerous simultaneous events, such as kernel scheduling, user-space library calls, garbage collection, and GPU rendering. Tracking bottlenecks, frame drops ("Jank"), and Application Not Responding (ANR) issues arising from these events is extremely difficult.
+
+To solve these problems, Perfetto integrates system-wide events into a single timeline and provides an environment to query them using SQL for quantitative analysis of complex performance metrics. Rather than a simple logging tool, this project is a performance analysis platform that efficiently processes large-scale trace data reaching several gigabytes (GB).
+
+## Key Concepts Needed to Understand It
+
+To understand Perfetto, you need to grasp the following three core components:
+
+1. **Tracing Daemons (`traced`, `traced_probes`)**: Background processes that collect system-wide data. They gather kernel `ftrace` events, CPU scheduling, memory usage, and more, integrating them into a single trace file.
+2. **Trace Processor**: Perfetto's analysis engine. It converts trace files into an SQL database, allowing users to explore performance data using standard SQL syntax such as `SELECT` and `JOIN`.
+3. **Tracing SDK**: C++ and Rust libraries that allow application developers to embed trace points directly inside their code. This enables comparing system events and application internal logic on the same timeline.
+
+## Repository Structure and Actual Flow
+
+The repository contains core logic for data collection, conversion, and analysis.
+
+- `src/`: Houses the core logic. `src/traceconv/` is a tool for converting various trace formats (Chrome JSON, Linux `perf`, etc.) into the Perfetto format, and `src/protovm/` contains logic for interpreting trace data via a Protocol Buffer-based virtual machine structure.
+- `infra/` and `.github/`: Configure CI/CD pipelines and automate integration tests with Android and Chromium environments.
+
+The operational flow generally proceeds in the order of "Record → Parse → Query". When a user collects data using a tool like `record_android_trace`, the `Trace Processor` reads it, structures it into SQL tables, and the user queries it via the UI or CLI.
+
+## A Concrete Example of Its Design Choices
+
+As a tool dealing with performance data, Perfetto adopts designs that maximize data processing efficiency. `src/protovm/parser.h` uses a Protocol Buffer-based virtual machine (VM) structure to interpret trace data. This appears to be a design for flexibly extending complex trace formats while optimizing runtime performance. Allowing users to directly query data using SQL enables analysts to immediately verify their hypotheses, unlike existing tools that only provide fixed dashboards.
+
+## Trade-offs Compared with Alternatives
+
+Compared to legacy tools like `systrace` or `chrome://tracing`, Perfetto's biggest advantages are **scalability** and **analysis flexibility**.
+
+- **Pros**: SQL-based analysis allows aggregating millions of events instantly. In addition, custom instrumentation is very straightforward through the C++/Rust SDK.
+- **Cons**: There is a learning curve for SQL syntax and trace schemas. For users who simply need visualization, the initial setup and learning process can feel somewhat complex.
+
+## Security, Licensing, and Adoption Checks
+
+- **License**: Follows the Apache-2.0 license, allowing free commercial use and modification in enterprise environments.
+- **Security**: While the Perfetto UI provides features to perform analysis in a local browser, the `Trace Processor` can support a server-client architecture depending on the analysis environment. Therefore, when handling sensitive performance data, you must verify the deployment environment to ensure data is not transmitted to external servers.
+- **Upon Adoption**: Adoption is straightforward since it is already established as a standard in Android/Linux environments. However, when adopting it for custom applications, you must measure SDK overhead to verify performance impact in production environments.
+
+## Limitations and Who Should Use It
+
+Perfetto is highly recommended for performance engineers who need deep system-level analysis, Android platform developers, and C++/Rust developers who need to optimize complex multi-threaded applications.
+
+On the other hand, the tool's complexity may be excessive if you want simple function call frequency or basic logging-level analysis. Furthermore, because the trace data structure is vast, a lack of knowledge in specific domains (e.g., kernel schedulers, memory allocators) can make data interpretation difficult. Therefore, before adoption, it is essential to check the official documentation's "Getting Started" guide to verify whether your analysis goals align with Perfetto's SQL analysis model.
+
+---
+**Sources:**
+- [Perfetto GitHub Repository](https://github.com/google/perfetto)
+- [README.md](https://github.com/google/perfetto/blob/main/README.md)
+- [src/protovm/parser.h](https://github.com/google/perfetto/blob/main/src/protovm/parser.h)
+- [src/traceconv/main.cc](https://github.com/google/perfetto/blob/main/src/traceconv/main.cc)
+- [LICENSE](https://github.com/google/perfetto/blob/main/LICENSE)
+
+## Sources
+
+- GitHub: [google/perfetto](https://github.com/google/perfetto) — Author: google
+- GitHub: [google/perfetto / LICENSE](https://github.com/google/perfetto/blob/main/LICENSE) — Author: google
+- GitHub: [google/perfetto / src/protovm/parser.h](https://github.com/google/perfetto/blob/main/src/protovm/parser.h) — Author: google
+- GitHub: [google/perfetto / src/traceconv/main.cc](https://github.com/google/perfetto/blob/main/src/traceconv/main.cc) — Author: google
+- GitHub: [google/perfetto / src/proto_utils/main.cc](https://github.com/google/perfetto/blob/main/src/proto_utils/main.cc) — Author: google
