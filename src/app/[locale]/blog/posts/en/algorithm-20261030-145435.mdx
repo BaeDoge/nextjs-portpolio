@@ -1,0 +1,89 @@
+---
+title: "[Coding Test] Finding Saddle Points in a Matrix"
+publishedAt: "2026-10-30"
+summary: "Implements an algorithm to find elements in a matrix that are both the minimum in their row and the maximum in their column."
+tag: "Algorithm"
+---
+
+## Problem
+
+Find and return all "lucky numbers" in a given `m x n` matrix. A lucky number is an element that is the minimum in its row and simultaneously the maximum in its column. All elements in the matrix are distinct, and the order of the returned elements does not matter. The constraints are that the dimensions of the rows and columns are at most 50, and the values of the elements are at most $10^5$.
+
+## Approach
+
+A lucky number must satisfy two conditions: it is the 'minimum of its row' and the 'maximum of its column'. To find this efficiently, we first pre-calculate and store the maximum value of each column. Then, we iterate through each row to find its minimum value. If this minimum value matches the pre-calculated maximum value of its corresponding column, it is a lucky number. This approach allows us to verify the conditions without iterating over elements more than necessary.
+
+## Solution
+
+First, store the maximum value of each column in a `col_maxs` array. This is done by iterating through each column to find the maximum value. Then, iterate through each row to find its minimum value. Once the minimum value of a row is found, compare it with the maximum value of the column it belongs to (`col_maxs`). If the two values match, it is a lucky number, so add it to the result list.
+
+```python
+def luckyNumbers(matrix):
+    lucky_numbers = []
+    rows = len(matrix)
+    cols = len(matrix[0])
+    
+    # Pre-calculate and store the maximum value of each column
+    # For each column j, find the maximum value among all matrix[i][j] for i in range(rows)
+    col_maxs = [max(matrix[i][j] for i in range(rows)) for j in range(cols)]
+    
+    # Iterate through each row to find the minimum value and check the condition
+    for i in range(rows):
+        # Find the minimum value in the current row
+        row_min = min(matrix[i])
+        
+        # Find the index of the column where the row's minimum value is located
+        col_index = matrix[i].index(row_min)
+        
+        # Check if the row's minimum value matches the column's maximum value
+        if col_maxs[col_index] == row_min:
+            lucky_numbers.append(row_min)
+            
+    return lucky_numbers
+```
+
+Time Complexity: Calculating the maximum value for each column takes $O(m \times n)$. Finding the minimum value for each row and comparing it with the corresponding column's maximum value also takes $O(m \times n)$, resulting in an overall time complexity of $O(m \times n)$.
+Space Complexity: The array `col_maxs` used to store the maximum values of columns requires $O(n)$ space.
+
+## Alternative Approaches
+
+It is also possible to first calculate the minimum value of each row and store it in a `row_mins` array, then check the maximum value of each column. In this case, we also verify the condition by iterating through each element once, so the time complexity remains $O(m \times n)$.
+
+```python
+def luckyNumbers(matrix):
+    lucky_numbers = []
+    rows = len(matrix)
+    cols = len(matrix[0])
+    
+    # Pre-calculate and store the minimum value of each row
+    row_mins = [min(row) for row in matrix]
+    
+    # Iterate through each column to find the maximum value and check the condition
+    for j in range(cols):
+        # Find the maximum value in the current column
+        col_max = max(matrix[i][j] for i in range(rows))
+        
+        # Find the index of the row where the column's maximum value is located
+        row_index = -1
+        for i in range(rows):
+            if matrix[i][j] == col_max:
+                row_index = i
+                break
+        
+        # Check if the column's maximum value matches the row's minimum value
+        if row_mins[row_index] == col_max:
+            lucky_numbers.append(col_max)
+            
+    return lucky_numbers
+```
+
+Time Complexity: Calculating the minimum value for each row takes $O(m \times n)$, and finding the maximum value for each column and comparing it with the corresponding row's minimum value takes $O(m \times n)$, resulting in an overall time complexity of $O(m \times n)$.
+Space Complexity: The array used to store the minimum values of rows requires $O(n)$ space.
+
+## Additional Notes
+
+Since the problem specifies that all elements are distinct, we do not need to consider cases where minimum or maximum values might be duplicated within the same row or column. If duplicates were allowed, the definition of 'minimum' or 'maximum' might become ambiguous, requiring careful handling. The current approach works reliably within the given constraints, and list comprehensions can be used to write concise and readable code.
+
+## Sources
+
+- LeetCode: [LeetCode 1380 - Lucky Numbers in a Matrix](https://leetcode.com/problems/lucky-numbers-in-a-matrix/)
