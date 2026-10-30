@@ -1,0 +1,81 @@
+---
+title: "[Open Source Analysis] Chronicle-Queue's Disk Persistence Design"
+publishedAt: "2026-10-30"
+summary: "Chronicle-Queue is a high-performance Java message queue library that provides microsecond-latency and disk persistence simultaneously by leveraging memory-mapped files."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+`OpenHFT/Chronicle-Queue` is a library designed to maintain extremely low latency in Java applications while persistently storing all messages on disk. Unlike general message queue systems that suffer from latency fluctuations (Jitter) due to network communication or garbage collection (GC), this project aims to minimize GC impact and maximize hardware performance by directly manipulating memory-mapped files.
+
+Primary users include engineering teams in the financial sector for high-frequency trading (HFT) systems, real-time data feed processing, or those requiring immediate persistence of large-scale logs. This project goes beyond being a simple library, classifying it as an infrastructure tool for building high-performance systems.
+
+## Key Concepts Needed to Understand It
+
+Understanding `Chronicle-Queue` requires familiarity with the following three concepts:
+
+1. **Memory-Mapped Files (MMap):** Utilizes the operating system's virtual memory functionality to access disk files directly as if they were memory. This reduces system calls and data copying between kernel and user space that occurs during file I/O.
+2. **Roll Cycles:** Since queues cannot grow infinitely, they are automatically partitioned and managed by time units (e.g., `HOURLY`, `DAILY`). This distributes file system load and makes it easier to delete old data (Retention).
+3. **Wire Types:** The method of serializing data. `Chronicle-Wire` allows choosing between binary formats or text formats (YAML/JSON), with binary formats predominantly used for performance.
+
+## Repository Structure and Actual Flow
+
+The repository centers its core logic in `src/main/java`, with detailed technical documentation managed through `docs/antora`.
+
+- `src/main/java/net/openhft/chronicle/queue/`: Contains the core interfaces and implementations of the queue.
+- `bin/`: Includes utility scripts related to queue files.
+- `docs/`: A documentation system built on `Antora` provides detailed guides for each module, including Configuration and Performance.
+
+The operational flow involves the user creating a queue instance via `ChronicleQueue.singleBuilder()`, recording data via `ExcerptAppender`, and reading data via `ExcerptTailer`. Since all data is written to the memory-mapped area immediately, data remains on disk even if the process terminates abnormally.
+
+## A Concrete Example of Its Design Choices
+
+The example provided in `src/test/java/net/openhft/chronicle/queue/example/QueueExamples1.java` well illustrates the library's intuitive API design.
+
+```java
+ChronicleQueue queue = ChronicleQueue.single("./myQueueDir");
+Printer printer = queue.methodWriter(Printer.class);
+printer.print("hello world");
+```
+
+The above code enables interface-based communication using `methodWriter`. This means that developers can record data to the queue simply by calling a standard Java interface, without the complex process of manually serializing bytes. This design improves developer productivity while internally performing efficient serialization via `Chronicle-Wire` to prevent performance loss.
+
+## Trade-offs Compared with Alternatives
+
+`Chronicle-Queue` has a different focus compared to network-based message brokers like Kafka or RabbitMQ.
+
+- **Advantages:** It shows overwhelming performance in local inter-process communication (IPC) where no network calls are involved. Latency is very stable due to an object reuse design that does not trigger GC.
+- **Advantages:** Since disk persistence is a default feature, it prevents data loss without additional configuration.
+- **Disadvantages:** As it is fundamentally based on the local file system, a separate replication solution is required to configure a distributed environment across multiple servers. Additionally, it may lack the complex routing features provided by network brokers.
+
+## Security, Licensing, and Adoption Checks
+
+- **License:** It follows the `Apache-2.0` license, allowing commercial use. As seen in `pom.xml`, it is composed of several modules such as `chronicle-core` and `chronicle-bytes`, requiring attention to dependency management.
+- **Security:** Since it writes data directly to the file system, OS-level access control (permission settings) for the directory where queue files are stored is the core of security.
+- **Adoption:** You should consult the various `adoc` documents included in the project's `docs/` folder for configuration and operation guides.
+
+## Limitations and Who Should Use It
+
+`Chronicle-Queue` is strongly recommended in the following cases:
+- When latency in the microsecond range determines business success or failure.
+- When large amounts of data need to be persisted locally on disk.
+- When dealing with latency issues in Java applications that cannot be resolved by GC tuning alone.
+
+Conversely, for simple asynchronous task processing or when a message broker is needed in a distributed system, a general-purpose messaging system like Kafka may be more suitable. Also, if there is insufficient understanding of the operating system's file system cache and memory mapping, you may encounter difficulties in queue file management or disk capacity settings, so prior study is necessary.
+
+---
+**Source:**
+- [OpenHFT/Chronicle-Queue GitHub Repository](https://github.com/OpenHFT/Chronicle-Queue)
+- [LICENSE](https://github.com/OpenHFT/Chronicle-Queue/blob/ea/LICENSE)
+- [pom.xml](https://github.com/OpenHFT/Chronicle-Queue/blob/ea/pom.xml)
+- [QueueExamples1.java](https://github.com/OpenHFT/Chronicle-Queue/blob/ea/src/test/java/net/openhft/chronicle/queue/example/QueueExamples1.java)
+
+## Sources
+
+- GitHub: [OpenHFT/Chronicle-Queue](https://github.com/OpenHFT/Chronicle-Queue) — Author: OpenHFT
+- GitHub: [OpenHFT/Chronicle-Queue / LICENSE](https://github.com/OpenHFT/Chronicle-Queue/blob/ea/LICENSE) — Author: OpenHFT
+- GitHub: [OpenHFT/Chronicle-Queue / pom.xml](https://github.com/OpenHFT/Chronicle-Queue/blob/ea/pom.xml) — Author: OpenHFT
+- GitHub: [OpenHFT/Chronicle-Queue / src/test/java/net/openhft/chronicle/queue/example/QueueExamples1.java](https://github.com/OpenHFT/Chronicle-Queue/blob/ea/src/test/java/net/openhft/chronicle/queue/example/QueueExamples1.java) — Author: OpenHFT
+- GitHub: [OpenHFT/Chronicle-Queue / src/main/java/net/openhft/chronicle/queue/main/DumpMain.java](https://github.com/OpenHFT/Chronicle-Queue/blob/ea/src/main/java/net/openhft/chronicle/queue/main/DumpMain.java) — Author: OpenHFT
+- GitHub: [OpenHFT/Chronicle-Queue / src/test/java/net/openhft/chronicle/queue/LongRunTestMain.java](https://github.com/OpenHFT/Chronicle-Queue/blob/ea/src/test/java/net/openhft/chronicle/queue/LongRunTestMain.java) — Author: OpenHFT
