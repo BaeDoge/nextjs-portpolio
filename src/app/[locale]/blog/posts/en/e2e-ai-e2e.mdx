@@ -1,0 +1,118 @@
+---
+title: "[Open Source Analysis] e2e: AI Agent-based E2E Testing Framework"
+publishedAt: "2026-10-30"
+summary: "This analysis explores the architecture and design principles of a web/mobile E2E testing framework that combines natural language goals with locators to enable AI agents to drive applications and verify results."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+`tester-army/e2e` is a next-generation end-to-end (E2E) testing framework for web and mobile applications. To address the "selector maintenance cost" and "environment dependency" issues faced by traditional frameworks, this project adopts a hybrid approach that combines AI agents with traditional verification logic.
+
+The core goal of this framework is to allow developers to describe "what" needs to be achieved in natural language, rather than specifying "how" to click or input data in detail. According to the [README.md](https://github.com/tester-army/e2e/blob/main/README.md), the framework is structured so that an agent drives the application to achieve a goal, while the results are verified using locators and assertions. This helps create tests that are resilient to minor UI changes (e.g., button repositioning, CSS class changes).
+
+The primary language is TypeScript, and it is licensed under Apache-2.0. It supports both web (Chromium, Firefox, WebKit) and mobile engines, providing flexibility for developers to choose their own models or use local models.
+
+## Key Concepts Needed to Understand It
+
+To understand this framework, three key concepts are required:
+
+First, the **separation of Agent Steps and locator verification**. While traditional E2E tests list commands like `click` and `fill`, `e2e` uses `agent.act()` to let an AI model explore and interact with the UI. The model is not called every time; if the application state remains unchanged, it replays previous execution records to reduce API costs. Subsequently, results are verified using traditional locators like `agent.assert()` or `expect(screen.getByRole(...))`. This design combines the flexibility of AI with the deterministic accuracy of traditional testing.
+
+Second, **Engine Abstraction**. The `e2e` package handles the core SDK and CLI, while actual browser or device control is delegated to engine packages in plugin form. The web engine is based on Playwright and runs browsers through various environments (e.g., Lightpanda, smol). This allows users to perform cross-environment testing using the same test API.
+
+Third, the **Trust Model**. [SECURITY.md](https://github.com/tester-army/e2e/blob/main/SECURITY.md) clearly distinguishes between "Code-trust" and "Untrusted model input." While test code and configuration files run with OS privileges, text or screenshots collected from the app are treated as "evidence" when passed to the model and are not interpreted as direct commands. All model tool calls are parsed via a Closed Schema before being approved.
+
+## Repository Structure and Actual Flow
+
+The repository uses a monorepo structure, separating the core package, development tools, and example projects. The roles of the main folders and files are as follows:
+
+1.  **Core Packages**: The root [`package.json`](https://github.com/tester-army/e2e/blob/main/package.json) manages `e2e` (SDK/CLI) and various sub-packages prefixed with `@e2e-dev/` (web, kernel, lightpanda, decision, etc.). All packages are built sequentially via the `build` script.
+2.  **Configuration and Initialization**: The `npx e2e init` command generates a configuration file (`e2e.config.ts`) and example tests tailored to the project. The config file defines the engine, model provider, and cache paths.
+3.  **Example Projects**: The [`examples/`](https://github.com/tester-army/e2e/tree/main/examples) folder contains examples for various stacks such as Vite, Next.js, and Angular. Each example is an independent project, making it easy to verify behavior before applying it to a real environment.
+4.  **Changelog Management**: The `.changeset/` folder contains version management files using [`changeset`](https://github.com/tester-army/e2e/blob/main/.changeset/README.md), which is used to systematically manage version bumps and changes across multiple packages.
+
+The **execution flow** is as follows:
+1.  The user runs the `e2e run` command.
+2.  The framework loads the configuration file and initializes the specified engine.
+3.  It parses test files (`*.e2e.ts`) to load test cases.
+4.  Each test case manipulates the UI via an AI model (or cached replay records) during the `agent.act()` step.
+5.  Results are verified via `agent.assert()` or `expect` statements.
+6.  Test results and trace information are reported via the specified reporter.
+
+## A Concrete Example of Its Design Choices
+
+The [`examples/with-angular/src/app/app.ts`](https://github.com/tester-army/e2e/blob/main/examples/with-angular/src/app/app.ts) example demonstrates an Angular component-based UI. This app provides a name input field and a "Greet" button; when a user enters a name and clicks the button, a "Hello, [name]!" message appears.
+
+The design choices of this framework include:
+
+*   **Declarative Test Structure**: Test code declares the goal to be achieved via `agent.act()` and verifies the final state via `expect`. This enables writing tests that are less dependent on implementation details (DOM selectors).
+*   **Hierarchical Verification**: Since `agent.act()` relies on AI judgment, it can have high uncertainty. This is supplemented by deterministic verification like `agent.assert()` or `expect` to catch AI errors quickly and increase test reliability.
+*   **Replay Optimization**: In subsequent runs where the app state has not changed, `agent.act()` replays previous UI interaction records without calling the AI model. This is a core design choice that significantly improves test execution speed and reduces API costs.
+
+## Trade-offs Compared with Alternatives
+
+Comparing the `e2e` framework with traditional E2E tools like Playwright reveals the following trade-offs:
+
+| Comparison Item | Playwright (Traditional E2E) | e2e (Agent-based) |
+| :--- | :--- | :--- |
+| **Test Writing Style** | Locator-based (`locator.click()`) | Natural language-based (`agent.act('...')`) |
+| **Maintainability** | Requires locator updates on UI changes | Resilient to UI changes (intent-based) |
+| **Execution Speed** | Fast (runs locally) | Slow on initial run (AI calls), fast via replay |
+| **Reliability** | High (deterministic) | Medium (depends on AI, requires verification) |
+| **Learning Curve** | Low (requires DOM structure knowledge) | High (requires prompt engineering) |
+| **Cost** | Free (open source) | Model API costs (BYOK or subscription) |
+
+**Pros**:
+*   **Reduced Maintenance Costs**: Tests do not break easily when CSS classes or DOM structures change.
+*   **Test Writing Speed**: Complex workflows can be described quickly in natural language.
+
+**Cons**:
+*   **Non-deterministic Elements**: AI model responses may not always be consistent, making it difficult to identify the root cause of test failures.
+*   **Cost and Latency**: Calling the AI model on every execution increases costs and time (mitigated by the replay feature).
+
+## Security, Licensing, and Adoption Checks
+
+**Licensing**: The project follows the [Apache-2.0](https://github.com/tester-army/e2e/blob/main/LICENSE) license, which allows for commercial use, modification, and distribution, provided that license notices and disclaimers are maintained. The same license applies to contributions.
+
+**Security**:
+*   **Trust Model**: According to [SECURITY.md](https://github.com/tester-army/e2e/blob/main/SECURITY.md), test code and configuration files run with OS privileges. Exercise caution when running test code from untrusted sources.
+*   **Model Input Isolation**: Data collected from the app is passed to the model as "evidence" and is not executed as direct commands. All tool calls are executed after schema validation.
+*   **Log Masking Limitations**: As noted in the [README.md](https://github.com/tester-army/e2e/blob/main/README.md) and security documentation, `command.log` and service logs are captured as recorded by the process; the framework does not automatically redact them. Ensure sensitive information is not exposed in the app's stdout.
+*   **Telemetry**: The CLI sends anonymous usage statistics, which can be disabled via `npx e2e telemetry disable` or `E2E_TELEMETRY_DISABLED=1` as guided in the [README.md](https://github.com/tester-army/e2e/blob/main/README.md).
+
+**Adoption Checks**:
+*   **Model Provider**: Verify supported model providers and API key management methods.
+*   **Engine Environment**: The web engine requires Playwright browser setup, and the mobile engine requires simulator/emulator environment configuration.
+
+## Limitations and Who Should Use It
+
+**Limitations**:
+*   **AI Dependency**: Test execution stability partially depends on the performance and response quality of the AI model. If the model malfunctions, tests may fail.
+*   **Initial Learning Curve**: Time is required to learn how to write effective natural language prompts and understand the agent's operating principles.
+*   **Cost**: Costs can escalate if the AI model is called on every execution in large test suites (mitigated by the replay feature).
+
+**Recommended for**:
+*   **Projects with frequent UI changes**: Projects where CSS classes or DOM structures change often, leading to high maintenance overhead for traditional E2E tests.
+*   **Complex workflow testing**: Projects involving multi-step form inputs, drag-and-drop, or complex state transitions that are difficult to maintain with locator-based tests.
+*   **Cross-platform testing**: Projects requiring the same test logic for both web and mobile.
+
+**Not recommended for**:
+*   **Projects with stable UIs**: Projects where the UI rarely changes and high execution speed and deterministic reliability are prioritized.
+*   **Cost-constrained projects**: Small projects that cannot afford AI model API costs.
+*   **Offline environments**: Testing in isolated environments where AI model calls are impossible.
+
+The `e2e` framework offers an innovative approach that combines the flexibility of AI with the accuracy of traditional testing. However, adoption should be decided carefully, considering AI dependency and cost factors.
+
+## Sources
+
+- GitHub: [tester-army/e2e](https://github.com/tester-army/e2e) — Author: tester-army
+- GitHub: [tester-army/e2e / LICENSE](https://github.com/tester-army/e2e/blob/main/LICENSE) — Author: tester-army
+- GitHub: [tester-army/e2e / SECURITY.md](https://github.com/tester-army/e2e/blob/main/SECURITY.md) — Author: tester-army
+- GitHub: [tester-army/e2e / package.json](https://github.com/tester-army/e2e/blob/main/package.json) — Author: tester-army
+- GitHub: [tester-army/e2e / CONTRIBUTING.md](https://github.com/tester-army/e2e/blob/main/CONTRIBUTING.md) — Author: tester-army
+- GitHub: [tester-army/e2e / examples/with-vite/src/main.tsx](https://github.com/tester-army/e2e/blob/main/examples/with-vite/src/main.tsx) — Author: tester-army
+- GitHub: [tester-army/e2e / examples/with-angular/src/main.ts](https://github.com/tester-army/e2e/blob/main/examples/with-angular/src/main.ts) — Author: tester-army
+- GitHub: [tester-army/e2e / examples/with-angular/src/app/app.ts](https://github.com/tester-army/e2e/blob/main/examples/with-angular/src/app/app.ts) — Author: tester-army
+- GitHub: [tester-army/e2e / docs/images/examples/README.md](https://github.com/tester-army/e2e/blob/main/docs/images/examples/README.md) — Author: tester-army
+- GitHub: [tester-army/e2e / skills/create-verification-skill/references/example/verify-playground/SKILL.example.md](https://github.com/tester-army/e2e/blob/main/skills/create-verification-skill/references/example/verify-playground/SKILL.example.md) — Author: tester-army
