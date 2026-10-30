@@ -1,0 +1,85 @@
+---
+title: "[Open Source Analysis] JetBrains Kotlin Compiler and Ecosystem"
+publishedAt: "2026-10-31"
+summary: "This is the unified repository managed by JetBrains that contains the official compiler, standard library, and analysis APIs for the Kotlin programming language."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+The `JetBrains/kotlin` repository is the main repository containing the core source code for the Kotlin programming language. Beyond simply defining the language specification, this project is the center of a massive ecosystem encompassing compilers (JVM, JS, Native, Wasm), standard libraries, Gradle and Maven plugins, and analysis APIs for IDE integration.
+
+The core problem this project solves is "providing a safe, concise, statically typed language that runs across various platforms." In particular, it focuses on abstracting the compiler's internal logic via the `Analysis API` so that external tool developers can utilize it more easily. This demonstrates the goal of building an environment where development tools and the language itself are tightly integrated, going beyond a mere language implementation.
+
+## Key Concepts Needed to Understand It
+
+The core concepts you must know to understand the Kotlin project are as follows:
+
+1. **Analysis API**: An abstraction layer that allows querying code information at a semantic level without directly manipulating the compiler's internal representation. According to `analysis/docs/contribution-guide/index.md`, this provides a standardized interface for IDE plugin developers and static analysis tool creators.
+2. **Multiplatform Support**: A compiler backend structure designed to support various targets such as JVM, JS, Native, and Wasm. Configuration files in `runConfigurations` within the repository show that an independent test runtime is configured for each target.
+
+## Repository Structure and Actual Flow
+
+The repository has a vast structure, broadly divided into the compiler core, analysis API, build tools, and test data.
+
+* `compiler/`: The core implementation of the Kotlin compiler. It contains logic that converts language specifications into bytecode or machine code.
+* `analysis/`: Houses the design documents and implementation of the Analysis API. `analysis/docs/design-documents/README.md` contains a historical record of how this API has evolved.
+* `.idea/runConfigurations/`: Run configurations used when developing the project in JetBrains IDEs. These define numerous automated test execution environments, including compiler tests and build tool API tests.
+* `compiler/build-tools/`: Houses build tool APIs related to Gradle and Maven plugins. This defines the interfaces invoked when users build Kotlin projects.
+
+The execution flow generally follows the process of "writing code → analysis (Analysis API) → compilation (Compiler) → generating the target platform," and each step is verified through numerous unit tests and integration tests (`Smoke_Test__*.xml`).
+
+## A Concrete Example of Its Design Choices
+
+The path `compiler/build-tools/kotlin-build-tools-api-tests/` in the repository contains example codes for testing the actual build tool APIs. For instance, it verifies the behavior of the build tools using a simple Java Enum class such as `com.example.Color`.
+
+```java
+package com.example;
+
+public enum Color {
+    RED,
+    GREEN
+}
+```
+
+Such examples are used as test data to check how the compiler's build tool API behaves in various environments. By design, it adopts an approach of separating "TestData" into distinct resources to clearly distinguish between compiler logic and test cases. This is a typical strategy for managing compiler complexity.
+
+## Trade-offs Compared with Alternatives
+
+Compared to Java, Kotlin has the following characteristics:
+
+* **Pros**: Modern language features like null safety, data classes, and extension functions can drastically reduce the amount of code. In addition, integration with IDEs via the Analysis API is extremely high, offering superior developer productivity.
+* **Cons**: The complexity of the compiler is very high. Unlike Java, where the compiler acts like a massive framework, the learning curve required to understand the internal structure of the language and contribute to it is steep.
+
+While Java has a simple and predictable compilation process, Kotlin provides more convenience to developers through a compiler with a powerful inference engine, while internally absorbing the maintenance cost of the compiler.
+
+## Security, Licensing, and Adoption Checks
+
+According to `SECURITY.md`, JetBrains provides security updates for recent release lines such as Kotlin 2.x.0 and 2.x.20. In particular, starting from Kotlin 2.4.0, it guarantees an 18-month support period for the JVM standard library and has a system in place to immediately deploy fixes to the latest version of that release line when security vulnerabilities are discovered.
+
+When adopting it, you should check the following:
+1. **Version Support Policy**: You must verify whether the Kotlin version you are currently using is within its support period.
+2. **License**: You can check the Apache 2.0 license in the copyright notices of some files within the repository (e.g., `compiler/build-tools/.../SomeClass.java`). You should check the actual `LICENSE` file for the scope of the project's overall license applicability.
+3. **Build Tool Compatibility**: If you use the APIs defined in `compiler/build-tools`, you must periodically check compatibility with Gradle versions.
+
+## Limitations and Who Should Use It
+
+This repository is best suited for **experienced developers who want to study the internal workings of the Kotlin language itself or develop compiler-level tools**. For users who simply develop applications with Kotlin, consulting the official documentation (kotlinlang.org) is far more efficient than looking at the code in this repository.
+
+As a limitation, because the scale of the project is so massive, it takes a considerable amount of time to modify or understand specific features. Also, you should note that although `design-documents` contain implemented contents, they are not always kept up to date during architectural changes. Therefore, when reading the code, you must always cross-reference the documentation with the actual implementation (`compiler/` internal logic).
+
+Sources:
+- https://github.com/JetBrains/kotlin/blob/master/SECURITY.md
+- https://github.com/JetBrains/kotlin/blob/master/analysis/docs/contribution-guide/index.md
+- https://github.com/JetBrains/kotlin/blob/master/compiler/build-tools/kotlin-build-tools-api-tests/src/main/resources/modules/jps-enum-when/com/example/Color.java
+- https://github.com/JetBrains/kotlin/blob/master/compiler/build-tools/kotlin-build-tools-api-tests/src/main/resources/modules/ic-scenarios/kt-85241/java-nested/com/example/SomeClass.java
+
+## Sources
+
+- GitHub: [JetBrains/kotlin](https://github.com/JetBrains/kotlin) — Author: JetBrains
+- GitHub: [JetBrains/kotlin / SECURITY.md](https://github.com/JetBrains/kotlin/blob/master/SECURITY.md) — Author: JetBrains
+- GitHub: [JetBrains/kotlin / compiler/build-tools/kotlin-build-tools-api-tests/src/main/resources/modules/jps-enum-when/com/example/Color.java](https://github.com/JetBrains/kotlin/blob/master/compiler/build-tools/kotlin-build-tools-api-tests/src/main/resources/modules/jps-enum-when/com/example/Color.java) — Author: JetBrains
+- GitHub: [JetBrains/kotlin / compiler/build-tools/kotlin-build-tools-api-tests/src/main/resources/modules/ic-scenarios/kt-85241/java-nested/com/example/SomeClass.java](https://github.com/JetBrains/kotlin/blob/master/compiler/build-tools/kotlin-build-tools-api-tests/src/main/resources/modules/ic-scenarios/kt-85241/java-nested/com/example/SomeClass.java) — Author: JetBrains
+- GitHub: [JetBrains/kotlin / compiler/build-tools/kotlin-build-tools-api-tests/src/main/resources/modules/ic-scenarios/kt-85241/java-static-method/com/example/SomeClass.java](https://github.com/JetBrains/kotlin/blob/master/compiler/build-tools/kotlin-build-tools-api-tests/src/main/resources/modules/ic-scenarios/kt-85241/java-static-method/com/example/SomeClass.java) — Author: JetBrains
+- GitHub: [JetBrains/kotlin / analysis/docs/design-documents/README.md](https://github.com/JetBrains/kotlin/blob/master/analysis/docs/design-documents/README.md) — Author: JetBrains
+- GitHub: [JetBrains/kotlin / analysis/docs/contribution-guide/index.md](https://github.com/JetBrains/kotlin/blob/master/analysis/docs/contribution-guide/index.md) — Author: JetBrains
