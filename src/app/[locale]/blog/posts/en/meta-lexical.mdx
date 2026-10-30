@@ -1,0 +1,90 @@
+---
+title: "[Open Source Analysis] Meta Lexical Text Editor Framework"
+publishedAt: "2026-10-31"
+summary: "Lexical, developed by Meta, is a high-performance text editor engine featuring a framework-agnostic immutable state model and a plugin-based architecture."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+`meta/lexical` is an extensible framework for building web-based text editors. The project is designed with a "framework-agnostic" philosophy, meaning it is not tied to any specific UI library.
+
+It aims to solve the problems faced by many existing editor libraries, which are often tightly coupled to specific frameworks (e.g., React, Vue) or suffer from performance degradation and complex state management due to direct DOM manipulation. Lexical adopts an immutable state model to make state changes predictable and utilizes a plugin-based architecture, allowing developers to add only the features they need. According to the official [README.md](https://github.com/meta/lexical/blob/main/README.md), the framework prioritizes reliability, accessibility, and performance.
+
+## Key Concepts Needed to Understand It
+
+To understand Lexical, you must grasp the following core architectural elements:
+
+1. **Immutable State Model**: The editor's state is never mutated directly; instead, it transitions to a new state via `editor.update()`. This is a fundamental requirement for implementing features like time-travel debugging or Undo/Redo.
+2. **`$` Prefix Functions**: Functions starting with `$` (e.g., `$getRoot`, `$getSelection`) indicate that they must be executed only within the editor's update context. As explained in the package documentation at [packages/lexical-website/docs/faq.md](https://github.com/meta/lexical/blob/main/packages/lexical-website/docs/faq.md), this acts as a signal pattern similar to React Hooks, clearly defining the execution scope for developers.
+3. **Plugin Architecture**: The core functionality of the editor is minimized. Features like lists, tables, and code highlighting are provided as plugins. This optimizes bundle size and improves maintainability.
+
+## Repository Structure and Actual Flow
+
+The repository is managed as a monorepo, divided into core packages and various extension packages:
+
+- `packages/lexical`: Contains the core logic and state management engine of the editor.
+- `packages/lexical-react`: Provides bindings for easy integration of Lexical in React environments.
+- `examples/`: Contains implementation examples for various environments, such as `vanilla-js` and `react-rich`, providing a clear learning path.
+- `.changeset/`: A folder for project versioning and change tracking, managing user-centric changelogs according to [CONTRIBUTING.md](https://github.com/meta/lexical/blob/main/CONTRIBUTING.md).
+
+The operational flow involves the user creating an editor instance and injecting the necessary plugins, after which the editor performs state changes. The reconciliation process, which reflects the changed state in the actual DOM, is processed asynchronously in batches using `queueMicrotask`.
+
+## A Concrete Example of Its Design Choices
+
+Looking at `examples/vanilla-js/src/main.ts` reveals the characteristics of its framework-agnostic design:
+
+```typescript
+const editor = buildEditorFromExtensions(
+  AppExtension,
+  configExtension(HMRExtension, {hot: import.meta.hot ?? null}),
+);
+editor.setRootElement(document.getElementById('lexical-editor'));
+```
+
+The code above demonstrates that an editor can be created and mounted to a DOM element without any specific framework. `HMRExtension` accommodates HMR updates in development environments, and the framework guides developers to call `editor.dispose()` when the editor instance is no longer needed, ensuring explicit resource management. This is a design choice that prioritizes development productivity and stability.
+
+## Trade-offs Compared with Alternatives
+
+Lexical is often compared to existing editor libraries like Slate.js or Quill.
+
+- **Pros**:
+    - **Performance**: Optimizes performance by minimizing DOM manipulation through asynchronous batch updates.
+    - **Flexibility**: Not tied to a specific UI framework, allowing the editor core to be preserved even if the technology stack changes in the future.
+    - **Reliability**: Increases the predictability of state changes through an immutable state model.
+- **Cons**:
+    - **Learning Curve**: Requires time to master unique API patterns, such as the `$` prefix functions.
+    - **Initial Setup**: Because it is plugin-based, it can be cumbersome to install and configure multiple packages even for a very simple editor.
+
+## Security, Licensing, and Adoption Checks
+
+- **Licensing**: The project follows the MIT License as specified in the [LICENSE](https://github.com/meta/lexical/blob/main/LICENSE) file, with copyright held by Meta Platforms, Inc. The software is provided "AS IS" without warranty of merchantability or fitness, so users should review the relevant clauses for commercial use.
+- **Contributions and Issues**: According to `CONTRIBUTING.md`, there is a clear process for bug reporting and contributions. Security-related issues are handled through Meta's bug bounty program.
+- **Adoption Considerations**: As seen in the root [package.json](https://github.com/meta/lexical/blob/main/package.json), Node.js 20.19.0 or higher is required, so check your build environment. Additionally, when using `Strict Mode` in React, be careful to avoid redundant initialization logic in side effects, as the single editor instance is maintained even when components are recreated due to `useMemo`.
+
+## Limitations and Who Should Use It
+
+Lexical is recommended for:
+- Teams that need to implement high-performance, complex text editing features.
+- Projects that use React but want to keep the option open to change frameworks in the future.
+- Enterprise services that require an extensible editor engine with web accessibility in mind.
+
+On the other hand, it may be overkill if you only need simple textarea-level functionality or if simplicity of configuration is your top priority. In particular, you must review the Browser Support section of the official documentation to ensure the supported browser environment matches your project's requirements.
+
+**References:**
+- [Lexical Official Repository](https://github.com/meta/lexical)
+- [Lexical Official Documentation](https://lexical.dev/docs/intro)
+- [CONTRIBUTING.md](https://github.com/meta/lexical/blob/main/CONTRIBUTING.md)
+- [packages/lexical-website/docs/faq.md](https://github.com/meta/lexical/blob/main/packages/lexical-website/docs/faq.md)
+
+## Sources
+
+- GitHub: [meta/lexical](https://github.com/meta/lexical) — Author: meta
+- GitHub: [meta/lexical / LICENSE](https://github.com/meta/lexical/blob/main/LICENSE) — Author: meta
+- GitHub: [meta/lexical / package.json](https://github.com/meta/lexical/blob/main/package.json) — Author: meta
+- GitHub: [meta/lexical / CONTRIBUTING.md](https://github.com/meta/lexical/blob/main/CONTRIBUTING.md) — Author: meta
+- GitHub: [meta/lexical / examples/vanilla-js/src/main.ts](https://github.com/meta/lexical/blob/main/examples/vanilla-js/src/main.ts) — Author: meta
+- GitHub: [meta/lexical / examples/react-rich/src/main.tsx](https://github.com/meta/lexical/blob/main/examples/react-rich/src/main.tsx) — Author: meta
+- GitHub: [meta/lexical / examples/shadow-dom/src/main.tsx](https://github.com/meta/lexical/blob/main/examples/shadow-dom/src/main.tsx) — Author: meta
+- GitHub: [meta/lexical / packages/lexical-website/docs/faq.md](https://github.com/meta/lexical/blob/main/packages/lexical-website/docs/faq.md) — Author: meta
+- GitHub: [meta/lexical / packages/lexical-website/docs/react/faq.md](https://github.com/meta/lexical/blob/main/packages/lexical-website/docs/react/faq.md) — Author: meta
