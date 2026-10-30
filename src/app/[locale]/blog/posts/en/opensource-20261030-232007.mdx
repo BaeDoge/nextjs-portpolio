@@ -1,0 +1,97 @@
+---
+title: "[Open Source Analysis] Git Visualization Learning Tool Analysis"
+publishedAt: "2026-10-30"
+summary: "A client-side interactive learning platform that visually demonstrates Git's branch and commit structures."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+`pcottle/learnGitBranching` is a **learning simulation tool** that visualizes the internal structure of Git repositories and provides an interactive tutorial and sandbox environment based on that visualization.
+
+Since Git operates via a command-line interface (CLI), it is difficult for users to intuitively grasp how abstract concepts like commits, branches, and tags are reflected in the actual state of a repository. In particular, understanding that a branch is not just a file but a "pointer to a commit," and how synchronization with a remote repository is stored locally, is a significant barrier for beginners. This project visualizes these "invisible states," providing real-time feedback as the commit tree updates whenever a user enters a command.
+
+Key problems solved:
+1. **Concrete Visualization of Abstract Concepts:** Lowers the learning curve by visually representing Git's data model (commit graphs, pointer movements).
+2. **Risk-Free Experimental Environment:** Allows users to freely experiment with `undo`, `reset`, etc., in a sandbox mode without affecting actual projects.
+3. **Step-by-Step Learning Path:** Provides structured learning from basic commits to advanced workflows like remote repository conflict resolution and rebase through difficulty-based levels.
+
+## Key Concepts Needed to Understand It
+
+To effectively use this project and understand its structure, one must know Git's data model and the project's architectural features.
+
+### 1. Git's Data Model (Commit, Branch, Tag)
+This application does not manipulate an actual Git repository but recreates Git's data model using JavaScript objects.
+*   **Commit:** A node that references parent commits, corresponding to a vertex in a graph.
+*   **Branch:** A label pointing to a specific commit, corresponding to a pointer in a graph.
+*   **Remote Tracking Branch:** A virtual branch (e.g., `o/main`) representing the state of a remote repository stored locally. This is a core concept for visually comparing the differences between local and remote states.
+
+### 2. Level-Based Learning Structure
+Learning is controlled by JSON data defined in the `src/levels` folder. Each level includes a starting state (`startTree`), a target state (`goalTreeString`), and hints. The system updates the state based on the user's command input and determines success by comparing the current state with the target state.
+
+### 3. Client-Side Execution
+This project runs 100% on the client side without a backend database or AJAX requests. This offers advantages in deployment simplicity (static compatibility with GitHub Pages) and privacy protection.
+
+## Repository Structure and Actual Flow
+
+The repository consists of an 'engine', 'UI', 'learning content', and 'build tools'.
+
+### Key Folders and Files
+*   **`src/js/git/`**: Contains the core logic of the Git engine. `commands.js` handles command execution, while `index.js` manages the creation and maintenance of Git objects (Commit, Branch, etc.).
+*   **`src/js/models/`**: Defines models for managing Git objects such as commits, branches, and tags via `collections.js`.
+*   **`src/levels/`**: Stores learning content in JSON format.
+*   **`__tests__/`**: Contains the test suite using `jasmine`, verifying engine logic through files like `git.spec.js`.
+
+### Operational Flow
+1. **Initialization**: When `index.html` loads, Vite executes the bundled JS.
+2. **Command Processing**: Commands entered by the user are processed via `src/js/git/commands.js`, which updates the data model defined in `src/js/models/collections.js`.
+3. **Visualization**: The UI view redraws the commit tree in response to state changes.
+4. **Validation**: In level mode, the system compares the current tree with `goalTreeString` to determine success.
+
+## A Concrete Example of Its Design Choices
+
+We examine the level design approach through the `src/levels/remote/lockedMain.js` file.
+
+```javascript
+exports.level = {
+  "goalTreeString": "{\"branches\":{\"main\":{\"target\":\"C1\",...},...},...}",
+  "startTree": "{\"branches\":{\"main\":{\"target\":\"C2\",...},...},...}",
+  "hint": { ... }
+};
+```
+
+*   **JSON-based Level Definition**: By storing the start and goal states of a level in JSON, learning content can be expanded by modifying the data structure without changing the underlying logic.
+*   **State-based Validation**: The system verifies if the tree state transformed by user commands matches the `goalTreeString`. This is a flexible design that does not force specific commands but allows various paths to reach the same result.
+
+## Trade-offs Compared with Alternatives
+
+| Comparison | LearnGitBranching | Simple Visualization Sites | IDE Plugins |
+| :--- | :--- | :--- | :--- |
+| **Interactivity** | High (Command input) | Low (Animation) | Medium (IDE dependent) |
+| **Learning Structure** | Structured (Levels/Hints) | None | None |
+| **Execution Environment** | Browser (No install) | Browser | IDE installation required |
+
+*   **Pros**: Runs immediately in any browser and provides a level builder feature for users to create and share their own learning content.
+*   **Cons**: Does not handle the actual file system, so verifying file-level changes is impossible; also contains dependencies on legacy libraries.
+
+## Security, Licensing, and Adoption Checks
+
+*   **Licensing**: Follows the MIT License, allowing free commercial use and modification.
+*   **Security**: As a client-side app without a backend, there are no server-side security risks. However, security vulnerabilities in dependency libraries listed in `package.json` should be checked regularly.
+*   **Adoption**: The project uses `yarn` as a package manager and specifies a `node` engine version. To ensure build environment consistency, the `engines` settings defined in `package.json` must be followed.
+
+## Limitations and Who Should Use It
+
+*   **Limitations**: Since it does not handle the actual file system, it cannot teach `.gitignore` or actual file changes. Additionally, the use of legacy libraries may make integration with modern web tech stacks difficult.
+*   **Who Should Use It**: Suitable for beginners who want to visually understand Git principles, intermediate users confused by `rebase` or `remote tracking` concepts, and developers looking for a tool to train team members. It is not suitable as an actual repository management tool.
+
+## Sources
+
+- GitHub: [pcottle/learnGitBranching](https://github.com/pcottle/learnGitBranching) — Author: pcottle
+- GitHub: [pcottle/learnGitBranching / LICENSE.md](https://github.com/pcottle/learnGitBranching/blob/main/LICENSE.md) — Author: pcottle
+- GitHub: [pcottle/learnGitBranching / Dockerfile](https://github.com/pcottle/learnGitBranching/blob/main/Dockerfile) — Author: pcottle
+- GitHub: [pcottle/learnGitBranching / package.json](https://github.com/pcottle/learnGitBranching/blob/main/package.json) — Author: pcottle
+- GitHub: [pcottle/learnGitBranching / CONTRIBUTING.md](https://github.com/pcottle/learnGitBranching/blob/main/CONTRIBUTING.md) — Author: pcottle
+- GitHub: [pcottle/learnGitBranching / src/js/models/collections.js](https://github.com/pcottle/learnGitBranching/blob/main/src/js/models/collections.js) — Author: pcottle
+- GitHub: [pcottle/learnGitBranching / src/levels/remote/lockedMain.js](https://github.com/pcottle/learnGitBranching/blob/main/src/levels/remote/lockedMain.js) — Author: pcottle
+- GitHub: [pcottle/learnGitBranching / src/js/util/mock.js](https://github.com/pcottle/learnGitBranching/blob/main/src/js/util/mock.js) — Author: pcottle
