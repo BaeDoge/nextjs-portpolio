@@ -1,0 +1,56 @@
+---
+title: "[Coding Test] Convert BST to Greater Tree"
+publishedAt: "2026-10-30"
+summary: "This article covers an algorithm to convert each node's value in a Binary Search Tree to the sum of all keys greater than the original key."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given the root of a Binary Search Tree (BST), convert it to a Greater Tree such that every node's value is updated to the original value plus the sum of all keys greater than the original key. By definition of a BST, the keys in the left subtree are less than the node's key, and the keys in the right subtree are greater than the node's key. The number of nodes in the tree is at most $10^4$, and node values are unique integers between $-10^4$ and $10^4$.
+
+## Approach
+
+By leveraging the properties of a BST, we can convert node values while maintaining a cumulative sum if we process nodes in descending order. Standard in-order traversal visits nodes from smallest to largest, but a reverse in-order traversal (Right-Node-Left) visits nodes from largest to smallest. By visiting nodes in this order and adding the accumulated sum to the current node, we can easily calculate the sum of all nodes greater than the current node.
+
+## Solution
+
+Implement a reverse in-order traversal (Right -> Current -> Left) and manage the cumulative sum using a global variable or a reference variable. When visiting each node, add the current cumulative sum to the node's value and update the cumulative sum with the new node value. Recursively perform this process to convert all nodes in the tree.
+
+```python
+class Solution:
+    def convertBST(self, root: Optional[TreeNode]) -> Optional[TreeNode]:
+        self.cumulative_sum = 0
+        
+        def reverse_inorder(node):
+            if not node:
+                return
+            
+            # 1. Visit right subtree (process larger values first)
+            reverse_inorder(node.right)
+            
+            # 2. Process current node
+            self.cumulative_sum += node.val
+            node.val = self.cumulative_sum
+            
+            # 3. Visit left subtree
+            reverse_inorder(node.left)
+            
+        reverse_inorder(root)
+        return root
+```
+
+Time Complexity: $O(N)$ (visiting every node once)
+Space Complexity: $O(H)$ (recursive call stack, where $H$ is the height of the tree)
+
+## Alternative Approaches
+
+An iterative approach using a stack is available instead of recursion. Implementing the reverse in-order logic with a stack reduces the risk of stack overflow caused by recursive calls. Push nodes onto the stack and continue moving right as long as there are right children, storing nodes in the stack. Then, pop nodes from the stack to process them and move to the left child, repeating the process. This method also has a time complexity of $O(N)$, but the space complexity remains $O(H)$, identical to the recursive approach.
+
+## Additional Notes
+
+This problem is identical to LeetCode 1038. Reverse in-order traversal, which utilizes the sorted order property of BSTs, is a common pattern in related problems, so it is recommended to master it. Although the range of node values is limited, potentially requiring consideration for integer overflow, Python's integer type automatically supports arbitrarily large integers, so no special handling is necessary.
+
+## Sources
+
+- LeetCode: [LeetCode 538 - Convert BST to Greater Tree](https://leetcode.com/problems/convert-bst-to-greater-tree/)
