@@ -1,0 +1,122 @@
+---
+title: "[Coding Test] Circular Queue Design"
+publishedAt: "2026-10-30"
+summary: "This note explains how to implement insertion, deletion, and retrieval operations for a circular queue using an array."
+tag: "Algorithm"
+---
+
+## Problem
+
+A circular queue is a linear data structure that operates on the FIFO (First In First Out) principle, where the last position connects back to the first, forming a ring. It is also known as a 'Ring Buffer'. Unlike a standard queue, which cannot utilize empty space at the front when full, a circular queue reuses this space to store new values.
+
+The methods for the `MyCircularQueue` class to implement are as follows:
+- `MyCircularQueue(k)`: Initializes the queue with size `k`.
+- `Front()`: Returns the front item from the queue. If the queue is empty, return -1.
+- `Rear()`: Returns the last item from the queue. If the queue is empty, return -1.
+- `enQueue(int value)`: Inserts an element into the circular queue. Return true if the operation is successful, false if the queue is full.
+- `deQueue()`: Deletes an element from the circular queue. Return true if the operation is successful, false if the queue is empty.
+- `isEmpty()`: Checks whether the circular queue is empty or not.
+- `isFull()`: Checks whether the circular queue is full or not.
+
+You must implement this without using any built-in queue library.
+
+## Approach
+
+Implement the circular queue using a fixed-size array. Use the modulo operator (%) to cycle through the array indices. Manage the queue state using two pointers and a counter.
+- `head`: The index pointing to the front element of the queue.
+- `tail`: The index pointing to the position where the next element will be inserted.
+- `count`: The number of elements currently stored in the queue.
+
+During initialization, set the array size to `k`, and initialize `head`, `tail`, and `count` to 0.
+- Insertion (`enQueue`): Perform only if `count` is less than `k`. Store the value at `tail`, then move `tail` to `(tail + 1) % k` and increment `count`.
+- Deletion (`deQueue`): Perform only if `count` is greater than 0. Move `head` to `(head + 1) % k` and decrement `count`.
+- Retrieval (`Front`, `Rear`): Check if `count` is 0. Return the value at `head` for `Front`, or at `(tail - 1 + k) % k` for `Rear`.
+
+## Solution
+
+This is the code for an array-based circular queue. All operations are performed in constant time O(1).
+
+```python
+class MyCircularQueue:
+
+    def __init__(self, k: int):
+        """
+        큐의 크기를 k로 설정하고 배열을 초기화합니다.
+        """
+        self.queue = [0] * k
+        self.head = 0
+        self.tail = 0
+        self.count = 0
+        self.size = k
+
+    def enQueue(self, value: int) -> bool:
+        """
+        큐에 요소를 삽입합니다.
+        """
+        if self.isFull():
+            return False
+        self.queue[self.tail] = value
+        self.tail = (self.tail + 1) % self.size
+        self.count += 1
+        return True
+
+    def deQueue(self) -> bool:
+        """
+        큐에서 요소를 삭제합니다.
+        """
+        if self.isEmpty():
+            return False
+        self.head = (self.head + 1) % self.size
+        self.count -= 1
+        return True
+
+    def Front(self) -> int:
+        """
+        큐의 앞쪽 요소를 반환합니다.
+        """
+        if self.isEmpty():
+            return -1
+        return self.queue[self.head]
+
+    def Rear(self) -> int:
+        """
+        큐의 뒤쪽 요소를 반환합니다.
+        """
+        if self.isEmpty():
+            return -1
+        # tail은 다음 삽입 위치이므로, 실제 마지막 요소는 tail - 1 위치입니다.
+        # 음수 인덱스 처리를 위해 (tail - 1 + self.size) % self.size를 사용합니다.
+        return self.queue[(self.tail - 1 + self.size) % self.size]
+
+    def isEmpty(self) -> bool:
+        """
+        큐가 비어 있는지 확인합니다.
+        """
+        return self.count == 0
+
+    def isFull(self) -> bool:
+        """
+        큐가 가득 찼는지 확인합니다.
+        """
+        return self.count == self.size
+```
+
+- Time Complexity: All methods (`enQueue`, `deQueue`, `Front`, `Rear`, `isEmpty`, `isFull`) operate in constant time O(1).
+- Space Complexity: O(k) since a fixed-size array is used.
+
+## Alternative Approaches
+
+A circular queue can also be implemented using a Linked List.
+- **Approach**: Construct the queue by linking nodes, maintaining `head` and `tail` pointers. To create a circular structure, point the next node of the last node to the first node, or manage `head` and `tail` separately to implement a cyclic structure.
+- **Pros and Cons**: Unlike the array-based implementation, this requires dynamic memory allocation. However, it offers higher flexibility when the queue size is not predetermined or is very large. On the downside, it may take slightly longer than constant time due to the overhead of node creation/deletion compared to arrays.
+- **Time/Space Complexity**: Time complexity is O(1), and space complexity is O(k).
+
+## Additional Notes
+
+- The modulo operator `%` is a key technique used to wrap the index back to 0 when it exceeds the array boundaries.
+- In the `Rear()` method, the `tail` index points to the next insertion position, so the index of the actual last element must be calculated as `(tail - 1 + size) % size`. Adding `size` before performing the modulo operation handles cases where `tail` is 0, which would otherwise result in -1.
+- This problem focuses on evaluating the understanding of basic data structure principles and the ability to manipulate array indices.
+
+## Sources
+
+- LeetCode: [LeetCode 622 - Design Circular Queue](https://leetcode.com/problems/design-circular-queue/)
