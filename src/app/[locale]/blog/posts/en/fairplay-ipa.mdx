@@ -1,0 +1,75 @@
+---
+title: "[Open Source Analysis] FairPlay IPA Decryption Tool"
+publishedAt: "2026-10-31"
+summary: "A tool that performs offline decryption of IPA files encrypted with FairPlay by utilizing credentials extracted from jailbroken iOS devices."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+`EthanArbuckle/fairplay-decrypt` is a development tool for decrypting iOS apps (IPAs) protected by Apple's FairPlay DRM (Digital Rights Management). This project goes beyond simply cracking encrypted files; it is designed by separating the process of extracting FairPlay credentials from a jailbroken device and performing decryption in a local environment (macOS, Linux) using those credentials.
+
+The main goal is to remove the encryption layer of apps owned by the user, helping them analyze or research the app's binary structure. This is primarily aimed at security researchers and app analysts, and is characterized by an "offline" approach that does not communicate with Apple's servers during the decryption process.
+
+## Key Concepts Needed to Understand It
+
+To understand this project, the following three core concepts are required:
+
+1. **FairPlay DRM and SINF/SUPF**: FairPlay is a technology that encrypts the Mach-O binary of an app. The `SINF` (SINF atom) and `SUPF` records contain the data needed to derive the keys for encrypted pages. The `decrypt_binary` function in `core.py` interprets these records to derive the decryption key for each page.
+2. **Credential**: 16-byte data used to generate the core decryption keys. Tools within the `credential-retrieval/` directory interact with the `fairplayd` process on a jailbroken device to extract this value.
+3. **Mach-O Decryption**: Finds the encrypted `arm64` slice, modifies the `cryptid` field to 0, and restores the encrypted pages using the derived key.
+
+## Repository Structure and Actual Flow
+
+The repository is largely divided into Python modules responsible for decryption logic and C-based tools for credential extraction.
+
+* `core.py`: The core decryption engine. It calculates page keys via `derive_page_key` and decrypts the actual binary via `decrypt_binary`.
+* `credential-retrieval/`: A collection of tools for extracting credentials from a jailbroken device. It communicates with the device and extracts data through C source code within `credential/` and `retrieve.py`.
+* `decrypt.py`: The entry point executed directly by the user. It takes the IPA path and credential file as arguments to initiate the decryption process.
+
+The execution flow is as follows:
+1. The user runs `retrieve.py` to extract `credential.bin` from the jailbroken device.
+2. `decrypt.py` is called, passing the encrypted IPA and `credential.bin`.
+3. `core.py` parses `SINF`/`SUPF` inside the IPA, generates a decryption key using the credentials, and then restores the binary.
+
+## A Concrete Example of Its Design Choices
+
+The `derive_page_key` function in `core.py` illustrates the core of the design.
+
+```python
+def derive_page_key(wrapped: bytes, absolute_index: int, work: bytes) -> bytes:
+    # ... (omitted)
+    return struct.pack(">8H", *finish(_xor_int(finish(_xor_int(finish(a), b)), c)))
+```
+
+This function repeatedly executes an internal operation called `finish` and `_xor_int`. This is a Python re-implementation of Apple's FairPlay key derivation algorithm. This design minimizes external library dependencies and transparently exposes the decryption process, allowing researchers to directly verify how the algorithm works. In addition, the approach of using C code in `credential-retrieval` to interact with `fairplayd` demonstrates a sophisticated approach for analyzing black-box-style DRMs.
+
+## Trade-offs Compared with Alternatives
+
+Unlike methods that extract decrypted binaries directly from the device, this project adopts an offline approach that separates the credential extraction and decryption processes.
+
+* **Pros**: Because decryption is performed in a PC environment, device resource usage is minimized, and the decryption logic is implemented in Python, making it easy to analyze and verify the algorithm.
+* **Cons**: A jailbroken device environment is mandatory, and environment setup is required to interact with the system process `fairplayd`.
+
+## Security, Licensing, and Adoption Checks
+
+* **Security**: Since this tool interacts with the system process `fairplayd` in a jailbroken environment, it should only be used in a trusted development environment.
+* **License**: The project follows the `GPL-3.0` license. This means that if you distribute modified versions, you must disclose the source code.
+* **Adoption Checks**: As stated in the `README.md`, a `Python 3.9+` environment is required, and on macOS, `Xcode` and `ldid` tools must be installed to run `make` commands.
+
+## Limitations and Who Should Use It
+
+This project is best suited for **iOS app security researchers** and **reverse engineering learners**. It serves as a great learning resource for those who want to understand the principles of how FairPlay derives keys and encrypts binaries.
+
+**Limitations**:
+* Cannot be used on stock (non-jailbroken) devices.
+* In the event of Apple DRM updates, credential extraction logic or key derivation algorithms may become incompatible.
+* The C code in `credential-retrieval` may depend on the `fairplayd` structure of specific iOS versions, so additional analysis might be needed for newer OS versions.
+
+## Sources
+
+- GitHub: [EthanArbuckle/fairplay-decrypt](https://github.com/EthanArbuckle/fairplay-decrypt) — Author: EthanArbuckle
+- GitHub: [EthanArbuckle/fairplay-decrypt / LICENSE](https://github.com/EthanArbuckle/fairplay-decrypt/blob/main/LICENSE) — Author: EthanArbuckle
+- GitHub: [EthanArbuckle/fairplay-decrypt / core.py](https://github.com/EthanArbuckle/fairplay-decrypt/blob/main/core.py) — Author: EthanArbuckle
+- GitHub: [EthanArbuckle/fairplay-decrypt / credential-retrieval/credential/observer.c](https://github.com/EthanArbuckle/fairplay-decrypt/blob/main/credential-retrieval/credential/observer.c) — Author: EthanArbuckle
+- GitHub: [EthanArbuckle/fairplay-decrypt / credential-retrieval/retrieve.py](https://github.com/EthanArbuckle/fairplay-decrypt/blob/main/credential-retrieval/retrieve.py) — Author: EthanArbuckle
