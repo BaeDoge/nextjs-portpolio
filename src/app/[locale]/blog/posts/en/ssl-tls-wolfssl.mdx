@@ -1,0 +1,88 @@
+---
+title: "[Open Source Analysis] Embedded Lightweight SSL/TLS Library wolfSSL"
+publishedAt: "2026-10-31"
+summary: "wolfSSL is a high-performance, C-based SSL/TLS library designed for resource-constrained embedded and RTOS environments, offering a small memory footprint and compatibility with modern security standards."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+wolfSSL is a library designed to implement secure communication in embedded devices, IoT devices, and cloud environments. Previously known as CyaSSL, this project is written in ANSI C for high portability and aims to provide a significantly smaller memory footprint (typically 20–100 kB) compared to OpenSSL.
+
+Provided as a library, it supports modern security standards such as TLS 1.3 and DTLS 1.3. It addresses the problem of strengthening the security of IoT devices, which can be vulnerable, by enabling encrypted communication even in extremely resource-constrained environments.
+
+## Key Concepts Needed to Understand It
+
+To understand wolfSSL, you need to grasp the following three core concepts:
+
+1. **wolfCrypt**: The encryption library that serves as the foundation of wolfSSL. It includes cryptography modules certified under FIPS 140-2 and 140-3 and handles all security operations within the library.
+2. **OpenSSL Compatible API**: A compatibility layer that facilitates the easy porting of existing OpenSSL-based applications to wolfSSL. This allows developers to replace the library without significantly modifying existing code.
+3. **Crypto Callback (CryptoCB)**: An interface designed to leverage hardware accelerators or Secure Elements. It offloads cryptographic operations to dedicated hardware rather than the CPU, enhancing performance and isolating keys securely.
+
+## Repository Structure and Actual Flow
+
+The repository has a structure that reflects extensive portability and testing environments.
+
+- `wolfcrypt/`: Contains implementations of cryptographic algorithms, including the hardware porting layer.
+- `IDE/`: Provides build examples for various development environments such as PlatformIO and STM32.
+- `tests/`: Includes tests and porting code for the Zephyr RTOS environment.
+
+Users build the library by using the `configure` script or `CMake` to enable or disable features suitable for their environment. Applications then include the `wolfssl/` header files to call the API, initialize the library with `wolfSSL_Init()`, and create sessions.
+
+## A Concrete Example of Its Design Choices
+
+The file `zephyr/tests/wolfssl_condvar/src/main.c` demonstrates how wolfSSL handles thread synchronization in an RTOS environment.
+
+```c
+    /* Yield so the consumer generally reaches wolfSSL_CondWait() first. The
+     * handshake must still be correct if it does not, because the consumer
+     * re-checks the predicate under the lock before each wait. */
+    k_msleep(50);
+
+    (void)wolfSSL_CondStart(&g_cond);
+    g_predicate = 1;
+    (void)wolfSSL_CondSignal(&g_cond);
+    (void)wolfSSL_CondEnd(&g_cond);
+```
+
+This code shows that wolfSSL has designed its own abstraction layer (`CondStart`, `CondWait`, `CondEnd`) to ensure consistent synchronization behavior in RTOS environments that do not use POSIX threads. This reflects the library's design philosophy of minimizing hardware and OS dependencies to facilitate porting across various operating systems.
+
+## Trade-offs Compared with Alternatives
+
+Compared to OpenSSL, wolfSSL's biggest advantages are **size and portability**.
+
+| Comparison Item | wolfSSL | OpenSSL |
+| :--- | :--- | :--- |
+| **Footprint** | Very small (20–100 kB) | Relatively large |
+| **Purpose** | Embedded, RTOS, IoT | General-purpose servers, desktops |
+| **License** | GPLv3 (separate commercial license available) | OpenSSL License |
+
+While wolfSSL offers overwhelming efficiency in resource-constrained environments, it may have limitations in replacing the vast ecosystem and tool support provided by OpenSSL in general-purpose OS environments.
+
+## Security, Licensing, and Adoption Checks
+
+- **License**: Complies with GPLv3, so you must comply with license obligations or purchase a separate commercial license when including it in commercial products. As specified in `CONTRIBUTING.md`, you must sign a Contributor Agreement to contribute.
+- **Security**: Must comply with `SECURITY.md` and official disclosure policies. When vulnerabilities are found, report them privately to `support@wolfssl.com` instead of opening a public issue.
+- **Certification**: If your project requires FIPS 140-2/3 certification, be sure to check the relevant FAQ.
+
+## Limitations and Who Should Use It
+
+**Recommended For**:
+- Developers of embedded systems with tight memory constraints
+- IoT device manufacturers based on RTOS (Zephyr, FreeRTOS, etc.)
+- Developers of lightweight applications looking to avoid OpenSSL's heavy dependencies
+
+**Limitations**:
+- It may be difficult to fully replace OpenSSL's extensive functionality in general-purpose desktop applications.
+- Due to GPLv3 licensing constraints, commercial projects that do not wish to open-source their source code must carefully review the commercial licensing policy.
+
+Before adoption, it is recommended to first verify that the project's build system (`CMake` or `configure`) is compatible with the target hardware's compiler by checking the examples in the `IDE/` folder.
+
+## Sources
+
+- GitHub: [wolfSSL/wolfssl](https://github.com/wolfSSL/wolfssl) — Author: wolfSSL
+- GitHub: [wolfSSL/wolfssl / COPYING](https://github.com/wolfSSL/wolfssl/blob/master/COPYING) — Author: wolfSSL
+- GitHub: [wolfSSL/wolfssl / CONTRIBUTING.md](https://github.com/wolfSSL/wolfssl/blob/master/CONTRIBUTING.md) — Author: wolfSSL
+- GitHub: [wolfSSL/wolfssl / IDE/PlatformIO/examples/wolfssl_test/src/main.c](https://github.com/wolfSSL/wolfssl/blob/master/IDE/PlatformIO/examples/wolfssl_test/src/main.c) — Author: wolfSSL
+- GitHub: [wolfSSL/wolfssl / IDE/PlatformIO/examples/wolfssl_benchmark/src/main.c](https://github.com/wolfSSL/wolfssl/blob/master/IDE/PlatformIO/examples/wolfssl_benchmark/src/main.c) — Author: wolfSSL
+- GitHub: [wolfSSL/wolfssl / zephyr/tests/wolfssl_condvar/src/main.c](https://github.com/wolfSSL/wolfssl/blob/master/zephyr/tests/wolfssl_condvar/src/main.c) — Author: wolfSSL
