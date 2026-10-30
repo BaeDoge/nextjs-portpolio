@@ -1,0 +1,99 @@
+---
+title: "[Open Source Analysis] OpenStack Project Integration Management Repository"
+publishedAt: "2026-10-31"
+summary: "A meta-repository that integrates OpenStack's vast array of individual component repositories using Git submodules to track and manage verified version combinations."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+The `openstack/openstack` repository acts as a "super-project" to synchronize the overall state of the OpenStack ecosystem, which consists of numerous independent projects. OpenStack is developed across dozens of individual components providing various functions such as compute, networking, and storage; ensuring interoperability among them is a highly complex task.
+
+This repository does not contain the source code of individual components directly. Instead, it utilizes the `git submodule` feature to consist of a collection of pointers that reference specific commit hashes for each component. This allows developers and operators to clearly identify combinations of components that have been tested and verified together via the Zuul CI system at a specific point in time. In short, this project is not a code repository, but a tool for managing "version snapshots" of a massive distributed system.
+
+## Key Concepts Needed to Understand It
+
+Two concepts are essential to understand this project:
+
+1. **Git Submodules:** A feature that allows you to include other Git repositories as subdirectories within a Git repository. This repository registers each component as a submodule, pinning the entire state of OpenStack at a specific point in time to a single commit.
+2. **Zuul CI Gating:** Zuul, OpenStack's continuous integration system, ensures that changes across multiple repositories do not conflict with one another. This repository serves as the final destination for recording "successful combinations" that have been verified by Zuul.
+
+## Repository Structure and Actual Flow
+
+This repository is not intended for manual code modification; it is structured to have its state updated by automated scripts.
+
+* `.gitmodules`: Defines the path and remote repository URL for each component.
+* `generate-gitmodules.py`: An automation script that dynamically generates the list of submodules by referencing OpenStack governance data (`projects.yaml`).
+* `README.rst`: A document explaining the project's purpose and usage.
+
+The operational flow is as follows:
+1. `generate-gitmodules.py` is executed to fetch project information from `opendev.org`.
+2. The script compares the currently included submodules with the latest project list.
+3. If a new project is added or removed, the repository structure is updated via `git submodule add` or `git rm` commands.
+4. Finally, the `.gitmodules` file is updated to reflect the configuration of the entire system.
+
+```python
+# Core logic example of generate-gitmodules.py
+def find_integrated_gate_repos():
+    r = requests.get(CONFIG)
+    projects = yaml.safe_load(r.text)
+    repos = []
+    for project in projects.values():
+        for deliverable in project.get('deliverables', {}).values():
+            for repo in deliverable['repos']:
+                repos.append(repo)
+    return repos
+```
+
+## A Concrete Example of Its Design Choices
+
+The design of this repository adheres to a "read-only" principle. This means that when developers modify individual components, they must work in the unique repository of each component rather than committing to this repository.
+
+Looking at the `TEMPLATE` variable in `generate-gitmodules.py`, one can see how submodules are managed.
+
+```python
+TEMPLATE = """[submodule "%s"]
+\tpath = %s
+\turl = ../../%s.git
+\tbranch = .
+"""
+```
+
+This structure uses relative paths on `opendev.org` to define relationships between repositories. This ensures that projects maintain a consistent structure within the OpenStack governance framework without being dependent on a specific infrastructure environment.
+
+## Trade-offs Compared with Alternatives
+
+This approach contrasts with a monorepo.
+
+| Category | OpenStack Submodule Approach | Monorepo Approach |
+| :--- | :--- | :--- |
+| **Coupling** | Low (Independent development possible) | High (Requires full build) |
+| **Version Control** | Managed via submodule pointers | Managed via a single commit |
+| **Complexity** | Requires proficiency in tools | Burden of managing large repositories |
+
+**Pros:** Each component team can independently adjust their development speed within their own repositories.
+**Cons:** Due to the nature of submodules, commands like `git submodule update --init --recursive` must be used frequently, and the recovery process can be cumbersome if state synchronization is broken.
+
+## Security, Licensing, and Adoption Checks
+
+* **Licensing:** Follows the Apache-2.0 license. This is a permissive license that allows for free use and modification in corporate environments.
+* **Adoption Notes:** This repository is intended for understanding the overall configuration state of OpenStack. If the goal is to deploy OpenStack, it is recommended to use official deployment tools provided by `openstack.org` (e.g., Kolla, OpenStack-Ansible) rather than building the code in this repository directly.
+* **Security:** Since this repository contains almost no executable code, the direct vulnerability risk is low. However, one must periodically check for security updates in the individual projects connected as submodules.
+
+## Limitations and Who Should Use It
+
+**Limitations:**
+This repository is closer to a "metadata repository" than a "code repository." Therefore, it does not provide direct assistance to developers looking to modify source code or add features.
+
+**Recommended for:**
+1. Architects who want to understand the project composition and dependency relationships of the entire OpenStack ecosystem.
+2. System engineers who want to verify which components were tested together in a specific OpenStack release version.
+3. Open-source researchers studying version management strategies for large-scale distributed systems.
+
+This project acts as a "map" that binds the vast ecosystem of OpenStack under a single governance. Therefore, it is best utilized for understanding the project's structure and grasping the overall flow.
+
+## Sources
+
+- GitHub: [openstack/openstack](https://github.com/openstack/openstack) — Author: openstack
+- GitHub: [openstack/openstack / LICENSE](https://github.com/openstack/openstack/blob/master/LICENSE) — Author: openstack
+- GitHub: [openstack/openstack / generate-gitmodules.py](https://github.com/openstack/openstack/blob/master/generate-gitmodules.py) — Author: openstack
