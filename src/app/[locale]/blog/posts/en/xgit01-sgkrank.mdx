@@ -1,0 +1,70 @@
+---
+title: "[Open Source Analysis] Structure and Characteristics of the xgit01/sgkrank Repository"
+publishedAt: "2026-10-30"
+summary: "This project is a curated link collection repository that provides a list of Telegram-based information retrieval services (known as 'Shegongku')."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+`xgit01/sgkrank` is a curation project that organizes and provides a list of various information retrieval bots and web services operating on the Telegram platform. The project aims to gather the access paths and usage instructions of Telegram bots required when users want to check if their personal information has been leaked or access specific databases in one place.
+
+The main user base appears to be general users checking for personal information leaks or those looking for access addresses to specific Telegram bots. The nature of the project is not software or a library, but a collection of links connecting to external services.
+
+## Key Concepts Needed to Understand It
+
+To understand this project, the following two concepts are essential:
+
+1. **Shegongku (Social Engineering Library):** A term originating from the Chinese internet environment, referring to a system that databases personal information (such as names, resident registration numbers, phone numbers, addresses, etc.) collected through hacking or data breach incidents, allowing it to be searched.
+2. **Telegram Bot:** An automated account that queries a database and returns results when a specific command is entered using the Telegram API. Most services listed in this repository provide information to users through these bot interfaces.
+
+## Repository Structure and Actual Flow
+
+The repository largely consists of the `README.md` file and the `pic/` directory.
+
+- `README.md`: The core document of the project, containing the name, rating, feature description, and Telegram links for each Telegram bot.
+- `pic/`: Stores image files containing logos or example result screens for each service.
+
+Users browse the list of services through `README.md`, click the provided links to move to the Telegram app, and use the service by entering the commands required by each bot (e.g., `/start`).
+
+## A Concrete Example of Its Design Choices
+
+The repository adopts a 'rating' system and a 'classification by function' approach so that users can easily find bots. For example, the `暗精灵社工库` entry listed in `README.md` has the following structure:
+
+```
+markdown
+## 暗精灵社工库⭐⭐⭐⭐⭐
+...
+* 暗精灵社工库账号: <a href="https://t.me/AJL05_bot?start=7503613403" target="_blank">@AJL05_bot</a>
+* 教程见: <a href="#使用教程" target="_blank" >视频教程</a>。
+```
+
+This design allows users to intuitively understand the reliability and data scope of the bots, and is optimized to let users immediately start a conversation with the bot by providing a deep link utilizing Telegram's `start` parameter.
+
+## Trade-offs Compared with Alternatives
+
+Curation repositories similar to this project mainly exist in the form of Telegram channels or separate websites.
+
+- **Pros:** Because information is managed through the public platform GitHub, updates can be made relatively quickly and transparently when a specific bot is blocked or its address changes. In addition, users can indirectly check the popularity of a service through Stars.
+- **Cons:** Since there is no automated system to verify the validity of links in real-time, listed links are likely to become 'dead links' over time. Furthermore, because the source of information is often unclear, the accuracy of the data cannot be guaranteed.
+
+## Security, Licensing, and Adoption Checks
+
+This project does not specify security documents (`SECURITY.md`) or license files.
+
+- **Security Risks:** Most of the services introduced in this repository are directly or indirectly related to data breach incidents. The act of using these services itself may violate personal information protection laws or pose risks (such as phishing) that expose user information to bot operators.
+- **Licensing:** Because no open-source license is identified, legal rights are not protected when commercially using or redistributing this list.
+
+## Limitations and Who Should Use It
+
+This repository can serve as reference material for researchers or curious users trying to understand the current status of Telegram-based information retrieval services. However, its limitations are clear:
+
+1. **Data Reliability:** The authenticity of the information provided by the services cannot be verified.
+2. **Sustainability:** Telegram bots can be shut down or monetized at any time depending on the operator's will.
+3. **Legal Responsibility:** All results arising from the use of these services are the user's own responsibility.
+
+Therefore, apart from simply checking the list of information retrieval bots, actually entering personal information or using the services is highly discouraged due to security risks.
+
+## Sources
+
+- GitHub: [xgit01/sgkrank](https://github.com/xgit01/sgkrank) — Author: xgit01
