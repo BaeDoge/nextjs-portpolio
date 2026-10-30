@@ -1,0 +1,92 @@
+---
+title: "[Open Source Analysis] Distributed SQL Structure of YugabyteDB"
+publishedAt: "2026-10-31"
+summary: "This analysis examines the structure and licensing of YugabyteDB, a distributed SQL database project that provides horizontal scalability and high availability in cloud-native environments while maintaining PostgreSQL compatibility."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+YugabyteDB is a distributed SQL database that combines the transactional consistency of traditional relational database management systems (RDBMS) with the scalability of NoSQL systems. This project aims to solve the challenges faced by mission-critical OLTP (Online Transaction Processing) applications in cloud environments, specifically regarding maintaining data integrity, handling node failures, and managing geographically distributed deployments.
+
+The project is a complex software repository containing a functional database engine and a management platform. It provides a SQL interface through a C++-based core storage engine located in `src/yb/` and a modified PostgreSQL fork in `src/postgres/`.
+
+## Key Concepts Needed to Understand It
+
+The following core concepts are essential for understanding YugabyteDB:
+
+1. **DocDB**: The core distributed storage layer of YugabyteDB. Implemented inside `src/yb/`, it is based on RocksDB and handles data storage and replication in a distributed environment.
+2. **YSQL (Yugabyte SQL)**: A SQL layer compatible with PostgreSQL 15. Located in the `src/postgres/` directory, it allows users to migrate existing PostgreSQL applications to a distributed environment with minimal modifications.
+3. **Raft Consensus Algorithm**: Used for data replication between nodes to ensure high availability and consistency. The design documents in the `architecture/design/` directory explain how state synchronization is managed across distributed nodes.
+
+## Repository Structure and Actual Flow
+
+The repository is divided into three main parts: the core engine, the SQL layer, and the management platform.
+
+* `src/yb/`: C++ source code containing DocDB, Raft consensus, and server logic, which constitute the database's core engine.
+* `src/postgres/`: A layer that forks PostgreSQL source code and modifies it to integrate with YugabyteDB's distributed storage.
+* `managed/`: The YugabyteDB Anywhere (YBA) management platform, responsible for cluster orchestration and monitoring.
+* `architecture/`: Contains system design specifications and performance analysis documents, serving as a key guide for understanding internal operational principles.
+
+The data processing flow works as follows: when a user sends an SQL query to the `src/postgres/` layer, it is internally converted into DocDB key-value operations and safely stored on replicated nodes via Raft.
+
+## A Concrete Example of Its Design Choices
+
+The file `src/postgres/src/test/examples/testlo.c` provides a good example of how YugabyteDB handles PostgreSQL's Large Object functionality.
+
+```c
+/*
+ * create the large object
+ */
+lobjId = lo_creat(conn, INV_READ | INV_WRITE);
+if (lobjId == 0)
+    fprintf(stderr, "cannot create large object");
+
+lobj_fd = lo_open(conn, lobjId, INV_WRITE);
+```
+
+This code uses the standard PostgreSQL `libpq` API. By supporting this API as-is, YugabyteDB makes a design choice to maximize compatibility with the existing PostgreSQL ecosystem. This allows developers to benefit from a distributed database without incurring separate learning costs. Additionally, `src/yb/rocksdb/examples/simple_example.cc` demonstrates how to perform atomic updates using RocksDB's `WriteBatch`, a key technology for maintaining data consistency in distributed environments.
+
+## Trade-offs Compared with Alternatives
+
+YugabyteDB is frequently compared with CockroachDB.
+
+* **Advantages**: It offers high compatibility with PostgreSQL, making migration from existing databases relatively easy. Furthermore, the structure allows for quick incorporation of the latest PostgreSQL features via the `src/postgres/` layer.
+* **Disadvantages**: There is overhead associated with distributed transaction processing, and simple read/write performance may be lower compared to traditional single-node RDBMS. Additionally, the complex architecture can lead to higher operational and maintenance difficulties.
+
+## Security, Licensing, and Adoption Checks
+
+* **License**: As specified in `LICENSE.md`, the core database engine follows the `Apache License 2.0`, but the management platform, YugabyteDB Anywhere, follows the `Polyform Free Trial License 1.0.0`. This distinction must be verified when adopting for commercial use.
+* **Security**: In a distributed environment, encryption of communications between nodes and authentication settings are essential.
+* **Adoption Considerations**: You should review cost and performance optimization strategies for cloud environments in advance, using documents such as `architecture/cloud-machine-types-analysis.md`.
+
+## Limitations and Who Should Use It
+
+YugabyteDB is suitable for large-scale OLTP applications requiring horizontal scaling. Conversely, in environments with small data volumes or where a single server can provide sufficient performance, the complex distributed architecture may反而 increase operational burden.
+
+**Recommended For**:
+- Teams looking to scale PostgreSQL-based applications to a cloud-native environment
+- Services that require consistent data processing across geographically distributed data centers
+- Mission-critical systems where high availability and automatic failover are essential
+
+**Points to Check**:
+- Verify whether the service's workload aligns with the system design by reviewing the design documents in the `architecture/` directory.
+- It is important to understand the project's stability and supported features by checking the latest release notes listed in `README.md`.
+
+---
+**Source:**
+- [YugabyteDB GitHub Repository](https://github.com/yugabyte/yugabyte-db)
+- [README.md](https://github.com/yugabyte/yugabyte-db/blob/master/README.md)
+- [LICENSE.md](https://github.com/yugabyte/yugabyte-db/blob/master/LICENSE.md)
+- [src/postgres/src/test/examples/testlo.c](https://github.com/yugabyte/yugabyte-db/blob/master/src/postgres/src/test/examples/testlo.c)
+- [src/yb/rocksdb/examples/simple_example.cc](https://github.com/yugabyte/yugabyte-db/blob/master/src/yb/rocksdb/examples/simple_example.cc)
+
+## Sources
+
+- GitHub: [yugabyte/yugabyte-db](https://github.com/yugabyte/yugabyte-db) — Author: yugabyte
+- GitHub: [yugabyte/yugabyte-db / LICENSE.md](https://github.com/yugabyte/yugabyte-db/blob/master/LICENSE.md) — Author: yugabyte
+- GitHub: [yugabyte/yugabyte-db / src/postgres/src/test/examples/testlo.c](https://github.com/yugabyte/yugabyte-db/blob/master/src/postgres/src/test/examples/testlo.c) — Author: yugabyte
+- GitHub: [yugabyte/yugabyte-db / src/yb/rocksdb/examples/simple_example.cc](https://github.com/yugabyte/yugabyte-db/blob/master/src/yb/rocksdb/examples/simple_example.cc) — Author: yugabyte
+- GitHub: [yugabyte/yugabyte-db / src/yb/client/client.h](https://github.com/yugabyte/yugabyte-db/blob/master/src/yb/client/client.h) — Author: yugabyte
+- GitHub: [yugabyte/yugabyte-db / src/yb/rocksdb/examples/README.md](https://github.com/yugabyte/yugabyte-db/blob/master/src/yb/rocksdb/examples/README.md) — Author: yugabyte
+- GitHub: [yugabyte/yugabyte-db / src/odyssey/docs/index.md](https://github.com/yugabyte/yugabyte-db/blob/master/src/odyssey/docs/index.md) — Author: yugabyte
