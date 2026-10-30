@@ -1,0 +1,89 @@
+---
+title: "[Open Source Analysis] Elastic Kibana Architecture and Scalability"
+publishedAt: "2026-10-31"
+summary: "Kibana is an open-source, browser-based analytics platform that provides a dashboard for exploring, analyzing, and visualizing data stored in Elasticsearch."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+Kibana is a dashboard tool for exploring, analyzing, and visualizing Elasticsearch data. Beyond simply displaying data, it helps users monitor and manage large-scale logs, metrics, and security events in real time. The project aims to enable data analysts and engineers to derive insights through an intuitive UI without having to work directly with complex query languages.
+
+The primary user base includes system operators, data analysts, and security monitoring teams. The project type is a large-scale web application and development platform. As specified in `package.json`, Kibana operates in tight integration with Elasticsearch, providing features optimized for data visualization and dashboard configuration.
+
+## Key Concepts Needed to Understand It
+
+To understand Kibana, the following core concepts must be grasped.
+
+1. **Elasticsearch Version Compatibility**: Kibana is tightly coupled with the version of Elasticsearch. According to `README.md`, major versions must strictly match, and it supports exceptional compatibility rules such as "Kibana Patch Ahead" or "Kibana Minor Behind." This design ensures the stability of data structures and APIs.
+2. **Plugin Architecture**: Kibana is designed with a structure that layers various plugins on top of core functionality. Configuration files like `src/platform/test/examples/config.js` demonstrate the method of dynamically loading plugins in test environments.
+3. **Saved Objects**: This is the mechanism in Kibana for saving dashboards, visualizations, and search configurations created by the user. It allows user work states to be preserved permanently and shared.
+
+## Repository Structure and Actual Flow
+
+The repository is very large and is broadly composed of the core platform, testing tools, and CI/CD and configuration scripts.
+
+- `src/platform/`: This is where the Kibana platform code resides. It includes the test infrastructure and the plugin loading system.
+- `.agents/`: As seen in the file path list, this is the space where guidelines, scripts, and hook files are located.
+- `.buildkite/`: This folder contains CI/CD pipeline settings, specifically managing Functional Test Runner (FTR) configurations for various environments through the `ftr-manifests` folder.
+
+The operational flow is as follows: when the user executes `pnpm start`, the server is launched via `scripts/kibana`, the configured plugins are loaded, and the browser interface is provided.
+
+## A Concrete Example of Its Design Choices
+
+Looking at the `src/platform/test/examples/config.js` file reveals how Kibana constructs its test environment.
+
+```javascript
+export default async function ({ readConfigFile }) {
+  const functionalConfig = await readConfigFile(require.resolve('../functional/config.base.js'));
+
+  return {
+    testConfigCategory: ScoutTestRunConfigCategory.UI_TEST,
+    // ...
+    kbnTestServer: {
+      ...functionalConfig.get('kbnTestServer'),
+      serverArgs: [
+        ...functionalConfig.get('kbnTestServer.serverArgs'),
+        '--env.name=development',
+        '--telemetry.optIn=false',
+        ...findTestPluginPaths(resolve(REPO_ROOT, 'examples')),
+      ],
+    },
+  };
+}
+```
+
+This code extends the test environment based on `functionalConfig`. Specifically, the design uses `findTestPluginPaths` to automatically discover and load plugins within the `examples` folder, which increases scalability by minimizing the need for developers to modify existing settings when adding new features.
+
+## Trade-offs Compared with Alternatives
+
+Kibana holds a unique position within the Elasticsearch ecosystem.
+
+- **Advantages**: Tight integration with Elasticsearch, an extensive visualization library, and enterprise-grade permission management features.
+- **Disadvantages**: There are limitations in utilizing data sources other than Elasticsearch. Compared to Grafana, Grafana is more flexible in multi-data-source integration, whereas Kibana excels in data processing performance and functional depth within the Elastic Stack.
+
+## Security, Licensing, and Adoption Checks
+
+Kibana's license, as specified in `LICENSE.txt`, adopts a triple license of "GNU Affero General Public License v3.0 only," "Server Side Public License, v 1," and "Elastic License 2.0" by default, while the code in the `x-pack` folder is applied exclusively under the "Elastic License 2.0."
+
+From a security perspective, `SECURITY.md` guides the vulnerability reporting process. When adopting Kibana, it is necessary to verify the scope of license application per folder.
+
+## Limitations and Who Should Use It
+
+Kibana is most suitable for organizations operating large-scale Elastic Stacks. Conversely, small projects requiring lightweight dashboard tools, or environments not using Elasticsearch, may find that excessive configuration and resources are required.
+
+- **Recommended For**: Enterprise environments already using the Elastic Stack or those requiring powerful log analysis and visualization tools.
+- **Checks Before Adoption**: Review `CONTRIBUTING.md` and `README.md` to understand the development environment setup process and verify compatibility with the currently used Elasticsearch version.
+
+## Sources
+
+- GitHub: [elastic/kibana](https://github.com/elastic/kibana) — Author: elastic
+- GitHub: [elastic/kibana / LICENSE.txt](https://github.com/elastic/kibana/blob/main/LICENSE.txt) — Author: elastic
+- GitHub: [elastic/kibana / SECURITY.md](https://github.com/elastic/kibana/blob/main/SECURITY.md) — Author: elastic
+- GitHub: [elastic/kibana / package.json](https://github.com/elastic/kibana/blob/main/package.json) — Author: elastic
+- GitHub: [elastic/kibana / CONTRIBUTING.md](https://github.com/elastic/kibana/blob/main/CONTRIBUTING.md) — Author: elastic
+- GitHub: [elastic/kibana / examples/v8_profiler_examples/server/lib/session.ts](https://github.com/elastic/kibana/blob/main/examples/v8_profiler_examples/server/lib/session.ts) — Author: elastic
+- GitHub: [elastic/kibana / src/platform/packages/shared/kbn-scout/src/cli/__fixtures__/audit/fake_repo/x-pack/solutions/fake/packages/kbn-scout-fake/src/playwright/page_objects/uses_core.ts](https://github.com/elastic/kibana/blob/main/src/platform/packages/shared/kbn-scout/src/cli/__fixtures__/audit/fake_repo/x-pack/solutions/fake/packages/kbn-scout-fake/src/playwright/page_objects/uses_core.ts) — Author: elastic
+- GitHub: [elastic/kibana / src/platform/test/examples/config.js](https://github.com/elastic/kibana/blob/main/src/platform/test/examples/config.js) — Author: elastic
+- GitHub: [elastic/kibana / src/platform/test/examples/README.md](https://github.com/elastic/kibana/blob/main/src/platform/test/examples/README.md) — Author: elastic
+- GitHub: [elastic/kibana / x-pack/examples/README.md](https://github.com/elastic/kibana/blob/main/x-pack/examples/README.md) — Author: elastic
