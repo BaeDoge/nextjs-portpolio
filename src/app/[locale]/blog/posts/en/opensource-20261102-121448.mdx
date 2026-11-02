@@ -1,0 +1,115 @@
+---
+title: "[Open Source Analysis] Chinese Independent Developer List and Automation"
+publishedAt: "2026-11-02"
+summary: "This project is a curation repository for products by Chinese independent developers, featuring an automated pipeline that combines AI and GitHub Issues to streamline the contribution process."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+`1c7/chinese-independent-developer` is a massive link collection project that records the products and activities of Chinese independent developers. Beyond simply maintaining a static list, its most notable feature is an automated pipeline that combines GitHub Issues with Large Language Models (LLMs), allowing developers worldwide to easily register and manage their projects.
+
+The core problems this project addresses are "information fragmentation" and "management inefficiency." While numerous independent developers create their own products, gaining visibility by aggregating them in one place is difficult. Instead of manually updating the list, the maintainer designed a workflow where data submitted through a designated issue (`ISSUE_NUMBER = 160`) is structured by AI and automatically reflected in the repository via Pull Requests. This allows community contributors to register their products simply by commenting on an issue, without needing complex Git operations or manual Markdown editing.
+
+## Key Concepts Needed to Understand It
+
+To technically understand this project, the following three concepts are essential:
+
+1. **Issue-driven Collection:** When a user leaves a comment with their project details on issue 160 (`ISSUE_NUMBER = 160`), the system detects it and captures it as a candidate to be added to the static list (README).
+2. **LLM-based Processing:** The logic implemented in `.github/scripts/process_item.py` takes the user's unstructured text input and converts it into a standardized Markdown format via an OpenAI API-compatible endpoint. This process can even separate and handle multiple products contained within a single text input.
+3. **Automated Workflow:** The configuration files within `.github/workflows/` use GitHub Actions to periodically execute scripts, performing repetitive tasks that maintain data quality while minimizing manual intervention.
+
+## Repository Structure and Actual Flow
+
+The repository is divided into data storage and automation logic.
+
+- **Data Management:** `README.md` and related Markdown documents serve as the core repository for managing the list of independent developers by category.
+- **Automation Logic:** The `.github/scripts/` directory is the project's core engine. `.github/scripts/process_item.py` is responsible for scanning issues and refining text using AI.
+- **Workflow:** The YAML files within `.github/workflows/` automatically execute scripts based on specific events or periodic time settings.
+
+The overall flow is as follows:
+1. A user writes their project information as a comment on issue 160 (`ISSUE_NUMBER = 160`).
+2. The maintainer approves the request by leaving a specific emoji reaction on the comment (success processing follows the `SUCCESS_EMOJI = "hooray"` criteria).
+3. The `.github/scripts/process_item.py` script runs to collect and parse comments that meet the criteria.
+4. The LLM formats the content into Markdown, and the system automatically generates a Pull Request to update the list.
+
+## A Concrete Example of Its Design Choices
+
+The `.github/scripts/process_item.py` file demonstrates the project's automation philosophy. Specifically, the `get_ai_project_line` function is designed to use an LLM to convert free-form user input into structured data.
+
+```python
+def get_ai_project_line(raw_text):
+    """让 AI 提取项目名称、链接和描述（支持多个产品）"""
+    client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
+    prompt = f"""
+任务：将用户的项目介绍转换为 Markdown 格式。
+
+要求：
+1. 识别文本中的所有产品/项目（可能有多个）
+2. 每个项目占一行
+...
+    """
+    response = client.chat.completions.create(
+        model=os.getenv("LLM_MODEL", "gpt-4o-mini"),
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return response.choices[0].message.content.strip()
+```
+
+Additionally, `.github/tests/test_process_item.py` includes test code using Mocks to verify logic without actual external API calls. This is a design choice to remove external dependencies and independently verify the script's logic.
+
+```python
+class ProcessItemTests(unittest.TestCase):
+    def setUp(self):
+        self.script = load_script()
+
+    def test_contributor_success_reaction_does_not_suppress_submission(self):
+        item = Item((
+            Reaction("rocket", "1c7"),
+            Reaction("hooray", "contributor"),
+        ))
+
+        self.assertEqual(self.script.check_reactions(item), (True, False))
+```
+
+## Trade-offs Compared with Alternatives
+
+Compared to typical community lists (Awesome Lists) managed manually, this project has the following differences:
+
+| Comparison Item | Typical Community List | This Project (AI + Issue Automation) |
+| :--- | :--- | :--- |
+| **Update Method** | Maintainer manually reviews PRs and edits formats | Maintainer triggers via emoji on issue comment; automation script generates PR via AI |
+| **Data Refinement** | Manual editing by contributors and maintainers | Consistent Markdown formatting using LLMs |
+| **Operational Scalability** | Entirely dependent on maintainer's time | Easy to accept large volumes of contributions via automated workflows |
+
+**Pros:** Significantly reduces the manual editing burden for maintainers of large-scale community lists and lowers the barrier to entry, encouraging active participation.
+**Cons:** Incurs costs for LLM API calls and introduces model response variability; requires exception handling to review and correct cases where AI generates incorrect links or descriptions.
+
+## Security, Licensing, and Adoption Checks
+
+- **Security and Environment Variables:** The `.github/scripts/process_item.py` script requires `PAT_TOKEN` and `LLM_API_KEY` as environment variables. These must be injected securely via GitHub Actions Secrets, and care must be taken to ensure tokens are not exposed in public logs.
+- **Code Configuration:** Since identifiers such as `ISSUE_NUMBER = 160` or maintainer handles are used during configuration and script execution, these hardcoded values must be updated to fit the environment when adopting this system in other repositories.
+- **Licensing:** While an SPDX license is not explicitly stated in the repository, it adopts the knowledge-sharing and contribution model of the open-source community. When adopting this automation pipeline in other repositories, ensure compliance with the script's license and the terms of service of the LLM API being used.
+
+## Limitations and Who Should Use It
+
+**Limitations:**
+- The accuracy of extracted project links or descriptions may not be perfect due to LLM performance and potential hallucinations.
+- It is specialized for simple Markdown list updates rather than complex database structures, making it unsuitable for services requiring large-scale transactions or sophisticated search features.
+- It depends on the availability of the GitHub platform and external LLM API providers.
+
+**Who Should Use It:**
+- Community maintainers who want to automate management tasks while running large-scale curation lists or open-source directories.
+- Developers who want to learn from practical automation pipeline examples that combine GitHub Issues, GitHub Actions, and LLM APIs.
+- Founders and developers who want to share their independent projects within the Chinese ecosystem or explore cases from other developers.
+
+Sources:
+- [1c7/chinese-independent-developer GitHub Repository](https://github.com/1c7/chinese-independent-developer)
+- [.github/scripts/process_item.py](https://github.com/1c7/chinese-independent-developer/blob/master/.github/scripts/process_item.py)
+- [.github/tests/test_process_item.py](https://github.com/1c7/chinese-independent-developer/blob/master/.github/tests/test_process_item.py)
+
+## Sources
+
+- GitHub: [1c7/chinese-independent-developer](https://github.com/1c7/chinese-independent-developer) — Author: 1c7
+- GitHub: [1c7/chinese-independent-developer / .github/scripts/process_item.py](https://github.com/1c7/chinese-independent-developer/blob/master/.github/scripts/process_item.py) — Author: 1c7
+- GitHub: [1c7/chinese-independent-developer / .github/tests/test_process_item.py](https://github.com/1c7/chinese-independent-developer/blob/master/.github/tests/test_process_item.py) — Author: 1c7
