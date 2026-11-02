@@ -1,0 +1,79 @@
+---
+title: "[Open Source Analysis] Structure and Operation System of the RuneLite Plugin Hub"
+publishedAt: "2026-11-02"
+summary: "This project is a centralized metadata repository for managing and distributing external plugins for the RuneLite client."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+`runelite/plugin-hub` is a metadata repository designed to systematically manage external plugins for RuneLite, an open-source game client, that are not officially supported by the client itself. This project acts as an index for a 'plugin marketplace', connecting user-created plugins so that users can search for and install them within the RuneLite client.
+
+Expandable clients like RuneLite often face the issue of feature fragmentation as the user community becomes more active. This repository prevents such fragmentation and provides plugin developers with a standardized procedure for distributing their code. Consequently, users are provided with an environment where they can safely browse and install external plugins directly within the client.
+
+## Key Concepts Needed to Understand It
+
+To understand this project, the following two concepts are essential:
+
+1. **Manifest-based distribution**: This repository does not contain the source code for all plugins. Instead, it manages manifest files in the `plugins/` directory that specify the location (GitHub repository URL) and specific version (commit hash) of each plugin.
+2. **Supply Chain Security**: External plugins may include dependency libraries. To manage this, the project utilizes Gradle's dependency verification feature. Configurations within `package/verification-template/` prevent unexpected external libraries from being included during the build process and ensure build reproducibility.
+
+## Repository Structure and Actual Flow
+
+The repository is divided into plugin metadata and development tools.
+
+* `plugins/`: The core directory where metadata files for each plugin are located. For example, a file like `plugins/117hd` contains the original repository address of the plugin and the commit hash to be used for the build.
+* `package/verification-template/`: A template used when developing or submitting new plugins. It includes `build.gradle` and the Gradle Wrapper, providing a standard environment for developers to build and test plugins in their local environments.
+* `.github/workflows/`: CI/CD pipelines are defined here. `build.yml` automatically verifies whether submitted plugins build successfully.
+
+The operational flow is as follows: When a developer creates a Pull Request to register their plugin in the `plugins/` directory, GitHub Actions builds and verifies it. If it passes, it is merged into the main branch. Subsequently, the RuneLite client references this repository's information to update and display the list of plugins to users.
+
+## A Concrete Example of Its Design Choices
+
+The role of the `runelite-plugin.properties` file is crucial in the plugin submission process.
+
+```
+properties
+displayName=Helmet check
+author=dekvall
+description=Alerts you when you have nothing equipped in your head slot
+tags=hint,gear,head
+plugins=com.helmetcheck.HelmetCheckPlugin
+version=
+build=standard
+```
+
+This configuration file contains the information required for the client to display the plugin in the UI. In particular, the `build` attribute can be set to `standard` or `gradle`. The `standard` mode standardizes the build environment upon plugin submission for management and is used when no complex dependency configuration is required.
+
+## Trade-offs Compared with Alternatives
+
+This project has the following characteristics regarding plugin distribution methods:
+
+* **Centralized Management vs. Decentralized Distribution**: Compared to individual developers distributing plugins from their own websites, this project manages all plugins in one place, offering higher search convenience for users. However, since all changes are managed through Pull Requests, the distribution cycle depends on the review speed of the central repository.
+* **Standardized Build vs. Autonomous Distribution**: The method of downloading and installing arbitrary `.jar` files carries significant security risks. In contrast, this repository provides a relatively secure distribution environment by undergoing a source code-based build and verification process.
+
+## Security, Licensing, and Adoption Checks
+
+* **Security**: As stated in the `README.md`, all plugins are provided 'as is', and project maintainers do not guarantee the functionality or safety of the plugins. Users must be aware of the risks associated with installing external plugins themselves.
+* **Licensing**: The entire project follows the `BSD-2-Clause` license, which is permissive and allows for free modification and redistribution.
+* **Adoption Checks**: When adding new dependencies, Gradle's dependency verification metadata must be updated, which undergoes a management review process. Therefore, minimizing external library dependencies is advantageous for smooth registration.
+
+## Limitations and Who Should Use It
+
+This project is an essential gateway for developers wishing to distribute plugins within the RuneLite ecosystem. However, it has the following limitations:
+
+* **Dependence on Manual Review**: All plugins undergo management review, making it unsuitable for services requiring immediate distribution.
+* **Client Dependency**: Since it depends on RuneLite's client API, plugins are likely to need modification when the client is updated.
+
+Target users are developers who want to develop useful features for RuneLite users and share them with the community. For personal use, a local build is sufficient, and there is no need to register in this repository.
+
+---
+**Source:**
+- [RuneLite Plugin Hub GitHub Repository](https://github.com/runelite/plugin-hub)
+- [README.md](https://github.com/runelite/plugin-hub/blob/master/README.md)
+- [LICENSE](https://github.com/runelite/plugin-hub/blob/master/LICENSE)
+
+## Sources
+
+- GitHub: [runelite/plugin-hub](https://github.com/runelite/plugin-hub) — Author: runelite
+- GitHub: [runelite/plugin-hub / LICENSE](https://github.com/runelite/plugin-hub/blob/master/LICENSE) — Author: runelite
