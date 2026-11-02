@@ -1,0 +1,74 @@
+---
+title: "[Coding Test] Maximizing String Score"
+publishedAt: "2026-11-02"
+summary: "An algorithm to maximize the sum of the count of '0's in the left part and '1's in the right part when splitting a binary string into two."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given a string `s` consisting only of '0's and '1's, find the maximum score obtained by splitting it into two non-empty substrings (left and right). The score is the sum of the number of '0's in the left substring and the number of '1's in the right substring.
+
+The length of the string is between 2 and 500, and it consists only of '0's or '1's. For example, if `s = "011101"`, splitting into left "0" and right "11101" yields a score of 1 (left '0') + 4 (right '1') = 5, which is the maximum value.
+
+## Approach
+
+A brute-force approach is possible by calculating the score at every possible split position. For a string of length `n`, splits can occur at positions from index 1 to `n-1`, and for each split, you need to count the '0's and '1's in the left and right parts.
+
+Iterating through characters at each position results in a time complexity of $O(N^2)$. Given the constraint that `s.length` is 500, an $O(N^2)$ solution will pass, but a more efficient $O(N)$ approach is possible.
+
+First, count the total number of '1's in the entire string. Then, slide through the string from left to right; if the current character is '0', update the left '0' count, and if it is '1', update the total '1' count (effectively decreasing the right '1' count), calculating the score at each position.
+
+## Solution
+
+Count the total number of '1's first, then calculate the score by counting '0's in the left part while excluding '1's from the global count as they are passed.
+
+```python
+def maxScore(s: str) -> int:
+    # Count '1's in the entire string to set the initial value for right '1's
+    total_ones = s.count('1')
+    left_zeros = 0
+    max_score = 0
+    
+    # Possible split positions are from index 0 to len(s)-2
+    # Since the last character must be included in the right part, the left part ends before it
+    for i in range(len(s) - 1):
+        if s[i] == '0':
+            left_zeros += 1
+        else:
+            # If the current position is '1', decrement the count of '1's belonging to the right side
+            total_ones -= 1
+            
+        # Calculate the sum of left '0's and right '1's at the current position
+        current_score = left_zeros + total_ones
+        if current_score > max_score:
+            max_score = current_score
+            
+    return max_score
+```
+
+Time Complexity: $O(N)$ - Traverses the string twice (once for total count, once for sliding).
+Space Complexity: $O(1)$ - Uses only integer variables.
+
+## Alternative Approaches
+
+The approach is the same, but the implementation can explicitly use the concept of Prefix Sum.
+
+1. Precompute an array `left_ones[i]` storing the count of '1's from `s[0]` to `s[i]`.
+2. Calculate the total number of '1's, `total_ones`.
+3. At each split position `i`, the number of '1's on the left is `left_ones[i]`, and the number of '1's on the right is `total_ones - left_ones[i]`.
+4. Since the length of the left part is `i + 1`, the number of '0's on the left is derived as `(i + 1) - left_ones[i]`.
+5. Calculate the score using the formula: `((i + 1) - left_ones[i]) + (total_ones - left_ones[i])`.
+
+This method also has a time complexity of $O(N)$ and a space complexity of $O(N)$. It uses more memory than the sliding window method ($O(1)$ space), but the code, which creates an array and calculates using a formula, can be more readable.
+
+## Additional Notes
+
+This problem is a basic application of Prefix Sum and Sliding Window techniques.
+The key is to maintain the left and right information in constant time at the current position without re-splitting the string.
+Since the constraint on the string length is small (500), an $O(N^2)$ code will pass, but it is good to learn the $O(N)$ algorithm for scalability.
+Using Python's `count()` method allows for concise code by calculating the number of '1's at once.
+
+## Sources
+
+- LeetCode: [LeetCode 1422 - Maximum Score After Splitting a String](https://leetcode.com/problems/maximum-score-after-splitting-a-string/)
