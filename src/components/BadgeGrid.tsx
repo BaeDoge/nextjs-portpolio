@@ -18,12 +18,20 @@ export default function BadgeGrid() {
         year: "2024",
       },
       {
-        label: "ADsP",
-        sub: "데이터분석준전문가",
+        label: "ADsP , SQLD , DAsP",
+        sub: "Data Certifications",
         color: "#0066CC",
         bg: "#E6F0FF",
         fg: "#003D7A",
         year: "2025",
+      },
+      {
+        label: "AICE",
+        sub: "AI Certificate for Everyone",
+        color: "#0066CC",
+        bg: "#E6F0FF",
+        fg: "#003D7A",
+        year: "2026",
       },
       {
         label: "은행실무종합능력",

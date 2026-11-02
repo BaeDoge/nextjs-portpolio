@@ -80,6 +80,7 @@ const CERT_ITEMS = [
   { src: "/certificates/mentoring.jpg",     label: "교내 학업멘토링 수료증" },
   { src: "/certificates/gyungsan01.jpg",    label: "경산청년정책단 1기" },
   { src: "/certificates/gyungsan02.jpg",    label: "경산청년정책단 2기" },
+  { src: "/certificates/aice.png",    label: "AICE Associate 자격증" }
 ];
 // ── 영어 라벨 ──────────────────────────────────────────────
 const AWARD_ITEMS_EN = [
@@ -108,4 +109,5 @@ const CERT_ITEMS_EN = [
   { src: "/certificates/mentoring.jpg",       label: "Campus Academic Mentoring Certificate" },
   { src: "/certificates/gyungsan01.jpg",      label: "Gyeongsan Youth Policy Group, 1st Cohort" },
   { src: "/certificates/gyungsan02.jpg",      label: "Gyeongsan Youth Policy Group, 2nd Cohort" },
+  { src: "/certificates/aice.png",    label: "AICE Associate Certification" }
 ];
