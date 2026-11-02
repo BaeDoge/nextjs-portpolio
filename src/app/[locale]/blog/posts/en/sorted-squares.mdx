@@ -1,0 +1,64 @@
+---
+title: "[Coding Test] Sorted Squares"
+publishedAt: "2026-11-02"
+summary: "LeetCode 977: Compute squares of a sorted array in linear time using a two-pointer technique."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given an integer array `nums` in non-decreasing order, return an array of the squares of each element sorted in non-decreasing order. The input can contain up to 10^4 elements, each in the range [-10^4, 10^4]. The problem requires a solution that runs in linear time without re-sorting after squaring.
+
+## Approach
+
+Since the array is already sorted, we can start from the largest absolute value and fill the result array in reverse order. The left pointer begins at the start, and the right pointer begins at the end. At each step, compare the squares of the two ends, store the larger value at the last position of the result, and move the corresponding pointer. This processes each element once, achieving O(n) time.
+
+```python
+def sortedSquares(nums):
+    n = len(nums)
+    result = [0] * n
+    left, right = 0, n - 1
+    idx = n - 1
+    while left <= right:
+        left_sq = nums[left] ** 2
+        right_sq = nums[right] ** 2
+        if left_sq > right_sq:
+            result[idx] = left_sq
+            left += 1
+        else:
+            result[idx] = right_sq
+            right -= 1
+        idx -= 1
+    return result
+```
+
+## Solution
+
+The `sortedSquares` function above does not modify the input array; it fills the result array in reverse order with the squared values, producing a sorted result. The `while left <= right` loop processes each element exactly once, so the overall time complexity is **O(n)**. Because additional space is required for the result array, the space complexity is **O(n)**. This method handles both negative and positive numbers, and correctly preserves duplicate squares.
+
+```python
+# Example usage
+print(sortedSquares([-4, -1, 0, 3, 10]))  # [0, 1, 9, 16, 100]
+print(sortedSquares([-7, -3, 2, 3, 11])) # [4, 9, 9, 49, 121]
+```
+
+## Alternative Approaches
+
+The simplest approach is to square each element and then sort the array using the built-in sort function. This takes O(n) time for squaring, but the sorting step adds O(n log n) time. The implementation is simple, but it is less efficient than the linear-time solution.
+
+```python
+def sortedSquares_naive(nums):
+    return sorted(x * x for x in nums)
+```
+
+Time complexity: **O(n log n)**, space complexity: **O(n)** (additional space during sorting).
+
+## Additional Notes
+
+- The problem may include negative numbers and zero, but after squaring all values become non-negative, so the result array is automatically sorted.
+- The two-pointer approach works only on sorted input; it cannot be applied to arbitrary arrays.
+- For very large input sizes (e.g., 10^6), the O(n) method remains efficient, while the O(n log n) method can become noticeably slower.
+
+## Sources
+
+- LeetCode: [LeetCode 977 - Squares of a Sorted Array](https://leetcode.com/problems/squares-of-a-sorted-array/)
