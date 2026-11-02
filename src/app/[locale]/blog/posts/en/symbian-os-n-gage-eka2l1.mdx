@@ -1,0 +1,132 @@
+---
+title: "[Open Source Analysis] Symbian OS/N-Gage Emulator EKA2L1"
+publishedAt: "2026-11-02"
+summary: "EKA2L1 is an open-source Symbian OS/N-Gage emulator written in C++17 that provides a Qt-based UI, a JSON API controller, and an integrated test suite, distributed under the GPL-3.0 license."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+EKA2L1 is an emulator project designed to run Symbian OS (specifically the N-Gage gaming platform) on modern hardware. Instead of full system emulation, this project reimplements Symbian's core app servers and libraries, supporting most official N-Gage/N-Gage 2.0 libraries and game libraries from S60v1 to Belle. Its primary goals are:
+
+* **Retro Gaming and Software Accessibility** – Enables users to run classic Symbian games on Windows, Linux, macOS, and Android with a familiar UI.
+* **Development and Research Support** – Provides tools to investigate Symbian application behavior, debug, and test compatibility issues.
+* **Open Source Collaboration** – Releases all relevant files under GPL-3.0 so the community can review, extend, and improve the emulator code.
+
+The project is partially maintained; since 2022, development has shifted to a hobbyist pace, and official builds for some platforms are no longer provided. Currently, main contributors handle PC/Android builds, while the community assists with troubleshooting for missing platforms.
+
+## Key Concepts Needed to Understand It
+
+| Concept | Description | Relevance in EKA2L1 |
+|---------|------------|------------------------|
+| **Symbian OS Kernel (EKA2)** | A low-level OS layer defining the event-based scheduler, Inter-Process Communication (IPC), and the app server model. | The emulator reproduces EKA2 behavior in `kern` test cases within `src/emu/control` and `src/intests`. |
+| **App Server** | An abstraction layer used by Symbian applications to request system services (file system, UI, networking). | The emulator implements a control API server that acts as an external controller, communicating with the Qt frontend (`src/emu/qt`). |
+| **C++17 Features** | Modern type-safe code utilizing standard library features like `std::variant` and `std::string_view`. | CMakeLists.txt enforces `CXX_STANDARD 17`, utilized in the `rapidjson` parser and `std::vector<std::string>` metatype registration. |
+| **Data Distribution Model** | The emulator copies patches, resources, scripts, and compatibility data at runtime to reduce bundle size while maintaining user-specific data. | `main.cpp` uses `eka2l1::common::copy_folder` to copy `patch`, `resources`, `scripts`, and `compat` directories to `$XDG_DATA_HOME/EKA2L1/`. |
+
+## Repository Structure and Actual Flow
+
+```
+EKA2L1/
+├─ .github/               # CI workflows, funding YAML
+├─ cmake/                 # Platform detection, package managers, Symbian support
+├─ src/
+│  ├─ emu/               # Emulator runtime
+│  │  ├─ qt/            # Qt-based UI (src/emu/qt/src/main.cpp)
+│  │  └─ control/       # JSON API server (src/emu/control/src/api.cpp)
+│  └─ intests/           # Integrated test framework (src/intests/src/main.cpp)
+├─ native/                # Reference Symbian native apps (BitmapCanavas, ITried, etc.)
+├─ README.md              # Project overview and build instructions
+└─ BUILDING.md            # Detailed build instructions
+```
+
+**General Execution Flow**
+
+1. **Build** – Built using `cmake`; CI (`.github/workflows/build.yml`) generates artifacts for Windows, Linux, macOS, and Android.
+2. **Data Preparation** – `src/emu/qt/src/main.cpp` determines the `$XDG_DATA_HOME/EKA2L1/` path and copies the `patch`, `resources`, `scripts`, and `compat` directories provided with the executable to the user data path to configure the bundle-based file system.
+3. **UI Startup** – `eka2l1::desktop::emulator_entry` initializes the emulator core via Qt events and starts the Symbian app servers.
+4. **Control API** – `src/emu/control/src/api.cpp` provides a REST-style API using `rapidjson`, allowing external tools to control the emulator.
+5. **Testing** – `src/intests/src/main.cpp` uses `CTestManager` to run integrated tests for the kernel, file system, IPC, etc.
+
+## A Concrete Example of Its Design Choices
+
+### Example 1 – Qt UI Entry Point (`src/emu/qt/src/main.cpp`)
+
+```cpp
+int main(int argc, char *argv[]) {
+    if (handle_command_line_help(argc, const_cast<const char **>(argv))) {
+        return 0;
+    }
+    QApplication a(argc, argv);
+    // ... (Load language settings and register metatypes)
+#if !EKA2L1_PLATFORM(WIN32)
+    // Separate and copy bundle data and user data
+    eka2l1::common::copy_folder(app_path_str + "/patch", data_path_str + "/patch", 0, nullptr);
+    eka2l1::common::copy_folder(app_path_str + "/resources", data_path_str + "/resources", 0, nullptr);
+    eka2l1::common::copy_folder(app_path_str + "/scripts", data_path_str + "/scripts", 0, nullptr);
+    eka2l1::common::copy_folder(app_path_str + "/compat", data_path_str + "/compat", 0, nullptr);
+    // ...
+#endif
+    eka2l1::desktop::emulator emulator_state;
+    return eka2l1::desktop::emulator_entry(a, emulator_state, argc, const_cast<const char **>(argv));
+}
+```
+
+*Design Choice:* The project uses `QSettings` for language persistence and separates the installation path from the user data path. This structure allows managing user scripts and compatibility data without modifying system files.
+
+### Example 2 – Control API JSON Parser (`src/emu/control/src/api.cpp`)
+
+```cpp
+json json::parse(const std::string &text) {
+    rapidjson::Document doc;
+    doc.Parse(text.c_str(), text.size());
+    if (doc.HasParseError())
+        throw api_error(400, "parse_error", "invalid JSON");
+    return read(doc, 0);
+}
+```
+
+*Design Choice:* By wrapping `rapidjson`, the project increases type safety and standardizes HTTP status codes and error messages via the `api_error` exception, improving ease of use for external clients.
+
+## Trade-offs Compared with Alternatives
+
+| Aspect | EKA2L1 | Full System Virtualization (e.g., QEMU) |
+|--------|--------|------------------------------------------|
+| **Performance** | Low overhead due to core server reimplementation. | High overhead due to hardware emulation. |
+| **Setup** | Easy to build and run as a single CMake project. | Requires guest OS image management and virtualization setup. |
+| **Compatibility** | Optimized for games based on official library reimplementation. | High versatility via full OS emulation, but game performance may drop. |
+
+## Security, Licensing, and Adoption Checks
+
+* **Licensing** – The entire project is under **GPL-3.0** (see `LICENSE` file). Derivative works must disclose their source code upon distribution.
+* **Security Considerations** – The `control` API is designed for access via local network or Unix sockets. An additional authentication layer is required if exposed externally.
+* **Adoption Checklist**
+  1. Verify supported platforms (Windows, Linux, Android). macOS depends on community builds.
+  2. Ensure sufficient disk space in the `$XDG_DATA_HOME/EKA2L1/` directory.
+  3. Check if recording mode via the `GEN_TESTS` macro can be utilized when running tests.
+
+## Limitations and Who Should Use It
+
+**Limitations**
+* **Maintenance Status** – Development pace has slowed since 2022, and some platform builds rely on community support.
+* **Compatibility Scope** – Does not support all Symbian apps; apps using specific kernel-level features may have limited execution.
+
+**Recommended For**
+* **Retro Gaming Enthusiasts** – Users wanting to run N-Gage games in modern environments.
+* **Symbian Researchers** – Developers needing to analyze OS architecture or perform compatibility testing.
+* **Developers** – Those looking to learn Qt-based frontend and JSON API server structures or research porting Symbian-style app servers.
+
+### Sources
+* `README.md` – Project overview and compatibility information.
+* `LICENSE` – GPL-3.0 license.
+* `src/emu/qt/src/main.cpp` – UI entry point and data management logic.
+* `src/intests/src/main.cpp` – Integrated test framework.
+* `src/emu/control/src/api.cpp` – JSON API server implementation.
+
+## Sources
+
+- GitHub: [EKA2L1/EKA2L1](https://github.com/EKA2L1/EKA2L1) — Author: EKA2L1
+- GitHub: [EKA2L1/EKA2L1 / LICENSE](https://github.com/EKA2L1/EKA2L1/blob/master/LICENSE) — Author: EKA2L1
+- GitHub: [EKA2L1/EKA2L1 / src/emu/qt/src/main.cpp](https://github.com/EKA2L1/EKA2L1/blob/master/src/emu/qt/src/main.cpp) — Author: EKA2L1
+- GitHub: [EKA2L1/EKA2L1 / src/intests/src/main.cpp](https://github.com/EKA2L1/EKA2L1/blob/master/src/intests/src/main.cpp) — Author: EKA2L1
+- GitHub: [EKA2L1/EKA2L1 / src/emu/control/src/api.cpp](https://github.com/EKA2L1/EKA2L1/blob/master/src/emu/control/src/api.cpp) — Author: EKA2L1
