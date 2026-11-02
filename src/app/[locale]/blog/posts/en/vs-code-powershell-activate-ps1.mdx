@@ -1,0 +1,58 @@
+---
+title: "[Troubleshooting] VS Code PowerShell Activate.ps1 Execution Policy Error"
+publishedAt: "2026-11-02"
+summary: "How to resolve script blocking errors caused by execution policy restrictions when activating a virtual environment in Windows PowerShell."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+When trying to activate a virtual environment in the VS Code PowerShell terminal, the following security error occurs.
+
+```powershell
+PS C:\Users\hpoddar\Desktop\WebDev\ReactComplete\DjangoReact\ArticlesApp\APIProject> ..\venv\scripts\activate    
+..\venv\scripts\activate : File C:\Users\hpoddar\Desktop\WebDev\ReactComplete\DjangoReact\ArticlesApp\venv\scripts\Activate.ps1 cannot be loaded because running 
+scripts is disabled on this system.
+At line:1 char:1
++ ..\venv\scripts\activate
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : SecurityError: (:) [], PSSecurityException
+    + FullyQualifiedId : UnauthorizedAccess
+```
+
+![Symptom screenshot](/blogs/vs-code-powershell-activate-ps1-1.png)
+
+## Cause
+
+This is because the default execution policy of Windows PowerShell is set to `Restricted`. This policy allows individual commands but blocks the execution of script files (.ps1). Since the virtual environment's `Activate.ps1` is a script, a security exception (PSSecurityException) occurs if the current user's execution policy does not allow it.
+
+## Solution
+
+Change the current user's PowerShell execution policy to `RemoteSigned` to allow the execution of local scripts. This method applies only to the current account without requiring administrator privileges.
+
+```powershell
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+![Solution screenshot](/blogs/vs-code-powershell-activate-ps1-2.png)
+
+## Alternative Solutions
+
+If changing the PowerShell execution policy is not possible or desired, you can change the default profile of the VS Code terminal from PowerShell to Command Prompt (cmd.exe). Command Prompt uses `.bat` scripts and is not subject to these execution policy restrictions.
+
+```powershell
+# Select 'Select Default Profile' from the dropdown menu at the top of the VS Code terminal.
+# Choose 'Command Prompt' from the list to set it as the default terminal profile.
+```
+
+## Additional Notes
+
+Other causes for virtual environment activation failure include not being in the project root folder or the activation script not existing (the .venv folder was not created). You must run `Activate.ps1` in PowerShell and `activate.bat` in Command Prompt, choosing the script appropriate for the terminal environment. Successful activation can be verified by checking for the `(.venv)` prefix in the prompt or by running the `python -c "import sys; print(sys.executable)"` command to check the virtual environment path.
+
+## Sources
+
+- StackOverflow: [VS code terminal : Activate.ps1 cannot be loaded because running scripts is disabled on this system](https://stackoverflow.com/questions/69605313/vs-code-terminal-activate-ps1-cannot-be-loaded-because-running-scripts-is-disa) — Author: Himanshu Poddar(question), pxDav(answer) (CC BY-SA)
+- Tistory: [파이썬 가상환경 활성화가 안 될 때｜운영체제별 해결 순서](https://neos35.tistory.com/entry/%ED%8C%8C%EC%9D%B4%EC%8D%AC-%EA%B0%80%EC%83%81%ED%99%98%EA%B2%BD-%ED%99%9C%EC%84%B1%ED%99%94%EA%B0%80-%EC%95%88-%EB%90%A0-%EB%95%8C%EF%BD%9C%EC%9A%B4%EC%98%81%EC%B2%B4%EC%A0%9C%EB%B3%84-%ED%95%B4%EA%B2%B0-%EC%88%9C%EC%84%9C) — Author: 컴공대생 mr.ko
+- Tistory: [파이썬 가상환경이 활성화되지 않을 때 해결 순서](https://neos35.tistory.com/entry/%ED%8C%8C%EC%9D%B4%EC%8D%AC-%EA%B0%80%EC%83%81%ED%99%98%EA%B2%BD%EC%9D%B4-%ED%99%9C%EC%84%B1%ED%99%94%EB%90%98%EC%A7%80-%EC%95%8A%EC%9D%84-%EB%95%8C-%ED%95%B4%EA%B2%B0-%EC%88%9C%EC%84%9C) — Author: 컴공대생 mr.ko
+
+Images are taken from the sources above.
