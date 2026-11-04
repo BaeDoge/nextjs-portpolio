@@ -1,0 +1,85 @@
+---
+title: "[Open Source Analysis] Plugin-based Desktop Music Player Nuclear"
+publishedAt: "2026-11-04"
+summary: "Nuclear is an open-source desktop music player using Tauri and React that extends streaming sources via a plugin architecture and integrates with AI agents through MCP."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+`nukeop/nuclear` is a desktop application for searching and streaming music without ads or user tracking. This project aims to avoid the constraints of centralized commercial services like Spotify and allows users to freely find music from various online sources. Since the repository was created on September 22, 2016, it has seen consistent development and currently supports Windows, macOS, and Linux.
+
+Technically, it combines the desktop native environment with web technologies using `Tauri`. The frontend is built with `React` and `TypeScript`, while the backend and system interfaces are handled in `Rust`. The entire project is managed as a monorepo using `pnpm` and `Turborepo`, with `@nuclearplayer/player` acting as the main application package.
+
+## Key Concepts Needed to Understand It
+
+To understand how `Nuclear` works, three core concepts must be grasped.
+
+1. **Plugin Architecture**: The core functionality of `Nuclear` is modularized into plugins. All features such as streaming sources, metadata, playlists, and dashboard content are provided as plugins. Users can extend functionality via the built-in plugin store or develop their own plugins using `@nuclearplayer/plugin-sdk`.
+2. **Tauri-based Hybrid Structure**: When the application runs via `packages/player/src/main.tsx`, it checks for the existence of `__TAURI_INTERNALS__` to distinguish between a Tauri environment and a web environment. This allows efficient separation of desktop native features and web UI operation, while also providing a web UI for remote control.
+3. **MCP (Model Context Protocol) Server**: A feature activatable through the `Integrations` menu in settings, providing an interface for AI agents to control `Nuclear`. This enables direct manipulation of the music player from tools such as Claude Code or Cursor.
+
+## Repository Structure and Actual Flow
+
+The repository is split into multiple packages using `Turborepo`. Key packages include:
+
+- `packages/player`: Contains the main application code and handles React and Tauri integration.
+- `packages/hifi`: Includes low-level logic for audio streaming.
+- `packages/model`: Defines common data models used by the application (e.g., `Queue`, `Track`). `packages/model/src/queue.ts` is a representative example.
+- `packages/docs`: Houses documentation for users and developers.
+
+The data flow operates as follows: when a user enters a search term, the plugin system calls an external API, processes the resulting streaming URL, and passes it to the audio buffer.
+
+## A Concrete Example of Its Design Choices
+
+`Nuclear` provides `api.Http.fetch` to allow plugins to communicate with external APIs without the constraints of the desktop environment. According to `packages/docs/plugins/http.md`, while general browser environments restrict external API calls due to CORS policies, `Nuclear` solves this by routing requests through Tauri's native HTTP client.
+
+```typescript
+// Plugin example: using api.Http.fetch
+async onEnable(api: NuclearPluginAPI) {
+  const response = await api.Http.fetch('https://api.example.com/tracks?q=radiohead');
+  if (response.ok) {
+    const data = await response.json();
+    api.Logger.info(`Found ${data.results.length} tracks`);
+  }
+}
+```
+
+This design allows plugin developers to freely extend data sources without being bound by browser security models.
+
+## Trade-offs Compared with Alternatives
+
+Compared to existing centralized streaming services, `Nuclear` has the following characteristics:
+
+- **Advantages**: It has no ads and has very high extensibility as users can add sources directly via plugins. Additionally, it can manage local files and online streaming in an integrated manner.
+- **Disadvantages**: Since streaming sources depend on external services, playback functionality may be temporarily interrupted due to changes in service policies or API updates. Furthermore, users may find it cumbersome to manage plugins directly.
+
+## Security, Licensing, and Adoption Checks
+
+- **License**: It follows the `AGPL-3.0` license. This means that if the software is modified or served over a network, the modified source code must be made public. License compliance must be strictly verified when adopting this in a corporate environment.
+- **Security and Contribution Policy**: As specified in `CONTRIBUTING.md`, the project currently does not accept code contributions. This appears to be a policy to maintain project management consistency, with user expansion handled through the official plugin system. When using external plugins, users must review the source and safety of the plugins themselves.
+
+## Limitations and Who Should Use It
+
+`Nuclear` is suitable for advanced users who want to build their own music libraries and manage various sources in an integrated manner. Conversely, for users who prioritize stable official API support and uninterrupted playback experiences, commercial services may be a better choice.
+
+Before adoption, it is important to verify whether the music sources you primarily use are stably supported in the current plugin ecosystem. Additionally, under the `AGPL-3.0` license, legal review must precede any use beyond personal purposes, including commercial utilization.
+
+Source:
+- [Nuclear GitHub Repository](https://github.com/nukeop/nuclear)
+- [Nuclear Documentation](https://github.com/nukeop/nuclear/blob/master/packages/docs/README.md)
+- [Nuclear Plugin HTTP API](https://github.com/nukeop/nuclear/blob/master/packages/docs/plugins/http.md)
+- [Nuclear License](https://github.com/nukeop/nuclear/blob/master/LICENSE)
+- [Nuclear Contributing Guide](https://github.com/nukeop/nuclear/blob/master/CONTRIBUTING.md)
+
+## Sources
+
+- GitHub: [nukeop/nuclear](https://github.com/nukeop/nuclear) — Author: nukeop
+- GitHub: [nukeop/nuclear / LICENSE](https://github.com/nukeop/nuclear/blob/master/LICENSE) — Author: nukeop
+- GitHub: [nukeop/nuclear / package.json](https://github.com/nukeop/nuclear/blob/master/package.json) — Author: nukeop
+- GitHub: [nukeop/nuclear / CONTRIBUTING.md](https://github.com/nukeop/nuclear/blob/master/CONTRIBUTING.md) — Author: nukeop
+- GitHub: [nukeop/nuclear / packages/model/src/queue.ts](https://github.com/nukeop/nuclear/blob/master/packages/model/src/queue.ts) — Author: nukeop
+- GitHub: [nukeop/nuclear / packages/player/src/main.tsx](https://github.com/nukeop/nuclear/blob/master/packages/player/src/main.tsx) — Author: nukeop
+- GitHub: [nukeop/nuclear / packages/hifi/src/fmp4/parser.ts](https://github.com/nukeop/nuclear/blob/master/packages/hifi/src/fmp4/parser.ts) — Author: nukeop
+- GitHub: [nukeop/nuclear / packages/docs/README.md](https://github.com/nukeop/nuclear/blob/master/packages/docs/README.md) — Author: nukeop
+- GitHub: [nukeop/nuclear / packages/docs/plugins/http.md](https://github.com/nukeop/nuclear/blob/master/packages/docs/plugins/http.md) — Author: nukeop
