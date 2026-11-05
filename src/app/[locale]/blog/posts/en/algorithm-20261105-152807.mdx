@@ -1,0 +1,61 @@
+---
+title: "[Coding Test] Complex Number Multiplication"
+publishedAt: "2026-11-05"
+summary: "Given two complex number strings, parse them, multiply, and return the product in the same format."
+tag: "Algorithm"
+---
+
+## Problem
+
+Two complex number strings are given. Each string is in the format "real+imaginaryi", where real and imaginary are integers between -100 and 100 inclusive. Using the property i² = -1, compute the product of the two complex numbers and output the result as a string in the same format.
+
+## Approach
+
+Apply the complex multiplication formula (a+bi)(c+di) = (ac - bd) + (ad + bc)i directly. Split each string on '+' to extract the real and imaginary parts, remove the trailing 'i', and convert to integers. Combine the computed real and imaginary parts back into a string. Since the input length is bounded, the processing completes in constant time.
+
+## Solution
+
+```python
+class Solution:
+    def complexNumberMultiply(self, num1: str, num2: str) -> str:
+        # Separate real and imaginary parts
+        a, bi = num1.split('+')
+        b = int(bi[:-1])
+        c, di = num2.split('+')
+        d = int(di[:-1])
+        
+        # Apply complex multiplication formula
+        real = int(a) * int(c) - b * d
+        imag = int(a) * d + b * int(c)
+        
+        return f"{real}+{imag}i"
+```
+
+Time Complexity: O(1) — the string length is bounded, so processing takes constant time.  
+Space Complexity: O(1) — only a fixed number of variables are used.
+
+## Alternative Approaches
+
+Another approach is to directly locate the '+' and 'i' characters in the string and extract the real and imaginary parts using indexing. This uses find and slicing instead of split, achieving the same result, and the underlying complex multiplication formula remains the same. Since the input size is bounded, the difference in time complexity is negligible.
+
+```python
+class Solution:
+    def complexNumberMultiply(self, num1: str, num2: str) -> str:
+        # Parsing using indices
+        plus1 = num1.find('+')
+        plus2 = num2.find('+')
+        a = int(num1[:plus1])
+        b = int(num1[plus1+1:-1])
+        c = int(num2[:plus2])
+        d = int(num2[plus2+1:-1])
+        
+        return f"{a*c - b*d}+{a*d + b*c}i"
+```
+
+## Additional Notes
+
+The input format is always a valid complex number string; the imaginary part may be negative, expressed as "+-1i". Using split('+') correctly separates the parts even in this case. No additional exception handling is required within the problem constraints.
+
+## Sources
+
+- LeetCode: [LeetCode 537 - Complex Number Multiplication](https://leetcode.com/problems/complex-number-multiplication/)
