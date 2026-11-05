@@ -1,0 +1,73 @@
+---
+title: "[Coding Test] DI String Match Permutation Restoration"
+publishedAt: "2026-11-05"
+summary: "This note explains how to restore a permutation satisfying ascending and descending conditions based on a string composed of 'I' and 'D'."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given a string $s$ of length $n$, find a permutation $perm$ of length $n+1$ consisting of integers from $0$ to $n$. The permutation must satisfy the following conditions based on the index $i$ of the string:
+
+- If $s[i]$ is `'I'`, then $perm[i] < perm[i + 1]$
+- If $s[i]$ is `'D'`, then $perm[i] > perm[i + 1]$
+
+You only need to return one valid permutation. The length of string $s$ is between $1$ and $10^5$, inclusive, and consists only of the characters `'I'` or `'D'`.
+
+## Approach
+
+A greedy approach using two pointers can be utilized. Prepare two pointers: `low` pointing to the smallest available number in the range $0$ to $n$, and `high` pointing to the largest. Initially, `low` is $0$ and `high` is $n$.
+
+Iterate through each character of string $s$ from the beginning and select values according to the following rules:
+
+- If `'I'` appears, select the smallest available number (`low`) and increment `low`. This ensures the next value is strictly greater than the currently selected value, satisfying the condition.
+- If `'D'` appears, select the largest available number (`high`) and decrement `high`. This ensures the next value is strictly smaller than the currently selected value, satisfying the condition.
+
+After processing all characters, add the last remaining number (the value pointed to by `low` after processing the last `'I'`, or `high` after processing the last `'D'`) to the last element of the array to complete the permutation.
+
+## Solution
+
+The following is a Python implementation utilizing two pointers.
+
+```python
+def diStringMatch(s: str) -> list[int]:
+    n = len(s)
+    low, high = 0, n
+    result = []
+    
+    for char in s:
+        if char == 'I':
+            result.append(low)
+            low += 1
+        else: # char == 'D'
+            result.append(high)
+            high -= 1
+            
+    # Add the last remaining number
+    result.append(low) # Or result.append(high), as low == high
+    
+    return result
+```
+
+Time Complexity: $O(n)$ — It iterates through the string $s$ once, performing constant-time operations at each step.
+Space Complexity: $O(n)$ — It uses an array of length $n+1$ to store the resulting permutation. Excluding the output array, the additional space complexity is $O(1)$.
+
+## Alternative Approaches
+
+### Using a Stack
+Push numbers onto a stack, incrementing them until an `'I'` is encountered. When `'I'` appears, pop all numbers from the stack and add them to the result in reverse order. This arranges the numbers accumulated before the `'I'` in descending order, satisfying the condition if the preceding character was `'D'`. If the stack is not empty at the end, add the remaining numbers in reverse order.
+- Time Complexity: $O(n)$, Space Complexity: $O(n)$ (due to stack usage)
+
+### Direct Simulation
+Simply iterate through numbers from $0$ to $n$ to find a number that satisfies the condition among unused numbers. Since finding an available number may require additional search at each step, the implementation becomes complex, and if not optimized, the time complexity can approach $O(n^2)$. Therefore, this is not an efficient approach.
+
+## Additional Notes
+
+- This problem is a representative example where the Two Pointers technique can be used to simplify the solution.
+- Since the returned permutation is not unique, any valid permutation is accepted as the correct answer.
+- Since the constraint allows the length of $s$ to be up to $10^5$, an $O(n^2)$ algorithm may result in a Time Limit Exceeded error. You must choose an $O(n)$ or $O(n \log n)$ algorithm.
+- Depending on the programming language, care may be needed when initializing integer arrays or handling indices.
+
+## Sources
+
+- LeetCode: [LeetCode 942 - DI String Match](https://leetcode.com/problems/di-string-match/)
