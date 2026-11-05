@@ -25,7 +25,7 @@ import { getLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 
 export async function generateStaticParams() {
-  const posts = getPosts(["src", "app", "[locale]", "work", "projects"]);
+  const posts = getPosts("work");
 
   return routing.locales.flatMap((locale) =>
     posts.map((post) => ({
@@ -46,7 +46,7 @@ export async function generateMetadata({
     : routeParams.slug || "";
 
   const locale = await getLocale();
-  const posts = getPostsByLocale(["src", "app", "[locale]", "work", "projects"], locale);
+  const posts = getPostsByLocale("work", locale);
   let post = posts.find((post) => post.slug === slugPath);
 
   if (!post) return {};
@@ -76,7 +76,7 @@ export default async function Project({
     ? routeParams.slug.join("/")
     : routeParams.slug || "";
 
-  let post = getPostsByLocale(["src", "app", "[locale]", "work", "projects"], locale).find(
+  let post = getPostsByLocale("work", locale).find(
     (post) => post.slug === slugPath,
   );
 
