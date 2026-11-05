@@ -1,0 +1,44 @@
+---
+title: "[Coding Test] Determining Name Match with Keyboard Long Press"
+publishedAt: "2026-11-05"
+summary: "Determine whether a typed string matches a name, taking into account that keys can be held down to repeat characters."
+tag: "Algorithm"
+---
+
+## Problem
+
+When a friend types a name on a keyboard, holding down a character key can cause that character to be entered multiple times. You must check whether the given input string `typed` can match the friend's name `name`. Each character of `name` must appear at least once in `typed`, and when the same character is entered consecutively, the count in `typed` must be greater than or equal to the count in `name`. If this condition is satisfied, return `true`; otherwise, return `false`.
+
+## Approach
+
+Use two pointers to traverse `name` and `typed` simultaneously. Initialize pointer `i` for `name` and `j` for `typed` to 0. While iterating through `typed`, if the current character equals the current character of `name`, advance both pointers. Otherwise, check whether the current character of `typed` is the same as the previous character (long press). If it is, advance only `j`; else return `false`. After the loop, verify that `name` has been fully consumed (`i == len(name)`) to decide the result.
+
+## Solution
+
+```python
+def isLongPressedName(name: str, typed: str) -> bool:
+    i, j = 0, 0
+    while j < len(typed):
+        if i < len(name) and name[i] == typed[j]:
+            i += 1
+            j += 1
+        elif j > 0 and typed[j] == typed[j - 1]:
+            j += 1
+        else:
+            return False
+    return i == len(name)
+```
+
+The time complexity of this algorithm is O(n + m), where n is the length of `name` and m is the length of `typed`. The space complexity is O(1).
+
+## Alternative Approaches
+
+Another method is to compress the strings into groups of consecutive characters and compare them. Convert both `name` and `typed` into lists of (character, count) groups, then verify that the number of groups matches, each group's character is the same, and the count in `typed` is at least the count in `name`. This approach also runs in O(n + m) time and uses O(1) extra space (excluding group storage), but the implementation can be longer. Using a hash map to count total occurrences of each character loses ordering information and is not suitable for this problem.
+
+## Additional Notes
+
+According to the constraints, `name` and `typed` consist only of lowercase English letters and have lengths between 1 and 1000 inclusive. Long presses allow a character to repeat at least once, so if any character from `name` is completely missing in `typed`, the result is `false`. For example, `name='saeed'`, `typed='ssaaedd'` requires two 'e' presses, but `typed` does not contain enough 'e's, so it returns `false`. The two-pointer algorithm visits each character only once, achieving optimal time complexity.
+
+## Sources
+
+- LeetCode: [LeetCode 925 - Long Pressed Name](https://leetcode.com/problems/long-pressed-name/)
