@@ -1,0 +1,91 @@
+---
+title: "[Troubleshooting] Django 4.0 url import error resolution"
+publishedAt: "2026-11-05"
+summary: "Explains how to resolve the `url` import error that occurs after upgrading to Django 4.0 by replacing it with `re_path` or `path`."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+After upgrading to Django 4.0 or higher, running `python manage.py runserver` produces the following error.
+
+```python
+  File "/path/to/myproject/myproject/urls.py", line 16, in <module>
+    from django.conf.urls import url
+ImportError: cannot import name 'url' from 'django.conf.urls' (/path/to/my/venv/lib/python3.9/site-packages/django/conf/urls/__init__.py)
+```
+
+This occurs if the existing `urls.py` file contains code that imports and uses `url` from `django.conf.urls`.
+
+```python
+from django.conf.urls import url
+from myapp.views import home
+
+urlpatterns = [
+    url(r'^$', home, name="home"),
+    url(r'^myapp/', include('myapp.urls')),
+]
+```
+
+![Symptom screenshot](/blogs/django-4-0-url-import-1.png)
+
+## Cause
+
+The `django.conf.urls.url()` function was moved to `django.urls` starting from Django 3.0 and was completely removed in Django 4.0. In Django 4.0 and later, the `url` attribute does not exist in the `django.conf.urls` module, causing the import to fail.
+
+## Solution
+
+The easiest way is to replace `url()` with `re_path()`. Since `re_path` uses regular expressions just like `url`, you can maintain the existing patterns by only changing the import path and function name.
+
+Before:
+
+```python
+from django.conf.urls import url
+from django.urls import include
+from myapp.views import home
+
+urlpatterns = [
+    url(r'^$', home, name="home"),
+    url(r'^myapp/', include('myapp.urls')),
+]
+```
+
+After:
+
+```python
+from django.urls import include, re_path
+from myapp.views import home
+
+urlpatterns = [
+    re_path(r'^$', home, name='home'),
+    re_path(r'^myapp/', include('myapp.urls')),
+]
+```
+
+![Solution screenshot](/blogs/django-4-0-url-import-2.png)
+
+## Alternative Solutions
+
+If simple string matching is sufficient, you can use the `path()` function. In this case, you need to convert the URL patterns from regular expressions to `path` format.
+
+```python
+from django.urls import include, path
+from myapp.views import home
+
+urlpatterns = [
+    path('', home, name='home'),
+    path('myapp/', include('myapp.urls')),
+]
+```
+
+## Additional Notes
+
+The same error can occur in the internal `urls.py` of external libraries (e.g., `markdownx`). In such cases, directly modifying the library's source files is not recommended; instead, check for updates to the library or install the latest version using `pip install --upgrade`. When upgrading from a version older than Django 3.0, it is advisable to check beforehand whether `url` is used.
+
+## Sources
+
+- StackOverflow: [ImportError: cannot import name 'url' from 'django.conf.urls' after upgrading to Django 4.0](https://stackoverflow.com/questions/70319606/importerror-cannot-import-name-url-from-django-conf-urls-after-upgrading-to) — Author: Alasdair(question), Alasdair(answer) (CC BY-SA)
+- Tistory: [Django - ImportError: cannot import name 'url' from 'django.conf.urls' after upgrading to Django 4.0](https://jerrytheking.tistory.com/151) — Author: 김제리의 개발 분투기
+- Tistory: [[Django] ImportError: cannot import name 'url' from 'django.conf.urls' 오류](https://jain5379.tistory.com/11) — Author: 유미의 기술들
+
+Images are taken from the sources above.
