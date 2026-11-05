@@ -1,0 +1,98 @@
+---
+title: "[Coding Test] Distance Value Calculation Problem"
+publishedAt: "2026-11-05"
+summary: "This problem asks to count the number of elements in one array that are at a distance greater than `d` from all elements in another array."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given two integer arrays `arr1` and `arr2`, and an integer `d`, the distance value is defined as the number of elements in `arr1` that satisfy the following condition:
+
+Condition: For each element `x` in `arr1`, the absolute difference `|x - y|` with every element `y` in `arr2` must be strictly greater than `d`.
+
+For example, if `arr1 = [4, 5, 8]`, `arr2 = [10, 9, 1, 8]`, and `d = 2`:
+- `4` has a difference greater than 2 from all elements in `arr2`. (Included in distance value)
+- `5` has a difference greater than 2 from all elements in `arr2`. (Included in distance value)
+- `8` has a difference of 0 from `8` in `arr2`, which is less than or equal to 2. (Excluded from distance value)
+The resulting distance value is 2.
+
+## Approach
+
+The most intuitive approach is a brute-force search, where we check the absolute difference between each element in `arr1` and every element in `arr2`.
+
+1. Iterate through each element `x` in `arr1`.
+2. For the current element `x`, iterate through all elements `y` in `arr2` to check if the condition `|x - y| <= d` holds.
+3. If any element in `arr2` satisfies this condition, `x` is not included in the distance value, so proceed to the next element in `arr1`.
+4. If no element in `arr2` satisfies the condition after iterating through all of them, increment the counter.
+
+## Solution
+
+Let `M` be the length of `arr1` and `N` be the length of `arr2`. Since all pairs are compared, the time complexity is O(M * N).
+
+```python
+class Solution:
+    def findTheDistanceValue(self, arr1: List[int], arr2: List[int], d: int) -> int:
+        count = 0
+        
+        for x in arr1:
+            is_valid = True
+            for y in arr2:
+                if abs(x - y) <= d:
+                    is_valid = False
+                    break
+            
+            if is_valid:
+                count += 1
+                
+        return count
+```
+
+- Time complexity: O(M * N)
+- Space complexity: O(1)
+
+## Alternative Approaches
+
+We can utilize binary search after sorting `arr2`.
+
+1. Sort `arr2`.
+2. Perform a binary search for each element `x` in `arr1`.
+3. Use binary search to find the closest element in `arr2` to `x`.
+4. If the difference between `x` and the found element is greater than `d`, it is included in the distance value.
+
+The time complexity of this method is O((M + N) log N), combining sorting O(N log N) and search O(M log N). This can be more efficient if the arrays are very large.
+
+```python
+import bisect
+
+class Solution:
+    def findTheDistanceValue(self, arr1: List[int], arr2: List[int], d: int) -> int:
+        arr2.sort()
+        count = 0
+        
+        for x in arr1:
+            idx = bisect.bisect_left(arr2, x)
+            
+            # The closest elements are arr2[idx] or arr2[idx-1]
+            dist = float('inf')
+            
+            if idx < len(arr2):
+                dist = min(dist, abs(x - arr2[idx]))
+            if idx > 0:
+                dist = min(dist, abs(x - arr2[idx - 1]))
+                
+            if dist > d:
+                count += 1
+                
+        return count
+```
+
+## Additional Notes
+
+- Based on the constraints, the maximum array length is 500, and element values range from -1000 to 1000.
+- The brute-force approach performs 250,000 operations when N and M are 500, which is small enough to be sufficiently performant.
+- `d` is an integer between 0 and 100, inclusive.
+
+## Sources
+
+- LeetCode: [LeetCode 1385 - Find the Distance Value Between Two Arrays](https://leetcode.com/problems/find-the-distance-value-between-two-arrays/)
