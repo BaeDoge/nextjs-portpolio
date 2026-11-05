@@ -1,0 +1,71 @@
+---
+title: "[Coding Test] Core Keywords"
+publishedAt: "2026-11-05"
+summary: "An algorithm problem that reverses the order of characters within each word while preserving spaces between words."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given a string s, reverse the characters in each word while maintaining the order of words and preserving spaces. The input string consists of words separated by single spaces with no leading or trailing spaces. For example, "Let's take LeetCode contest" becomes "s'teL ekat edoCteeL tsetnoc".
+
+## Approach
+
+Convert the string to a list of characters. Use two pointers (start, end) to find the beginning and end of each word. Swap characters within the word to reverse it in place. Since spaces only separate words, word boundaries are easily identified.
+
+```python
+def reverseWords(s: str) -> str:
+    chars = list(s)
+    n = len(chars)
+    i = 0
+    while i < n:
+        start = i
+        while i < n and chars[i] != ' ':
+            i += 1
+        end = i - 1
+        while start < end:
+            chars[start], chars[end] = chars[end], chars[start]
+            start += 1
+            end -= 1
+        i += 1
+    return ''.join(chars)
+```
+
+## Solution
+
+Convert the string to a list and reverse each word using two pointers (start, end). Swap characters within each word while traversing the string once. Time complexity is O(n). Extra space is O(n) for the character list, or O(1) additional space if the list is considered in-place.
+
+```python
+def reverseWords(s: str) -> str:
+    chars = list(s)
+    n = len(chars)
+    i = 0
+    while i < n:
+        start = i
+        while i < n and chars[i] != ' ':
+            i += 1
+        end = i - 1
+        while start < end:
+            chars[start], chars[end] = chars[end], chars[start]
+            start += 1
+            end -= 1
+        i += 1
+    return ''.join(chars)
+```
+
+## Alternative Approaches
+
+Split the string by spaces, reverse each word using slicing, then join the words back with spaces. This produces concise code but creates a new string for each word, resulting in O(n) extra space. Time complexity remains O(n), but it is less memory efficient than the two-pointer method.
+
+```python
+def reverseWords(s: str) -> str:
+    return ' '.join(word[::-1] for word in s.split(' '))
+```
+
+## Additional Notes
+
+The problem guarantees at least one word and that words are separated by single spaces. The input size can be up to 50,000, so a linear time algorithm is required. The two-pointer method allows in-place modification, but because Python strings are immutable, converting to a list and using join can improve readability.
+
+## Sources
+
+- LeetCode: [LeetCode 557 - Reverse Words in a String III](https://leetcode.com/problems/reverse-words-in-a-string-iii/)
