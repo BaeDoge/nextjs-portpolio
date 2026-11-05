@@ -1,0 +1,122 @@
+---
+title: "[Troubleshooting] Resolving Pandas SettingWithCopyWarning"
+publishedAt: "2026-11-05"
+summary: "This note explains the cause of the warning when assigning values to a DataFrame slice copy and provides solutions using `.loc` indexing."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+When assigning values to a sliced portion of a DataFrame in a Pandas environment, the following warning is displayed.
+
+```python
+df.col1[df.col1 == 10] = 1000
+```
+
+The warning message appears as follows.
+
+```
+-c:1: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+
+See the the caveats in the documentation: http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy
+```
+
+This warning indicates that while the assignment operation may work as intended, there is a potential bug where the original DataFrame might not be modified.
+
+## Cause
+
+This warning occurs when it is unclear whether a DataFrame slice is a view of the original or a copy.
+If the slice is a copy, changes made to it will not be reflected in the original DataFrame.
+Pandas displays this warning to prevent unintended behavior caused by such ambiguity.
+Using the `.loc` indexer allows you to modify the original DataFrame explicitly, regardless of the slice's state.
+
+## Solution
+
+Instead of assigning values to a sliced copy, use the `.loc` indexer to explicitly specify the location in the original DataFrame.
+Using the `.loc[row_indexer, col_indexer] = value` format directly modifies the original DataFrame.
+
+```python
+# Before fix (warning occurs)
+df.col2[df.index == 151] = 500
+
+# After fix (warning resolved)
+df.loc[151, 'col2'] = 500
+```
+
+Even when specifying conditions with indices, use `.loc`.
+
+```python
+# Before fix (warning occurs)
+df.col1[df.col1 == 10] = 1000
+
+# After fix (warning resolved)
+df.loc[df.col1 == 10, 'col1'] = 1000
+```
+
+You can also use `.loc` when processing multiple columns simultaneously.
+
+```python
+# Before fix (warning occurs)
+cols = ['col1', 'col2', 'col3']
+df[cols] = df[cols].applymap(some_function)
+
+# After fix (warning resolved)
+df.loc[:, cols] = df.loc[:, cols].applymap(some_function)
+```
+
+![Solution screenshot](/blogs/pandas-settingwithcopywarning-151538-1.png)
+
+## Alternative Solutions
+
+If you want to clearly indicate that a sliced DataFrame is an independent copy unrelated to the original, use the `.copy()` method.
+In this case, no warning is issued, and it is explicitly stated that changes do not affect the original.
+
+```python
+# Explicitly create a copy of the slice
+df_slice = df[df['A'] > 1].copy()
+
+# Assigning values to the copy does not trigger a warning
+df_slice['B'] = 0
+```
+
+Additionally, when creating new columns, you can use `.loc` to assign directly to the original DataFrame.
+
+```python
+# Code causing an error
+yesterday_result['date'] = yesterday_result['pubDate'].dt.strftime('%Y-%m-%d %H:%M:%S')
+
+# Resolving the warning using the .loc indexer
+yesterday_result.loc[:, 'date'] = yesterday_result['pubDate'].dt.strftime('%Y-%m-%d %H:%M:%S')
+```
+
+## Additional Notes
+
+When modifying values within an `iterrows()` loop, you must access the original DataFrame via `.loc` rather than modifying the row series.
+
+```python
+# Method that does not reflect changes to the original
+for idx, row in sample_df.iterrows():
+    row['score'] = 100
+
+# Correct method
+for idx, row in sample_df.iterrows():
+    sample_df.loc[idx, 'score'] = 100
+```
+
+When changing multiple values at once, assign them as a tuple.
+
+```python
+sample_df.loc[idx, ['score', 'grade']] = 100, 'A'
+```
+
+This warning can occur because Pandas indexing operations do not distinguish between views and copies, so it is always safer to use `.loc` or `.iloc`.
+
+## Sources
+
+- StackOverflow: [Pandas SettingWithCopyWarning](https://stackoverflow.com/questions/26724378/pandas-settingwithcopywarning) — Author: ba_ul(question), Paul H(answer) (CC BY-SA)
+- Tistory: [Pandas SettingWithCopyWarning 해결방법](https://miidsummer.tistory.com/11) — Author: 이것저것 담는 블로그
+- Velog: [[파이썬 판다스] SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.](https://velog.io/@hyojinnnnnan/%ED%8C%8C%EC%9D%B4%EC%8D%AC-%ED%8C%90%EB%8B%A4%EC%8A%A4-SettingWithCopyWarning-A-value-is-trying-to-be-set-on-a-copy-of-a-slice-from-a-DataFrame)
+
+Images are taken from the sources above.
