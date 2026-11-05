@@ -1,0 +1,90 @@
+---
+title: "[Troubleshooting] UnboundLocalError on global variable assignment"
+publishedAt: "2026-11-05"
+summary: "Resolves the error caused by omitting the global keyword when modifying global variables inside a function."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+When attempting to read or modify a global variable declared outside a function from within that function, the following error occurs.
+
+```python
+UnboundLocalError: local variable 'total' referenced before assignment
+```
+
+The minimal reproducible code causing the error is as follows.
+
+```python
+total = 0
+
+def doB():
+    total = total + 1
+
+doB()
+```
+
+## Cause
+
+Python considers a variable to be local if an assignment operation (`=`) exists within the function.
+Since the statement `total = ...` exists inside function `doB`, Python treats `total` as a local variable.
+However, in the statement `total = total + 1`, the `total` on the right-hand side has not yet been assigned as a local variable, so it cannot be referenced.
+This results in an error stating that it was referenced before assignment.
+While simply reading a global variable (e.g., `print(total)`) is allowed within a function, explicit declaration is required to modify its value.
+
+## Solution
+
+To modify a global variable inside a function, you must explicitly declare that the variable resides in the global namespace using the `global` keyword.
+
+```python
+total = 0
+
+def doB():
+    global total
+    total = total + 1
+
+doB()
+print(total)  # 1
+```
+
+Adding the `global` keyword at the beginning of the function ensures that the `total` variable inside the function refers to the global variable, resolving the error.
+
+![Solution screenshot](/blogs/unboundlocalerror-global-1.png)
+
+## Alternative Solutions
+
+Instead of modifying the global variable's value inside the function, you can pass the value as an argument and return the result.
+This method avoids namespace conflicts by not directly modifying the state of global variables.
+
+```python
+def doB(current_total):
+    return current_total + 1
+
+total = 0
+total = doB(total)
+print(total)  # 1
+```
+
+## Additional Notes
+
+The `global` keyword is not required when using a global variable as read-only within a function.
+It automatically looks up global variables only when there is no assignment operation.
+
+```python
+total = 0
+
+def checkTotal():
+    print(total)  # Read-only is possible without global declaration
+
+checkTotal()  # Outputs: 0
+```
+
+Excessive use of global variables can reduce code readability and make debugging difficult, so it is recommended to utilize classes or module structures whenever possible.
+
+## Sources
+
+- StackOverflow: [Why do I get a "referenced before assignment" error when assigning to a global variable in a function?](https://stackoverflow.com/questions/855493/why-do-i-get-a-referenced-before-assignment-error-when-assigning-to-a-global-v) — Author: Jeremy(question), stefanB(answer) (CC BY-SA)
+- Velog: [파이썬 referenced before assignment에러 이유와 해결](https://velog.io/@hongsikcho/%ED%8C%8C%EC%9D%B4%EC%8D%AC-referenced-before-assignment%EC%97%90%EB%9F%AC-%EC%9D%B4%EC%9C%A0%EC%99%80-%ED%95%B4%EA%B2%B0)
+- Tistory: [UnboundLocalError: local variable 'result1' referenced before assignment 해결](https://jack-channel-python.tistory.com/entry/UnboundLocalError-local-variable-result1-referenced-before-assignment-%ED%95%B4%EA%B2%B0) — Author: Smith_Solution
+
+Images are taken from the sources above.
