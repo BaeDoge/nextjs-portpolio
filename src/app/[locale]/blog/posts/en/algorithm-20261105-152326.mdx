@@ -1,0 +1,78 @@
+---
+title: "[Coding Test] Right Interval Search"
+publishedAt: "2026-11-05"
+summary: "An algorithm to find the index of the interval with the minimum start point greater than or equal to each interval's end point in an array of intervals with unique start points."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given an array of `intervals`, find the right interval for each interval `i`. A right interval `j` satisfies `start_j >= end_i` and has the minimum `start_j` among all such intervals. Note that `i` can be equal to `j`. Return an array of indices of the corresponding right intervals for all intervals. If no such interval exists, place -1 at that index. The start points of all intervals are unique.
+
+```python
+# Input example
+intervals = [[3,4],[2,3],[1,2]]
+# Output example
+[-1, 0, 1]
+```
+
+## Approach
+
+Since we need to find the minimum start point that satisfies the condition for each interval's end point (`end_i`), Binary Search is suitable. To do this, prepare a sorted array of pairs containing the start point (`start`) and the original index (`original_index`). Use `bisect_left` on the sorted start points array to find the first start point that is greater than or equal to `end_i`. If the found position is out of bounds, return -1; otherwise, append the original index mapped to that position to the result array.
+
+## Solution
+
+1. Create a `starts` array storing pairs of the start point and its original index for each interval.
+2. Sort `starts` based on the start point.
+3. Extract only the start points into a separate array called `sorted_starts`. This prevents the $O(N)$ overhead of creating sub-lists every time during binary search.
+4. For each interval `interval`, get `end = interval[1]`.
+5. Use `bisect_left` to find the index of the first start point in `sorted_starts` that is greater than or equal to `end`.
+6. If the found index is less than the length of `starts`, append the original index from `starts` at that index to the result. Otherwise, append -1.
+7. Return the result array.
+
+- Time Complexity: $O(N \log N)$ due to sorting and $O(\log N)$ per interval for binary search, totaling $O(N \log N)$.
+- Space Complexity: $O(N)$ for the auxiliary arrays `starts` and `sorted_starts`.
+
+```python
+import bisect
+
+def findRightInterval(intervals):
+    # Store pairs of start point and original index
+    starts = [[interval[0], i] for i, interval in enumerate(intervals)]
+    # Sort based on the start point
+    starts.sort(key=lambda x: x[0])
+    
+    # Prepare an array containing only start points for efficient binary search
+    sorted_starts = [s[0] for s in starts]
+    
+    result = []
+    n = len(intervals)
+    
+    for i in range(n):
+        end = intervals[i][1]
+        # Find the index of the first start point greater than or equal to end
+        idx = bisect.bisect_left(sorted_starts, end)
+        
+        if idx < n:
+            # If found, append the original index
+            result.append(starts[idx][1])
+        else:
+            # If no start point satisfies the condition
+            result.append(-1)
+            
+    return result
+```
+
+## Alternative Approaches
+
+- **Two Pointers**: Sort both the start points and end points. Then, iterate through the end points array while moving a start point pointer to find the closest start point that satisfies the condition. This method maintains $O(N \log N)$ time complexity after sorting but with a single pass, potentially optimizing space complexity.
+
+## Additional Notes
+
+- The problem constraints specify that each interval's start point is unique, so there is no ambiguity in sorting order regarding duplicate start points.
+- The `bisect` module performs binary search efficiently, handling search operations in a sorted array with logarithmic time complexity.
+- Since the length of each interval (`intervals[i].length`) is explicitly stated to always be 2, indexing can proceed without input validation.
+
+## Sources
+
+- LeetCode: [LeetCode 436 - Find Right Interval](https://leetcode.com/problems/find-right-interval/)
