@@ -1,0 +1,114 @@
+---
+title: "[Troubleshooting] Resolving Python ImportError Relative Import Errors"
+publishedAt: "2026-11-05"
+summary: "This note explains the cause of relative import errors occurring when `__package__` is `None` during script execution and provides solutions."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+This occurs when a submodule attempts to import a module from a parent package using a relative path within a project directory structure.
+
+```
+project/
+├─ utils/
+│  ├─ module.py
+├─ server/
+│  ├─ main.py
+```
+
+The import is performed in `project/server/main.py` using the following statement:
+
+```python
+from ..utils.module import my_function
+```
+
+Running this file directly in the terminal results in the following error:
+
+```
+ImportError: attempted relative import with no known parent package
+```
+
+In a VSCode environment, auto-completion may work normally due to IDE path settings, but this error appears during actual execution.
+
+## Cause
+
+The Python interpreter uses the `__name__` and `__package__` attributes to determine the reference point for relative imports.
+
+When a script is executed directly, `__name__` is set to `__main__`.
+
+At this point, the `__package__` attribute is set to `None`, so the interpreter cannot determine the location of the parent package.
+
+According to PEP 366, explicit relative imports are calculated only when `__package__` exists.
+
+Therefore, relative imports are invalid in standalone files that are not recognized as part of a package.
+
+## Solution
+
+Running the module using the `-m` flag ensures that `__package__` is set correctly.
+
+Modify the execution command in the project root directory:
+
+```bash
+python3 -m project.server.main
+```
+
+With this execution method, `__package__` is set to `project.server`, allowing relative imports to work correctly.
+
+If you are using a `__main__.py` file, you can also run the package itself:
+
+```bash
+python3 -m project.server
+```
+
+This method preserves the module's execution context and is the most standard solution.
+
+![Solution screenshot](/blogs/python-importerror-import-1.png)
+
+## Alternative Solutions
+
+You can specify the full path of the package by using absolute import statements.
+
+Modify the code as follows instead of using relative imports:
+
+```python
+# Before modification
+from ..utils.module import my_function
+
+# After modification
+from project.utils.module import my_function
+```
+
+When using absolute imports, the path is resolved relative to the project's root package.
+
+In this case, the `sys.path` in the script's execution environment must include the project root directory.
+
+For example, you can add the path within the script as follows:
+
+```python
+import sys
+from os import path
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+```
+
+Such configuration must be performed first for absolute import statements to locate modules correctly.
+
+## Additional Notes
+
+Check if `__package__` is `None` when executing the script to review the use of relative imports.
+
+```python
+print(__package__)
+```
+
+Relative imports calculate paths based on the current module's location, so they are invalid without the context of a parent package.
+
+Care must also be taken with the execution environment (`sys.path`) when using absolute imports.
+
+## Sources
+
+- StackOverflow: [Python error - ImportError: attempted relative import with no known parent package](https://stackoverflow.com/questions/68960171/python-error-importerror-attempted-relative-import-with-no-known-parent-packa) — Author: Ricardo Passos(question), Niel Godfrey P. Ponciano(answer) (CC BY-SA)
+- Tistory: [[파이썬][Error] 055. ImportError - attempted relative import with no known parent package](https://about-ittt.tistory.com/382) — Author: about_IT
+- Tistory: [[파이썬 상대경로 import 에러] ImportError: attempted relative import with no known parent package](https://myjorney.tistory.com/entry/%ED%8C%8C%EC%9D%B4%EC%8D%AC-%EC%83%81%EB%8C%80%EA%B2%BD%EB%A1%9C-import-%EC%97%90%EB%9F%AC-ImportError-attempted-relative-import-with-no-known-parent-package) — Author: Jordan Tech Lab
+
+Images are taken from the sources above.
