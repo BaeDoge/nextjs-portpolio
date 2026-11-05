@@ -1,0 +1,42 @@
+---
+title: "[Coding Test] Remove Adjacent Duplicate Characters"
+publishedAt: "2026-11-05"
+summary: "The problem requires repeatedly removing adjacent identical characters and returning the resulting string."
+tag: "Algorithm"
+---
+
+## Problem
+
+A string `s` consisting of lowercase English letters is given. Perform the operation of selecting and removing adjacent identical characters repeatedly until no more removals are possible, then return the final string. For example, in `"abbaca"` first remove `"bb"` to get `"aaca"`, then remove `"aa"` to get `"ca"`. It is proven that the answer is always unique in this problem.
+
+## Approach
+
+Use a stack to construct the final string. Iterate through the string from left to right character by character; if the stack is not empty and the top of the stack equals the current character, pop the stack (remove); otherwise push the character. After processing all characters, the remaining items in the stack are the answer. This method processes each character once, giving O(n) time complexity and O(n) worst‑case space complexity.
+
+## Solution
+
+```python
+def removeDuplicates(s: str) -> str:
+    stack = []
+    for ch in s:
+        if stack and stack[-1] == ch:
+            stack.pop()
+        else:
+            stack.append(ch)
+    return ''.join(stack)
+```
+
+- Time complexity: O(n) (process each character once)
+- Space complexity: O(n) (maximum size that can remain in the stack)
+
+## Alternative Approaches
+
+Another approach uses two pointers to clean the string in place. Convert the string to a character array, then move a write pointer from the front while traversing with a read pointer; if the write pointer's previous character equals the current character, move the write pointer back (remove), otherwise advance the write pointer. This also runs in O(n) time but uses O(1) extra space; however, because Python strings are immutable, converting to a char array still requires O(n) space, so the stack method is usually preferred for its concise and readable code. A recursive solution would have O(n^2) worst‑case time and is inefficient for long strings.
+
+## Additional Notes
+
+This problem is a typical simulation using a stack. It guarantees a unique answer, so the order of removals does not affect the final result. A variation of the same problem is removing k consecutive duplicate characters (LeetCode 1209), which can be explored if needed.
+
+## Sources
+
+- LeetCode: [LeetCode 1047 - Remove All Adjacent Duplicates In String](https://leetcode.com/problems/remove-all-adjacent-duplicates-in-string/)
