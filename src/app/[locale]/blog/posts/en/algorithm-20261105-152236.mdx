@@ -1,0 +1,117 @@
+---
+title: "[Coding Test] Finding Intersection of Strings"
+publishedAt: "2026-11-05"
+summary: "This problem involves finding characters common to all strings in an array and returning them with a frequency equal to the minimum occurrence across all strings."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given an array of strings `words`, return a list of all characters that appear in every string, including duplicates. The frequency of each character in the result is determined by the minimum number of times it appears in any of the input strings. The order of the returned characters does not matter.
+
+Input example: For `words = ["bella","label","roller"]`, "b" is excluded because it does not appear in "roller". "e" appears once in each word, so it is included once. "l" appears twice in "bella", twice in "label", and twice in "roller", so two "l"s are included. The result is `["e", "l", "l"]`.
+
+Constraints:
+- The length of `words` is between 1 and 100.
+- The length of each string is between 1 and 100.
+- The strings consist only of lowercase English letters.
+
+## Approach
+
+Since we need to find characters common to all strings, counting the frequency of each character is essential. Because there are only 26 lowercase English letters, we can use an array or a hash map to manage the counts.
+
+The core logic is as follows:
+1. Initialize the frequency counts using the first string.
+2. Iterate through the remaining strings, comparing their character counts with the current common counts, and keeping the minimum value for each character.
+3. After processing all strings, add characters with a count of 1 or more to the result.
+
+This approach is efficient as it scans each string once to update the minimum occurrence counts.
+
+## Solution
+
+This solution initializes the count based on the first string and maintains the minimum values by comparing with subsequent strings.
+
+```python
+import collections
+from typing import List
+
+class Solution:
+    def commonChars(self, words: List[str]) -> List[str]:
+        # Initialize based on the character frequencies of the first string
+        min_freq = collections.Counter(words[0])
+        
+        # Compare with remaining strings to maintain the minimum frequency of common characters
+        for word in words[1:]:
+            curr_freq = collections.Counter(word)
+            # Treat missing characters as 0 and store the minimum of the two counts in min_freq
+            for char in min_freq:
+                min_freq[char] = min(min_freq[char], curr_freq[char])
+                
+        # Generate result: add characters as many times as their count if count >= 1
+        result = []
+        for char in min_freq:
+            result.extend([char] * min_freq[char])
+            
+        return result
+```
+
+- Time Complexity: O(N * L)
+  - N is the length of the `words` array, and L is the average length of each string.
+  - Creating a `Counter` for each string takes O(L), performed N-1 times.
+  - Updating the minimum values for 26 alphabet letters takes O(26), which is constant time.
+  - Therefore, the total time complexity is O(N * L).
+- Space Complexity: O(1) or O(Σ)
+  - Since the number of alphabet letters is fixed at 26, the size of the hash map or array is constant.
+  - The size of the result array can be proportional to the total number of characters in the worst case, but it is generally considered constant space independent of input size.
+
+## Alternative Approaches
+
+This method manages counts using an array (index). Instead of `collections.Counter`, you can use an integer array of size 26.
+
+Map each character to an index from 0 to 25 using `ord(char) - ord('a')` and store it in the array. Initialize the initial array with the first string, and when comparing with other strings, update it by taking the minimum value between the two arrays.
+
+```python
+from typing import List
+
+class Solution:
+    def commonChars(self, words: List[str]) -> List[str]:
+        # Initialize array for 26 lowercase English letters
+        min_freq = [0] * 26
+        
+        # Initialize with the first string
+        for char in words[0]:
+            min_freq[ord(char) - ord('a')] += 1
+            
+        # Process remaining strings
+        for word in words[1:]:
+            curr_freq = [0] * 26
+            for char in word:
+                curr_freq[ord(char) - ord('a')] += 1
+                
+            # Update minimum values
+            for i in range(26):
+                min_freq[i] = min(min_freq[i], curr_freq[i])
+                
+        # Generate result
+        result = []
+        for i in range(26):
+            if min_freq[i] > 0:
+                result.extend([chr(i + ord('a'))] * min_freq[i])
+                
+        return result
+```
+
+- Time Complexity: O(N * L)
+- Space Complexity: O(1)
+  - The array size is fixed at 26, showing similar performance to using `Counter`.
+  - Depending on the language, using an array might be slightly lighter than `Counter` due to potential overhead in the hash map implementation.
+
+## Additional Notes
+
+- This problem can be viewed as finding the intersection of sets, but it considers the frequency of duplicates, not just unique elements.
+- With string lengths up to 100 and array lengths up to 100, the total number of operations is at most 10,000, making it very efficient and not requiring highly complex algorithms.
+- Python's `Counter` is a hash map implementation, so it handles key existence checks implicitly, whereas using an array allows direct index access, making the implementation straightforward.
+
+## Sources
+
+- LeetCode: [LeetCode 1002 - Find Common Characters](https://leetcode.com/problems/find-common-characters/)
