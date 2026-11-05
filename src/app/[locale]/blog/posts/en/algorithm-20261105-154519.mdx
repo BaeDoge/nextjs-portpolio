@@ -1,0 +1,45 @@
+---
+title: "[Coding Test] Finding Duplicates in an Array"
+publishedAt: "2026-11-05"
+summary: "Explains an algorithm to find duplicate integers in an array under O(n) time and O(1) auxiliary space constraints."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given an integer array `nums` of length `n`, where all elements are integers between 1 and `n`. Each integer appears at most twice. The goal is to return all integers that appear twice. The algorithm must have O(n) time complexity and use only O(1) additional space, excluding the output array. It must correctly distinguish between elements that appear once and those that appear twice or more.
+
+## Approach
+
+Detect duplicates by using the array values as indices. The value `nums[i]` corresponds to the 1-based index `nums[i] - 1`. While iterating through the array, flip the sign of the value at the index indicated by each element to mark that the value has been visited. If the value at the target index is already negative, it means the value has been seen before, indicating a duplicate. This technique utilizes the state of the input array for marking without using additional data structures.
+
+## Solution
+
+Iterate through the array once. For each element, check the sign of the value at the index corresponding to its absolute value `num - 1`. If the value at that index is positive, flip it to negative. If it is already negative, `num` is a duplicate, so add it to the result. Return the collected duplicate elements.
+
+```python
+def findDuplicates(nums):
+    result = []
+    for num in nums:
+        index = abs(num) - 1
+        if nums[index] < 0:
+            result.append(abs(num))
+        else:
+            nums[index] *= -1
+    return result
+```
+
+Time Complexity: O(n) - The array is iterated exactly once.
+Space Complexity: O(1) (excluding output array) - The input array is modified directly for marking.
+
+## Alternative Approaches
+
+Using a Hash Map or Set to store elements is another method. This approach allows checking for duplicates in O(n) time by inserting all elements once. However, since it stores all elements in the hash map or set, the space complexity becomes O(n), which fails to meet the constant space constraint of the problem. Sorting-based methods result in O(n log n) time complexity, making them less efficient.
+
+## Additional Notes
+
+The index marking technique is effectively applicable when array elements are within the range of 0 to n-1 or 1 to n. Since this method modifies the input array directly, it may cause data corruption if the caller needs to preserve the original array. If array modification is prohibited, there is no general solution to this problem in constant space and O(n) time; relaxing constraints (such as allowing increased space complexity) is necessary.
+
+## Sources
+
+- LeetCode: [LeetCode 442 - Find All Duplicates in an Array](https://leetcode.com/problems/find-all-duplicates-in-an-array/)
