@@ -1,0 +1,66 @@
+---
+title: "[Coding Test] Check Binary Tree Identity"
+publishedAt: "2026-11-05"
+summary: "This problem checks whether two binary trees have identical structure and values."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given the root nodes p and q of two binary trees, implement a function to determine if the two trees are identical. Two binary trees are considered identical if they have the same structure and the same node values at each position. For example, p = [1,2,3], q = [1,2,3] returns true, while p = [1,2], q = [1,null,2] returns false. Constraints: the number of nodes is between 0 and 100 inclusive, and node values are between -10^4 and 10^4 inclusive.
+
+## Approach
+
+The most intuitive solution is depth-first search using recursion. First, compare the values of the two root nodes and return false immediately if they differ. Then recursively check whether the left children and right children are identical. Base cases: return true if both nodes are null, false if only one is null. This approach visits each node once, so time complexity is O(n), and space complexity is O(h) for the recursion stack.
+
+## Solution
+
+The recursive solution code is as follows. This algorithm visits each node once, so time complexity is O(n), and space complexity is O(h) depending on the maximum depth of the recursion stack.
+
+```python
+# Definition for a binary tree node.
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+class Solution:
+    def isSameTree(self, p: TreeNode, q: TreeNode) -> bool:
+        if not p and not q:
+            return True
+        if not p or not q:
+            return False
+        if p.val != q.val:
+            return False
+        return self.isSameTree(p.left, q.left) and self.isSameTree(p.right, q.right)
+```
+
+## Alternative Approaches
+
+Iterative DFS using a stack avoids recursion and eliminates the risk of stack overflow. Push pairs of nodes onto the stack, pop them, and compare their values and structure. Time complexity is O(n), and space complexity is O(n) in the worst case when all nodes are in the stack.
+
+```python
+class Solution:
+    def isSameTree(self, p: TreeNode, q: TreeNode) -> bool:
+        stack = [(p, q)]
+        while stack:
+            node1, node2 = stack.pop()
+            if not node1 and not node2:
+                continue
+            if not node1 or not node2:
+                return False
+            if node1.val != node2.val:
+                return False
+            stack.append((node1.left, node2.left))
+            stack.append((node1.right, node2.right))
+        return True
+```
+
+## Additional Notes
+
+This problem must handle the case where both trees are empty as true. The recursive solution has no stack overflow concern since tree height is at most 100. The iterative solution uses up to O(n) auxiliary space. Since node values range from -10^4 to 10^4, only integer comparison is needed.
+
+## Sources
+
+- LeetCode: [LeetCode 100 - Same Tree](https://leetcode.com/problems/same-tree/)
