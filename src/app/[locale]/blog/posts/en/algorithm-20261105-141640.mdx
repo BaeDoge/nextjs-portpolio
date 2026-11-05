@@ -1,0 +1,52 @@
+---
+title: "[Coding Test] Convert Linked List Binary to Decimal"
+publishedAt: "2026-11-05"
+summary: "Given a singly linked list where each node contains 0 or 1, return the decimal value of the binary number it represents."
+tag: "Algorithm"
+---
+
+## Problem
+
+The given linked list has each node value either 0 or 1, and the head node represents the most significant bit. This linked list represents a binary number, and you must return its decimal value. The linked list is non-empty and contains at most 30 nodes.
+
+## Approach
+
+Traverse the list from the head, reading each value. At each step, multiply the current result by 2 and add the node's value. This converts the binary number to decimal. No extra data structures are used, so the space complexity is O(1).
+
+## Solution
+
+The following is an iterative solution.
+
+```python
+def getDecimalValue(head):
+    result = 0
+    while head:
+        result = result * 2 + head.val
+        head = head.next
+    return result
+```
+
+This method traverses each node once, so the time complexity is O(n), and it uses only a few extra variables, giving a space complexity of O(1).
+
+## Alternative Approaches
+
+A recursive approach calculates the value by visiting nodes recursively.
+
+```python
+def getDecimalValue(head):
+    def dfs(node):
+        if not node:
+            return 0
+        return dfs(node.next) * 2 + node.val
+    return dfs(head)
+```
+
+This method uses the call stack, so its space complexity is O(n), requiring more additional space than the iterative approach.
+
+## Additional Notes
+
+Since the maximum number of nodes is 30, the result fits within a 32-bit integer range. Therefore, the calculation can be performed stably without separate overflow handling.
+
+## Sources
+
+- LeetCode: [LeetCode 1290 - Convert Binary Number in a Linked List to Integer](https://leetcode.com/problems/convert-binary-number-in-a-linked-list-to-integer/)
