@@ -1,0 +1,81 @@
+---
+title: "[Coding Test] Delete Node in Binary Search Tree"
+publishedAt: "2026-11-05"
+summary: "This note summarizes the implementation and logical approach for deleting a node with a specific key in a Binary Search Tree (BST)."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given the root of a Binary Search Tree (BST) and a key to delete, write a function that deletes the node with that value and returns the updated root. The deletion process involves two main steps: first, search the tree to find the target node; second, if found, remove it while maintaining the tree structure. If the key does not exist in the tree, return the original tree unchanged.
+
+The constraints for the given BST are as follows: the number of nodes is at most 10,000, and node values range from negative to positive integers. All node values are unique, and the input root forms a valid BST structure. The algorithm must solve the problem with a time complexity of $O(height)$, proportional to the height of the tree.
+
+## Approach
+
+Use the properties of the BST to search for the target node. The search process is identical to binary search: if the current node's value is greater than `key`, move to the left subtree; if smaller, move to the right subtree.
+
+When the target node is found, handle it based on the number of its children:
+1. If the node has no children (leaf node), simply remove it.
+2. If the node has only one child, promote the child to the node's position to maintain the tree structure.
+3. If the node has two children, replace the node's value with the smallest value in its right subtree (in-order successor) or the largest value in its left subtree (in-order predecessor) to preserve the BST ordering property.
+
+After replacement, recursively delete the duplicate node (the successor or predecessor) from its original location. Implementing this recursively improves code readability and maintainability.
+
+## Solution
+
+The following code solves the problem using a recursive function.
+
+```python
+class Solution:
+    def deleteNode(self, root: Optional[TreeNode], key: int) -> Optional[TreeNode]:
+        # 1. Search for the node and perform deletion based on recursion
+        if root is None:
+            return None
+        
+        if key < root.val:
+            root.left = self.deleteNode(root.left, key)
+        elif key > root.val:
+            root.right = self.deleteNode(root.right, key)
+        else:
+            # 2. Target node found
+            # Case 1: No children or only one child
+            if root.left is None:
+                return root.right
+            elif root.right is None:
+                return root.left
+            
+            # Case 2: Two children present
+            # Find the smallest node in the right subtree (minimum value) and replace current node's value
+            min_val = self.find_min(root.right)
+            root.val = min_val
+            
+            # The replaced node (minimum value in the right subtree) must be deleted
+            root.right = self.deleteNode(root.right, min_val)
+            
+        return root
+
+    def find_min(self, node: TreeNode) -> int:
+        # The leftmost node is the minimum value in the subtree
+        while node.left:
+            node = node.left
+        return node.val
+```
+
+**Time Complexity:** $O(height)$
+The height of a BST is $O(\log N)$ in the balanced case and $O(N)$ in the skewed case relative to the number of nodes $N$. Since constant-time operations are performed at each step of the search and deletion, the time complexity is proportional to the tree's height.
+
+**Space Complexity:** $O(height)$
+The stack space used is proportional to the depth of the recursive calls. Therefore, the space complexity is also proportional to the tree's height.
+
+## Alternative Approaches
+
+When deleting a node with two children in a BST, instead of choosing the minimum value from the right subtree as the replacement value, you can use the maximum value from the left subtree. Both are logical methods to maintain the sorted order of the BST. If using the maximum value from the left subtree, replace the current node's value with the largest value from the left subtree, and then recursively delete that maximum node. This approach shares the same principle as using the minimum value from the right subtree, resulting in no difference in time complexity $O(height)$ or space complexity $O(height)$.
+
+## Additional Notes
+
+When implementing node deletion in a BST, it is crucial to properly sever and reconnect the node references, not just the values. Specifically, in the case of two children, simply removing the node would disconnect the subtrees; therefore, deleting the replacement node (successor or predecessor) from its original location is necessary to maintain tree consistency. Additionally, keep in mind that if the input tree is an unbalanced skewed tree, recursive calls may cause a stack overflow.
+
+## Sources
+
+- LeetCode: [LeetCode 450 - Delete Node in a BST](https://leetcode.com/problems/delete-node-in-a-bst/)
