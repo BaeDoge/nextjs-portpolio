@@ -1,0 +1,57 @@
+---
+title: "[Coding Test] Bit Count and Sorting"
+publishedAt: "2026-11-05"
+summary: "This note describes how to sort an integer array by the number of 1s in its binary representation."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given an integer array `arr`, sort it in ascending order based on the number of 1s in the binary representation of each element. If two elements have the same number of 1s, sort them by their numeric value in ascending order. Return the sorted array. For example, with `arr = [0,1,2,3,4,5,6,7,8]`, the sorted array is `[0,1,2,4,8,3,5,6,7]`.
+
+## Approach
+
+Count the number of 1s in each element's binary representation and use it as the primary sort key. In Python, you can count 1s using `bin(x).count('1')` or Brian Kernighan's algorithm. By setting the sort key to a tuple `(popcount, value)`, the sorting can be done in one step. The time complexity is O(n log n) for sorting, plus O(log x) per element for counting.
+
+## Solution
+
+```python
+def sortByBits(arr):
+    def popcount(x):
+        # Brian Kernighan's algorithm
+        cnt = 0
+        while x:
+            x &= x - 1
+            cnt += 1
+        return cnt
+    return sorted(arr, key=lambda x: (popcount(x), x))
+```
+
+Time complexity: O(n log n) (including key computation)
+Space complexity: O(n) (for the sorted result)
+
+## Alternative Approaches
+
+A bucket approach that groups elements by the number of 1s and sorts each group separately.
+
+```python
+def sortByBits(arr):
+    buckets = [[] for _ in range(15)]  # maximum number of 1 bits is 14
+    for num in arr:
+        cnt = bin(num).count('1')
+        buckets[cnt].append(num)
+    result = []
+    for b in buckets:
+        result.extend(sorted(b))
+    return result
+```
+
+This method also has O(n log n) time complexity in the worst case, but the actual runtime can be shorter due to sorting smaller groups. Space complexity is O(n).
+
+## Additional Notes
+
+The length of `arr` is at most 500 and each element is at most 10^4, so the maximum number of 1 bits is 14. Therefore, you can precompute the popcounts or use built-in functions for optimization. Python's `sort` is stable, so the original order of elements with the same popcount is preserved. In other languages, using built-in functions like `__builtin_popcount` can be faster.
+
+## Sources
+
+- LeetCode: [LeetCode 1356 - Sort Integers by The Number of 1 Bits](https://leetcode.com/problems/sort-integers-by-the-number-of-1-bits/)
