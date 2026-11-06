@@ -1,7 +1,10 @@
 // src/app/api/chat/route.ts
 // 포트폴리오 RAG 챗봇: 질문 임베딩 → 지식 베이스 검색 → Groq 스트리밍 답변
+// 임베딩이나 DB가 실패해도 kb/profile.*.md 프로필 내용을 근거로 답변을 이어갑니다(degraded).
+import fs from "node:fs";
+import path from "node:path";
 import { CONTACT_EMAIL } from "@/resources/contact";
-import { embed, getGroq, GROQ_MODEL, retrieve } from "@/utils/rag";
+import { AppError, embed, getGroq, GROQ_MODEL, retrieve, type ErrorCode } from "@/utils/rag";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -44,6 +47,15 @@ function sanitizeMessages(raw: unknown): ChatMessage[] {
     .slice(-MAX_HISTORY);
 }
 
+// 검색이 실패하거나 결과가 없을 때 쓰는 대체 근거. 배포 번들에 포함되도록 next.config에서 trace 지정.
+function readProfile(isEn: boolean): string {
+  try {
+    return fs.readFileSync(path.join(process.cwd(), "kb", `profile.${isEn ? "en" : "ko"}.md`), "utf8");
+  } catch {
+    return "";
+  }
+}
+
 function buildSystemPrompt(isEn: boolean, context: string) {
   return isEn
     ? `You are the AI assistant for Seung Ho Bae's portfolio.
@@ -66,7 +78,7 @@ ${context}`
 ${context}`;
 }
 
-function errorResponse(status: number, code: string) {
+function errorResponse(status: number, code: ErrorCode | "rate_limited" | "invalid_json" | "invalid_messages") {
   return Response.json({ error: code }, { status });
 }
 
@@ -87,15 +99,23 @@ export async function POST(req: Request) {
 
   const isEn = body.locale === "en";
 
-  // 1~3. 임베딩 → 검색 → 컨텍스트. 검색에 실패해도 단계를 로그로 남기고 안내 응답으로 처리합니다.
+  // 1~3. 임베딩 → 검색 → 컨텍스트. 실패하면 프로필 내용으로 대신 답합니다.
   let context = "";
+  let sources: number[] = [];
+  let degraded = false;
   try {
     const queryEmbedding = await embed(last.content);
     const chunks = await retrieve(queryEmbedding);
     context = chunks.map((c) => c.content).join("\n\n");
+    sources = chunks.map((c) => c.id).filter((id): id is number => typeof id === "number");
   } catch (error) {
-    console.error("[chat] 검색 단계 실패:", error);
-    return errorResponse(503, "retrieval_failed");
+    const code = error instanceof AppError ? error.code : "retrieval_failed";
+    console.error(`[chat] 검색 단계 실패 (${code}):`, error);
+    degraded = true;
+  }
+  if (!context) {
+    context = readProfile(isEn);
+    degraded = true;
   }
 
   // 4. Groq 스트리밍
@@ -109,8 +129,9 @@ export async function POST(req: Request) {
       max_tokens: 400,
     });
   } catch (error) {
-    console.error("[chat] Groq 호출 실패:", error);
-    return errorResponse(503, "llm_failed");
+    const code = error instanceof AppError ? error.code : "llm_failed";
+    console.error(`[chat] Groq 호출 실패 (${code}):`, error);
+    return errorResponse(503, code);
   }
 
   const encoder = new TextEncoder();
@@ -119,6 +140,8 @@ export async function POST(req: Request) {
 
   const readable = new ReadableStream({
     async start(controller) {
+      // 첫 이벤트로 근거 청크 id를 보내면, 화면의 지식 지도가 해당 지점을 밝힙니다.
+      send(controller, { sources, degraded });
       try {
         for await (const chunk of stream) {
           const text = chunk.choices[0]?.delta?.content || "";

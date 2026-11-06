@@ -21,6 +21,10 @@ import Timeline from "@/components/Timeline";
 import CasualIntroSection from "@/components/CasualIntroSection";
 import ContactChallenge from "@/components/ContactChallenge";
 import HighlightPanel from "@/components/HighlightPanel";
+import HeroStage from "@/components/HeroStage";
+import ProjectReel from "@/components/ProjectReel";
+import fs from "node:fs";
+import path from "node:path";
 import PersonJsonLd from "@/components/PersonJsonLd";
 import { TypewriterRole } from "@/components/TypewriterRole";
 import {
@@ -53,6 +57,11 @@ export default async function Home() {
   const locale = await getLocale();
   const t = getHomeText(locale as "ko" | "en");
   const isEn = locale === "en";
+
+  // public/hero/loop.mp4 를 넣으면 사진 대신 AI로 만든 루프 영상이 재생됩니다.
+  const heroVideo = fs.existsSync(path.join(process.cwd(), "public", "hero", "loop.mp4"))
+    ? "/hero/loop.mp4"
+    : undefined;
 
   return (
     <Column maxWidth="m" gap="xl" paddingY="12" horizontal="center">
@@ -165,87 +174,26 @@ export default async function Home() {
            모바일에서 터지고, Column은 강제 세로라 안됨)
       ══════════════════════════════════════════ */}
         <RevealFx translateY="16" delay={0.5} fillWidth>
-          <div style={{ width: "100%" }}>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-                gap: "1.5rem",
-                alignItems: "stretch",
-                width: "100%",
-                // ↓ 고정 높이 지정 — 터미널이 길어져도 이 높이 유지
-                height: 800,
-                maxHeight: 800,       // ← 추가
-                overflow: "hidden",
-              }}
-            >
-              {/* 프로필 이미지 */}
-              <div
-                style={{
-                  position: "relative",
-                  borderRadius: 16,
-                  overflow: "hidden",
-                  // height를 부모(480px)에 맞춤
-                  height: "100%",
-                  maxHeight:800,
-                  background: "var(--neutral-alpha-weak)",
-                }}
-              >
-                {person.avatar ? (
-                  <img
-                    src={person.avatar_wide}
-                    alt={person.name}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      objectPosition: "top center",
-                      display: "block",
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      position: "absolute", inset: 0,
-                      display: "flex", alignItems: "center",
-                      justifyContent: "center", flexDirection: "column", gap: 12,
-                    }}
-                  >
-                    <div style={{
-                      width: 80, height: 80, borderRadius: "50%",
-                      background: "var(--neutral-alpha-medium)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 28, color: "var(--neutral-on-background-weak)",
-                    }}>
-                      {person.firstName?.[0]}{person.lastName?.[0]}
-                    </div>
-                    <Text variant="body-default-s" onBackground="neutral-weak">
-                      /images/avatar_wide.jpg 추가 필요
-                    </Text>
-                  </div>
-                )}
-                {/* 이름 오버레이 */}
-                <div style={{
-                  position: "absolute", bottom: 0, left: 0, right: 0,
-                  padding: "3rem 1.25rem 1.25rem",
-                  background: "linear-gradient(transparent, rgba(0,0,0,0.7))",
-                }}>
-                  <div style={{ fontSize: 18, fontWeight: 500, color: "#fff" }}>{person.name}</div>
-                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", marginTop: 2 }}>{person.role}</div>
-                </div>
-              </div>
+          <div className="hero-grid">
+            {/* 인물 카드: 파티클 연출 + 틸트 + (있으면) AI 루프 영상 */}
+            <HeroStage
+              src={person.avatar_wide}
+              videoSrc={heroVideo}
+              name={person.name}
+              role={person.role}
+            />
 
-              {/* GitHub 실시간 활동 + 실적 하이라이트 — height 100% 로 부모 800px에 맞춤 */}
-              <div style={{
-                height: "100%",
-                maxHeight: 800,
-                overflow: "hidden"
-              }}>
-                <HighlightPanel />
-              </div>
+            {/* GitHub 저장소 전체 + 지식 지도 */}
+            <div style={{ height: "100%", minHeight: 0 }}>
+              <HighlightPanel />
             </div>
           </div>
         </RevealFx>
+
+      {/* 프로젝트 대표 이미지 리일 */}
+      <RevealFx translateY="16" delay={0.1} fillWidth>
+        <ProjectReel />
+      </RevealFx>
 
       {/* ══════════════════════════════════════════
           SECTION 3 — 캐주얼 카드 (가로 그리드)

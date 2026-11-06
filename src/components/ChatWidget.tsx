@@ -57,6 +57,28 @@ export default function ChatWidget() {
     if (open) inputRef.current?.focus();
   }, [open]);
 
+  // 메인 화면의 "물어보기" 입력창에서 보낸 질문을 받아 챗봇을 열고 바로 질문합니다.
+  const sendRef = useRef<(text?: string) => Promise<void>>(async () => {});
+  useEffect(() => {
+    const onAsk = (e: Event) => {
+      const q = (e as CustomEvent<{ q?: string }>).detail?.q;
+      if (!q) return;
+      (window as unknown as { __pendingAsk?: string }).__pendingAsk = undefined;
+      setOpen(true);
+      void sendRef.current(q);
+    };
+    window.addEventListener("portfolio:ask", onAsk);
+    // 위젯이 로드되기 전에 들어온 질문이 있으면 이어서 처리
+    const w = window as unknown as { __pendingAsk?: string };
+    if (w.__pendingAsk) {
+      const q = w.__pendingAsk;
+      w.__pendingAsk = undefined;
+      setOpen(true);
+      setTimeout(() => void sendRef.current(q), 0);
+    }
+    return () => window.removeEventListener("portfolio:ask", onAsk);
+  }, []);
+
   const close = () => {
     setOpen(false);
     buttonRef.current?.focus();
@@ -86,7 +108,9 @@ export default function ChatWidget() {
       });
 
       if (!res.ok || !res.body) {
-        setLastAssistant(res.status === 429 ? rateLimited : fallback);
+        // 서버가 보낸 오류 코드를 작게 덧붙여, 어느 단계에서 막혔는지 바로 알 수 있게 합니다.
+        const code = await res.json().then((j) => j?.error as string | undefined).catch(() => undefined);
+        setLastAssistant(res.status === 429 ? rateLimited : code ? `${fallback}\n(${code})` : fallback);
         return;
       }
 
@@ -111,6 +135,12 @@ export default function ChatWidget() {
           try {
             const payload = JSON.parse(line.slice(6));
             if (payload.error) failed = true;
+            if (Array.isArray(payload.sources)) {
+              // 화면의 지식 지도가 근거로 쓰인 지점을 밝히도록 알립니다.
+              window.dispatchEvent(
+                new CustomEvent("portfolio:sources", { detail: { ids: payload.sources, degraded: !!payload.degraded } }),
+              );
+            }
             if (payload.text) {
               full += payload.text;
               setLastAssistant(full);
@@ -130,6 +160,8 @@ export default function ChatWidget() {
       setLoading(false);
     }
   };
+
+  sendRef.current = send;
 
   const title = isEn ? "AI Assistant" : "AI 어시스턴트";
 

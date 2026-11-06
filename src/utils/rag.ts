@@ -10,12 +10,24 @@ export const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 // (portfolio_chunks 테이블: id, content, embedding, category, created_at, source, locale, content_hash)
 const MATCH_RPC = "match_chunks";
 
+/** 챗봇이 어느 단계에서 실패했는지 화면과 로그에 남기기 위한 오류 */
+export type ErrorCode = "config_missing" | "embedding_failed" | "retrieval_failed" | "llm_failed";
+export class AppError extends Error {
+  constructor(
+    public code: ErrorCode,
+    message: string,
+    options?: { cause?: unknown },
+  ) {
+    super(message, options);
+  }
+}
+
 let supabaseClient: SupabaseClient | null = null;
 export function getSupabase(): SupabaseClient {
   if (!supabaseClient) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!url || !key) throw new Error("Supabase 환경변수가 설정되지 않았습니다.");
+    if (!url || !key) throw new AppError("config_missing", "Supabase 환경변수가 설정되지 않았습니다.");
     supabaseClient = createClient(url, key, { auth: { persistSession: false } });
   }
   return supabaseClient;
@@ -24,7 +36,7 @@ export function getSupabase(): SupabaseClient {
 let groqClient: Groq | null = null;
 export function getGroq(): Groq {
   if (!groqClient) {
-    if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY가 설정되지 않았습니다.");
+    if (!process.env.GROQ_API_KEY) throw new AppError("config_missing", "GROQ_API_KEY가 설정되지 않았습니다.");
     groqClient = new Groq({ apiKey: process.env.GROQ_API_KEY });
   }
   return groqClient;
@@ -49,9 +61,13 @@ async function getEmbedder() {
 }
 
 export async function embed(text: string): Promise<number[]> {
-  const model = await getEmbedder();
-  const output = await model(text, { pooling: "mean", normalize: true });
-  return Array.from(output.data as Float32Array);
+  try {
+    const model = await getEmbedder();
+    const output = await model(text, { pooling: "mean", normalize: true });
+    return Array.from(output.data as Float32Array);
+  } catch (error) {
+    throw new AppError("embedding_failed", `임베딩 실패: ${String(error)}`, { cause: error });
+  }
 }
 
 export interface Chunk {
@@ -69,6 +85,6 @@ export async function retrieve(
   const args = { query_embedding: embedding, match_threshold: threshold, match_count: count };
 
   const { data, error } = await supabase.rpc(MATCH_RPC, args);
-  if (error) throw new Error(`지식 베이스 검색 실패: ${error.message}`);
+  if (error) throw new AppError("retrieval_failed", `지식 베이스 검색 실패: ${error.message}`);
   return (data ?? []) as Chunk[];
 }
