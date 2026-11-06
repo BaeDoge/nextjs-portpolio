@@ -239,43 +239,6 @@
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
   pointer-events: none;
 }
-.hero-chip {
-  position: absolute;
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.92);
-  border: 0.5px solid rgba(255, 255, 255, 0.28);
-  border-radius: 999px;
-  background: rgba(10, 14, 22, 0.42);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  pointer-events: none;
-  animation: hero-float 6s ease-in-out infinite;
-}
-@keyframes hero-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-9px); }
-}
-.hero-toggle {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 3;
-  padding: 6px 12px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #fff;
-  cursor: pointer;
-  border: 0.5px solid rgba(255, 255, 255, 0.35);
-  border-radius: 999px;
-  background: rgba(10, 14, 22, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-.hero-toggle[aria-pressed="true"] {
-  background: rgba(79, 124, 255, 0.75);
-}
 .hero-toggle:focus-visible,
 .hero-repo:focus-visible {
   outline: 2px solid var(--brand-solid-strong, #4f7cff);
@@ -292,7 +255,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-chip,
   .hero-scan {
     animation: none;
   }
