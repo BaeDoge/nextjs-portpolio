@@ -1,0 +1,82 @@
+---
+title: "[Coding Test] Counting Numbers with an Even Number of Digits"
+publishedAt: "2026-11-05"
+summary: "Implement an algorithm that counts the elements in an integer array whose number of digits is even."
+tag: "Algorithm"
+---
+
+## Problem
+
+You are given an integer array `nums`. Implement an algorithm that returns the number of integers in the array that contain an even number of digits.
+
+For example, given `[12, 345, 2, 6, 7896]`:
+- `12`: 2 digits (even)
+- `345`: 3 digits (odd)
+- `2`: 1 digit (odd)
+- `6`: 1 digit (odd)
+- `7896`: 4 digits (even)
+
+The numbers with an even number of digits are `12` and `7896`, so the result is 2.
+
+Example 2: `[555, 901, 482, 1771]` → Only `1771` has an even number of digits (4), so the result is `1`.
+
+Constraints:
+- The array length is between 1 and 500.
+- Each integer is between 1 and $10^5$.
+
+## Approach
+
+Iterate through the array and check the number of digits in each integer. There are two common ways to determine the digit count.
+
+The first is to convert each integer to a string and check its length. This approach is simple and easy to read.
+
+The second is to calculate the number of digits mathematically. Repeatedly divide the number by 10 until it becomes 0, or explicitly check whether the digit count is 2, 4, or 6. Under the given constraints, each integer has at most six digits, so numbers with an even number of digits are those that are not in the three-digit (100–999) or five-digit (10,000–99,999) ranges.
+
+## Solution
+
+Here is an implementation using string conversion. Python's `str()` and `len()` functions make the code concise.
+
+```python
+def findNumbers(nums: list[int]) -> int:
+    count = 0
+    for num in nums:
+        digit_count = len(str(num))
+        if digit_count % 2 == 0:
+            count += 1
+    return count
+```
+
+- **Time complexity:** $O(N \cdot D)$, where $N$ is the array length and $D$ is the maximum number of digits. Since $D$ is bounded by 6, this is effectively $O(N)$ under the given constraints.
+- **Space complexity:** $O(D)$ for the temporary string created during conversion. Since $D$ is bounded, this is often treated as $O(1)$.
+
+## Alternative Approach
+
+You can also calculate the number of digits using arithmetic. Repeatedly divide each integer by 10 and count the iterations, then check whether the count is even. This avoids allocating a string.
+
+```python
+def findNumbers(nums: list[int]) -> int:
+    count = 0
+    for num in nums:
+        digits = 0
+        temp = num
+        while temp > 0:
+            temp //= 10
+            digits += 1
+        if digits % 2 == 0:
+            count += 1
+    return count
+```
+
+- **Time complexity:** $O(N \cdot D)$, because each integer requires up to $D$ division operations.
+- **Space complexity:** $O(1)$, because the algorithm uses only a fixed number of additional variables.
+
+## Additional Notes
+
+- The input contains only positive integers, so there is no need to handle negative values or a special case for zero.
+- String conversion is concise and readable, and most programming languages provide built-in functions for it.
+- The arithmetic approach avoids temporary string allocation and may be useful when minimizing allocation overhead.
+- Since the maximum value is $10^5$, an integer has at most six digits. The digit-counting loop therefore runs no more than six times per element.
+
+## Sources
+
+- LeetCode: [LeetCode 1295 - Find Numbers with Even Number of Digits](https://leetcode.com/problems/find-numbers-with-even-number-of-digits/)

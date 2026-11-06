@@ -3,6 +3,14 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Transformers.js v4는 서버 런타임에서 직접 로드합니다.
+  serverExternalPackages: ["@huggingface/transformers"],
+
+  outputFileTracingIncludes: {
+    // 임베딩/DB가 실패했을 때 프로필 내용으로 답변을 이어갈 수 있도록 포함합니다.
+    "/api/chat": ["./kb/profile.ko.md", "./kb/profile.en.md"],
+  },
+
   images: {
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 31536000,
