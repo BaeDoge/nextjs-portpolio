@@ -1,0 +1,65 @@
+---
+title: "[Coding Test] Matching Strings in an Array"
+publishedAt: "2026-11-06"
+summary: "This problem asks to find and return all strings in an array that are substrings of another string in the same array."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given an array of strings `words`, find and return all strings that are substrings of other strings in the array. The order of the returned strings does not matter, and each string in the input is unique.
+
+For example, if the input is `["mass","as","hero","superhero"]`, "as" is a substring of "mass" and "hero" is a substring of "superhero", so the result is `["as", "hero"]`. If the input is `["blue","green","bu"]`, no string is a substring of another, so the result is an empty array `[]`.
+
+The constraints are as follows:
+- Array length: 1 to 100
+- String length: 1 to 30
+- Strings consist only of lowercase English letters
+
+## Approach
+
+Since the maximum string length is 30 and the maximum array length is 100, which are very small, the problem can be solved efficiently using a brute-force approach that compares all pairs of strings.
+
+Select each string one by one and check if it is a substring of any other string in the array. If it is found to be a substring of another string, add it to the result list. Python's `in` operator efficiently checks for substring existence, so you can implement a nested loop using it.
+
+## Solution
+
+Use a nested loop with two indices to perform comparisons. The outer loop represents the candidate string being checked, and the inner loop represents the potential superstring. Strings with the same index are not compared. If the candidate string is found to be a substring of any other string in the inner loop, add it to the result and break out of the inner loop to proceed to the next string.
+
+```python
+class Solution:
+    def stringMatching(self, words: list[str]) -> list[str]:
+        result = []
+        n = len(words)
+        
+        # Compare all pairs of words
+        for i in range(n):
+            for j in range(n):
+                # Exclude the same index and check if words[i] is in words[j]
+                if i != j and words[i] in words[j]:
+                    result.append(words[i])
+                    break # Exit inner loop as it is confirmed to be a substring
+        
+        return result
+```
+
+- **Time Complexity**: $O(N^2 \times M)$. Here, $N$ is the number of words and $M$ is the maximum length of a word. The substring check (`in` operator) takes at most $O(M)$ time, and it is performed for $N \times N$ pairs. Given the constraints ($N=100, M=30$), the number of operations is very small, ensuring fast execution.
+- **Space Complexity**: $O(1)$. No additional storage space is used other than the result list. Although the result list size can be up to $N$ (technically $O(N)$), it is considered auxiliary space complexity $O(1)$ since no additional data structures are used.
+
+## Alternative Approaches
+
+**KMP Algorithm**: The KMP algorithm allows substring search in $O(M)$ time. The time complexity remains $O(N^2 \times M)$, but the constant factor for string search might improve. However, since $M$ is small, Python's built-in functions are generally faster.
+
+**Sorting-Based Approach**: Sort the array based on string length. A shorter string can be a substring of a longer string, but the reverse is impossible. Therefore, you only need to compare the $i$-th string with the $j$-th string where $j > i$ in the sorted array. This reduces the number of comparison pairs by half.
+
+- **Comparison**: The brute-force approach has the simplest code and fewest implementation errors. The sorting-based approach reduces the number of comparisons and improves efficiency, but has slightly higher implementation complexity and adds an $O(N \log N)$ sorting time. Given the small constraints, both methods are suitable.
+
+## Additional Notes
+
+This problem tests the basic concepts of string matching. In most languages (Python, Java, C++, etc.), built-in functions like `contains`, `in`, and `find` use optimized string search algorithms (such as variants of Boyer-Moore or KMP). Therefore, using built-in functions is efficient unless there is a specific reason to implement an algorithm manually.
+
+If the difference in string lengths is large, remember that only the shorter string can be a substring of the longer one. This observation can help filter candidates and reduce unnecessary comparisons.
+
+## Sources
+
+- LeetCode: [LeetCode 1408 - String Matching in an Array](https://leetcode.com/problems/string-matching-in-an-array/)
