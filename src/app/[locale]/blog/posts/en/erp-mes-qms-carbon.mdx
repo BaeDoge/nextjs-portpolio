@@ -1,0 +1,167 @@
+---
+title: "[Open Source Analysis] Carbon: An Integrated ERP/MES/QMS System for Manufacturing"
+publishedAt: "2026-11-05"
+summary: "An analysis of the architecture and design choices behind an open-source manufacturing management system that integrates ERP, MES, and QMS on a single PostgreSQL schema and a React Router-based monorepo."
+tag: "OpenSource"
+---
+
+## Project at a Glance and the Problem It Solves
+
+`crbnos/carbon` is an executable open-source manufacturing management system that integrates ERP, MES, and QMS capabilities. It is designed to address a common problem in manufacturing environments: **data silos**. Manufacturing companies often manage product design (BOM), purchasing, inventory, material requirements planning (MRP), shop-floor operations (MES), quality management (QMS), and accounting in separate systems. As a result, a change to a bill of materials can cause synchronization errors between engineering and production, while material shortages may not be discovered until production has already started.
+
+Carbon brings ERP, MES, and QMS capabilities together on a single PostgreSQL database schema. As stated in the project's [README.md](https://github.com/crbnos/carbon/blob/main/README.md), its goal is to "Plan materials, run the shop floor, manage quality and track actual costs in one system." Rather than simply placing several modules side by side, the project aims to integrate them at the data-model and API layers so that information remains consistent and can be shared across workflows.
+
+The intended users include hardware startups and manufacturing companies. They can get started through Carbon Cloud, a managed service, or self-host the system in a VPC or on-premises environment to retain control over their data. The project primarily uses TypeScript, with a React Router-based web application and PostgreSQL as its core technology stack.
+
+## Key Concepts Needed to Understand It
+
+Three concepts are central to understanding Carbon's technical architecture.
+
+1. **A unified data model and Row-Level Security (RLS):**
+
+   Carbon does not use separate databases for ERP and MES. According to the architecture section of the [README.md](https://github.com/crbnos/carbon/blob/main/README.md), "ERP and MES are React Router apps over a single Postgres database." Every table is scoped by `company_id`, and PostgreSQL Row-Level Security policies isolate each company's (tenant's) data. This allows modules to reference shared data internally while preventing one tenant from accessing another tenant's records.
+
+2. **An application layer built on React Router:**
+
+   The frontend uses [React Router 7](https://reactrouter.com) and [Vite](https://vite.dev). The Tech Stack section of the [README.md](https://github.com/crbnos/carbon/blob/main/README.md) lists Tailwind 4, Radix, and React Aria for the UI. This is more than a collection of static pages: it is a modern web application architecture that supports server-side rendering (SSR) and client-side navigation. ERP and MES are separated into applications such as `/apps/erp` and `/apps/mes`, but they share the same database and API layer.
+
+3. **The Model Context Protocol (MCP) server:**
+
+   Carbon goes beyond a conventional REST API by providing an [MCP](https://docs.carbon.ms/api/mcp) server for integration with AI agents. External AI tools, such as Claude Code, can use this standard protocol to access Carbon data and operations. The [README.md](https://github.com/crbnos/carbon/blob/main/README.md) states that "The Carbon API exposes the same manufacturing operations used by the application." In other words, the same operations can be accessed through both HTTP and MCP interfaces.
+
+## Repository Structure and Runtime Flow
+
+Carbon is managed as a monorepo using [pnpm](https://pnpm.io) and [Turborepo](https://turbo.build). The separation of responsibilities can be seen in the Monorepo section of the [README.md](https://github.com/crbnos/carbon/blob/main/README.md) and the repository's file structure.
+
+```
+carbon/
+├── apps/
+│   ├── erp/          # ERP application (React Router)
+│   ├── mes/          # MES application (React Router)
+│   └── assembler/    # Rust-based assembler (e.g. 3D model processing)
+├── packages/
+│   ├── api/          # Shared API layer and data access logic
+│   ├── database/     # Database migrations and seed data
+│   ├── ee/           # Enterprise features (commercial license)
+│   └── ...           # Other shared packages (UI, config, etc.)
+├── crates/           # Rust crates (assembler-related)
+├── docs/             # Official documentation and content
+└── scripts/          # Build and development tools
+```
+
+**Runtime flow:**
+
+1. **Build and deployment:** The repository's [Dockerfile](https://github.com/crbnos/carbon/blob/main/Dockerfile) uses a `node:24.22.1-slim` base image, installs dependencies with `pnpm install`, and builds the ERP and MES applications with `turbo run build`. The `crates/*` packages and `apps/assembler` are also built with Rust. The [Cargo.toml](https://github.com/crbnos/carbon/blob/main/Cargo.toml) file lists libraries such as `gltf`, `meshopt`, and `nalgebra` for 3D model processing.
+
+2. **Database initialization:** In the Dockerfile's `bootstrap-deps` stage, `supabase migration up` and `tsx src/seed.ts` are used to create the database schema and insert initial data.
+
+3. **Execution:** In a development environment, the `crbn up --no-portless` command (listed in the scripts section of [package.json](https://github.com/crbnos/carbon/blob/main/package.json)) starts the Docker Compose-based stack. This includes PostgreSQL, Inngest for background jobs, and the React Router applications.
+
+4. **Background jobs:** Inngest detects database change events and processes asynchronous tasks, such as report generation and notification delivery.
+
+## A Concrete Example of a Design Choice
+
+One notable design choice is the `CarbonClient` pattern for integrating external systems. The implementation can be examined in [contrib/building/examples/upload-3d-model/app/lib/carbon.server.ts](https://github.com/crbnos/carbon/blob/main/contrib/building/examples/upload-3d-model/app/lib/carbon.server.ts).
+
+This example demonstrates how an external application can upload a 3D model to Carbon's storage and database.
+
+```typescript
+class CarbonClient {
+  private readonly client: SupabaseClient;
+  // ...
+  async uploadModel(file: File) {
+    const modelId = nanoid();
+    const fileName = `${this.companyId}/models/${modelId}.${fileExtension}`;
+
+    const [fileUpload, recordInsert] = await Promise.all([
+      this.client.storage.from(this.companyId).upload(fileName, file),
+      this.client.from("modelUpload").insert({
+        id: modelId,
+        modelPath: fileName,
+        size: file.size,
+        name: file.name,
+        companyId: this.companyId,
+        createdBy: "system"
+      })
+    ]);
+    // ...
+  }
+}
+```
+
+**Design analysis:**
+
+1. **Using the Supabase client:** Carbon uses Supabase internally for database and authentication-related functionality. The Supabase client is initialized through `createClient`, and its `storage` and `from` methods are used to access files and records. This suggests that Carbon extends Supabase capabilities to implement multi-tenancy and RLS.
+
+2. **Concurrent execution with `Promise.all`:** File upload and metadata insertion are started concurrently. This can reduce the time spent waiting for the two independent operations, but it requires care around transactional consistency. If the file upload succeeds while the database insert fails, an orphaned file may remain. (The production implementation may include additional error-handling logic.)
+
+3. **Company-level isolation:** The file path and `companyId` associate the uploaded file with a specific company. Together with PostgreSQL RLS, this helps enforce tenant-level data isolation.
+
+This design allows Carbon to act not only as a CRUD application but also as a platform that can be integrated with external systems.
+
+## Advantages and Trade-offs Compared with Alternatives
+
+The following comparison focuses on architectural choices rather than ranking products by performance.
+
+| Comparison | Carbon | Odoo / ERPNext |
+| :--- | :--- | :--- |
+| **Architecture** | Single database and a React Router-based monorepo | Module-specific databases or more complex ORM-based structures |
+| **Developer experience** | TypeScript, pnpm, and Turborepo | Python (Odoo), Python/JavaScript (ERPNext) |
+| **Integration** | ERP, MES, and QMS operate on a shared schema | Additional configuration may be needed to synchronize data across modules |
+| **AI integration** | Native support for AI agents through an MCP server | Often integrated indirectly through plugins or separate APIs |
+| **Extensibility** | Modern stack based on React Router and Rust components | Flexibility through Python-based scripting |
+
+**Advantages:**
+- **Data consistency:** A shared database can reduce inconsistencies between ERP and MES data.
+- **Modern technology stack:** TypeScript and React Router provide a familiar development experience and can make maintenance easier for teams using these technologies.
+- **AI integration:** The MCP server provides a direct integration point for AI agents.
+
+**Limitations:**
+- **Learning curve:** Understanding PostgreSQL RLS and the Supabase configuration can require significant effort.
+- **Community size:** The community and ecosystem may be smaller than those of Odoo or ERPNext.
+- **Feature coverage:** The system may not cover every manufacturing scenario, and some Enterprise features require a commercial license.
+
+Overall, Carbon may be a good fit for teams that want a consistent API across multiple storage and manufacturing workflows and prefer a modern TypeScript/Rust-oriented stack. A different approach may be more suitable when a mature ecosystem or a specific vendor's advanced functionality is essential.
+
+## Security, Licensing, and Adoption Considerations
+
+**License:**
+
+Carbon is licensed under [AGPLv3](https://github.com/crbnos/carbon/blob/main/LICENSE). This is a strong copyleft license that can require source-code disclosure when a modified version is provided as a network service. However, the `packages/ee` directory and files named with `.ee.` follow the [Carbon Commercial License](https://github.com/crbnos/carbon/blob/main/packages/ee/LICENSE). A commercial license is therefore required to use Enterprise features covered by that license.
+
+**Security:**
+- **Row-Level Security (RLS):** Tables are scoped by `company_id`, and PostgreSQL RLS controls data access. The Security section of the [README.md](https://github.com/crbnos/carbon/blob/main/README.md) highlights this approach.
+- **API keys:** External integrations use API keys for authentication. The [carbon.server.ts example](https://github.com/crbnos/carbon/blob/main/contrib/building/examples/upload-3d-model/app/lib/carbon.server.ts) uses the `carbon-key` header.
+- **Vulnerability reporting:** According to [SECURITY.md](https://github.com/crbnos/carbon/blob/main/.github/SECURITY.md), vulnerabilities should be reported by email rather than through public issues.
+
+**Things to check before adoption:**
+- **Supabase dependency:** Carbon relies on Supabase for core functionality, so its availability and policy changes may affect the system.
+- **Data migration:** Migrating data from existing ERP/MES systems to Carbon may be complex.
+- **Enterprise features:** Check whether the features your organization needs are covered by the Enterprise license.
+
+## Limitations and Who It May Suit
+
+**Limitations:**
+- **Community and ecosystem:** As the project is still at an early stage, it may not yet have enough plugins or connectors for every manufacturing scenario.
+- **Advanced functionality:** Complex supply-chain management (SCM) or advanced planning and control (APC) capabilities may not be fully implemented.
+- **Support:** The open-source edition relies on community support, while commercial support is available through the Enterprise license.
+
+**Potential users:**
+- **Hardware startups:** Teams that want to prototype quickly and manage manufacturing workflows in an integrated system.
+- **Small and medium-sized manufacturers:** Companies looking to improve data consistency by bringing ERP and MES together.
+- **Developer-oriented organizations:** Teams that prefer a modern TypeScript and React stack and have the ability to customize the system themselves.
+
+Carbon presents an approach to integrated manufacturing management, with AI integration and a modern technology stack as notable differentiators. Before adopting it, however, organizations should carefully review the license and support model and evaluate how well it can integrate with their existing systems.
+
+## Sources
+
+- GitHub: [crbnos/carbon](https://github.com/crbnos/carbon) — Author: crbnos
+- GitHub: [crbnos/carbon / LICENSE](https://github.com/crbnos/carbon/blob/main/LICENSE) — Author: crbnos
+- GitHub: [crbnos/carbon / Cargo.toml](https://github.com/crbnos/carbon/blob/main/Cargo.toml) — Author: crbnos
+- GitHub: [crbnos/carbon / Dockerfile](https://github.com/crbnos/carbon/blob/main/Dockerfile) — Author: crbnos
+- GitHub: [crbnos/carbon / package.json](https://github.com/crbnos/carbon/blob/main/package.json) — Author: crbnos
+- GitHub: [crbnos/carbon / contrib/building/examples/upload-3d-model/app/lib/carbon.server.ts](https://github.com/crbnos/carbon/blob/main/contrib/building/examples/upload-3d-model/app/lib/carbon.server.ts) — Author: crbnos
+- GitHub: [crbnos/carbon / contrib/building/examples/quote-configurator/app/lib/carbon.server.ts](https://github.com/crbnos/carbon/blob/main/contrib/building/examples/quote-configurator/app/lib/carbon.server.ts) — Author: crbnos
+- GitHub: [crbnos/carbon / ci/src/client.ts](https://github.com/crbnos/carbon/blob/main/ci/src/client.ts) — Author: crbnos
+- GitHub: [crbnos/carbon / .ai/docs/outer-loop.md](https://github.com/crbnos/carbon/blob/main/.ai/docs/outer-loop.md) — Author: crbnos
+- GitHub: [crbnos/carbon / docs/content/docs/index.mdx](https://github.com/crbnos/carbon/blob/main/docs/content/docs/index.mdx) — Author: crbnos
