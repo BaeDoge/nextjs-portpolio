@@ -126,7 +126,9 @@ export async function POST(req: Request) {
       messages: [{ role: "system", content: buildSystemPrompt(isEn, context) }, ...messages],
       stream: true,
       temperature: 0.2,
-      max_tokens: 400,
+      max_completion_tokens: 700,
+      reasoning_effort: "low",
+      include_reasoning: false,
     });
   } catch (error) {
     const code = error instanceof AppError ? error.code : "llm_failed";
