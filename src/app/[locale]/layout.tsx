@@ -9,7 +9,6 @@ import PageViewTracker from "@/components/PageViewTracker";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
-import Script from "next/script";
 
 import {
   Background,
@@ -21,6 +20,7 @@ import {
   SpacingToken,
 } from "@once-ui-system/core";
 import { Footer, Header, RouteGuard, Providers } from "@/components";
+import ThemeInitializer from "@/components/ThemeInitializer";
 import { baseURL, effects, fonts, korean, style, dataStyle, home } from "@/resources";
 
 export async function generateMetadata() {
@@ -65,49 +65,18 @@ export default async function RootLayout({
         korean.variable,
       )}
     >
-      <Script
-        id="theme-init"
-        strategy="beforeInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-              (function() {
-                try {
-                  const root = document.documentElement;
-                  const defaultTheme = 'system';
-                  const config = ${JSON.stringify({
-                    brand: style.brand,
-                    accent: style.accent,
-                    neutral: style.neutral,
-                    solid: style.solid,
-                    "solid-style": style.solidStyle,
-                    border: style.border,
-                    surface: style.surface,
-                    transition: style.transition,
-                    scaling: style.scaling,
-                    "viz-style": dataStyle.variant,
-                  })};
-                  Object.entries(config).forEach(([key, value]) => {
-                    root.setAttribute('data-' + key, value);
-                  });
-                  const resolveTheme = (themeValue) => {
-                    if (!themeValue || themeValue === 'system') {
-                      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                    }
-                    return themeValue;
-                  };
-                  const savedTheme = localStorage.getItem('data-theme');
-                  const resolvedTheme = resolveTheme(savedTheme);
-                  root.setAttribute('data-theme', resolvedTheme);
-                  Object.keys(config).forEach(key => {
-                    const value = localStorage.getItem('data-' + key);
-                    if (value) root.setAttribute('data-' + key, value);
-                  });
-                } catch (e) {
-                  console.error('Failed to initialize theme:', e);
-                  document.documentElement.setAttribute('data-theme', 'dark');
-                }
-              })();
-            `,
+      <ThemeInitializer
+        config={{
+          brand: style.brand,
+          accent: style.accent,
+          neutral: style.neutral,
+          solid: style.solid,
+          "solid-style": style.solidStyle,
+          border: style.border,
+          surface: style.surface,
+          transition: style.transition,
+          scaling: style.scaling,
+          "viz-style": dataStyle.variant,
         }}
       />
       <NextIntlClientProvider locale={locale}>
