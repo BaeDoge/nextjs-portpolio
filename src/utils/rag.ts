@@ -1,10 +1,11 @@
 // RAG 챗봇이 공통으로 쓰는 클라이언트와 헬퍼 (서버 전용)
 import Groq from "groq-sdk";
+import path from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 export const EMBEDDING_MODEL = "Xenova/paraphrase-multilingual-MiniLM-L12-v2";
 export const EMBEDDING_DIM = 384;
-export const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+export const GROQ_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
 
 // Supabase의 match_chunks(query_embedding, match_threshold, match_count) 함수를 사용합니다.
 // (portfolio_chunks 테이블: id, content, embedding, category, created_at, source, locale, content_hash)
@@ -48,9 +49,15 @@ let embedderPromise: Promise<any> | null = null;
 async function getEmbedder() {
   if (!embedderPromise) {
     embedderPromise = (async () => {
-      const { pipeline, env } = await import("@xenova/transformers");
+      const { pipeline, env } = await import("@huggingface/transformers");
       env.allowLocalModels = false;
-      env.cacheDir = "/tmp/transformers-cache";
+      env.allowRemoteModels = true;
+      env.useFSCache = true;
+      env.cacheDir =
+        process.env.TRANSFORMERS_CACHE_DIR ||
+        (process.env.VERCEL
+          ? "/tmp/transformers-cache"
+          : path.join(process.cwd(), ".cache", "transformers"));
       return pipeline("feature-extraction", EMBEDDING_MODEL);
     })().catch((error) => {
       embedderPromise = null; // 실패한 로드를 캐시하지 않음
