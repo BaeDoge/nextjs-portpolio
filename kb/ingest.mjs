@@ -169,7 +169,7 @@ async function main() {
   console.log(`새로 임베딩할 청크 ${fresh.length}개, 유지 ${chunks.length - fresh.length}개`);
 
   if (fresh.length) {
-    const { pipeline } = await import("@xenova/transformers");
+    const { pipeline } = await import("@huggingface/transformers");
     const embedder = await pipeline("feature-extraction", MODEL);
 
     for (let i = 0; i < fresh.length; i += BATCH) {
