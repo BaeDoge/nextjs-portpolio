@@ -341,3 +341,12 @@
     animation: none;
   }
 }
+
+/* Legacy hero controls from the previous particle-mode design.
+   Keep these hidden even if an old component chunk is still cached. */
+.hero-toggle,
+.hero-chip,
+.hero-particle-toggle,
+[data-hero-particle-control] {
+  display: none !important;
+}
