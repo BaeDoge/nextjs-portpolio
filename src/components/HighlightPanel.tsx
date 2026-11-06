@@ -8,7 +8,7 @@
 //   - 저장소는 GitHub 공개 API(숨김 저장소 제외)에서 가져오고, 막히면 대체 목록을 씀 (utils/github.ts)
 
 import { getLocale } from "next-intl/server";
-import KnowledgeMap from "@/components/KnowledgeMap";
+import KnowledgeMap from "@/components/KnowledgeMapClient";
 import { GITHUB_USERNAME, LANGUAGE_COLORS, getRepos } from "@/utils/github";
 
 function formatMonth(iso: string, isEn: boolean) {
