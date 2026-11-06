@@ -1,0 +1,150 @@
+---
+title: "[Paper Review] How LLM Quantization Affects Performance and Serving Costs"
+publishedAt: "2026-11-06"
+summary: "A practical review of a benchmark comparing 4-bit and 8-bit quantization, vLLM serving, and output quality across 12 LLMs and eight biomedical NLP datasets."
+tag: "Paper Review"
+---
+
+> **Publication timeline**
+>
+> The journal version was published in *npj Health Systems* on November 4, 2026. However, the same study first appeared as an arXiv preprint on September 4, 2025. It is more accurate to describe this as a 2026 journal publication of research that was already publicly available in 2025, rather than a study first introduced in late 2026.
+
+## Does a smaller model automatically make a service faster?
+
+GPU memory is often the first constraint when running an LLM on an internal server or a local workstation. Model weights can occupy tens of gigabytes, and inference also needs memory for activations and the key-value (KV) cache that stores attention states for the input context and generated tokens.
+
+Quantization reduces the number of bits used to represent model weights. That can lower memory requirements, but it does not guarantee that accuracy will remain unchanged or that responses will become faster.
+
+This study evaluates those trade-offs on biomedical natural language processing (BioNLP) tasks. Its central question is not simply how much smaller a model becomes, but how memory use, task scores, latency, and output validity change across models, tasks, and inference runtimes.
+
+| Item | Scope |
+|---|---:|
+| LLMs evaluated | **12** general-purpose and biomedical models |
+| Benchmark datasets | **8** |
+| Task types | **4** |
+| Main hardware | **4 NVIDIA A100 GPUs**, 40 GB each |
+
+## How were the quantization experiments designed?
+
+The authors used Hugging Face Transformers with BitsAndBytes to compare full-precision models against 8-bit and 4-bit weight configurations.
+
+```text
+Original LLM checkpoint
+→ Measure full-precision baseline
+→ Load W8A16 or W4A16 weights with BitsAndBytes
+→ Run inference on the same prompts and datasets
+→ Measure task scores, peak GPU memory, latency, and output validity
+→ Compare results by model and task
+```
+
+W4A16 stores weights in 4-bit form while using 16-bit computation. W8A16 uses 8-bit weights with 16-bit computation. For the 4-bit setup, the paper uses NF4, FP16 compute, and double quantization.
+
+| Configuration | Weight precision | Compute precision | Main goal |
+|---|---:|---:|---|
+| Full precision | Baseline | Baseline | Reference |
+| W8A16 | 8-bit | 16-bit | Balance memory savings and quality |
+| W4A16 | 4-bit | 16-bit | Reduce weight memory further |
+
+**Four bits are not automatically the best choice.** They can save more weight memory, but task scores and output quality still depend on the model. The study also observed repetitive or malformed outputs from some biomedical models under 8-bit loading.
+
+## Which tasks were used for evaluation?
+
+The benchmark covers eight datasets grouped into four task types. The authors compare task-specific metrics instead of relying on a single aggregate score.
+
+| Task | Datasets | Metric |
+|---|---|---|
+| Multi-label classification (MLC) | HoC, LitCovid | Macro F1 |
+| Named entity recognition (NER) | BC5CDR, NCBI Disease | Entity F1 |
+| Relation extraction (RE) | ChemProt, DDI | Macro F1 |
+| Question answering (QA) | MedQA-USMLE, PubMedQA | Accuracy |
+
+The evaluation also checks whether generated responses are empty, difficult to parse, or repetitive. In a real service, a slightly higher benchmark score is not useful if the output format breaks downstream processing.
+
+## Memory went down, but latency needs a separate check
+
+The paper reports that 4-bit and 8-bit quantization reduce GPU memory use. Four-bit quantization generally gives the largest savings, while average task performance often remains relatively close to the full-precision baseline.
+
+That is not true for every model and task. Some biomedical models showed notable degradation under 8-bit loading, including repetitive or semantically poor responses. It would therefore be misleading to conclude that quantization always preserves quality.
+
+### What quantization can improve
+
+- Lower memory use for model weights.
+- More room to experiment with larger models under a fixed VRAM budget.
+- More options for local inference where cloud deployment is restricted.
+
+### What still needs to be measured
+
+- Latency generally increased in the Transformers/BitsAndBytes experiments.
+- Some model-task combinations lost accuracy.
+- Invalid or repetitive outputs can still occur.
+
+One distinction matters here: **weight memory is not the same as total GPU memory during inference.** Activations, CUDA runtime allocations, and the KV cache also consume memory. The paper separately studies few-shot prompts because adding examples increases input length and can increase KV-cache memory.
+
+## The vLLM experiments compare AWQ, GPTQ, and FP8
+
+The authors also ran a separate serving-oriented experiment with vLLM. They evaluated AWQ, GPTQ, and FP8 checkpoints on Qwen2.5-7B and Qwen2.5-32B across selected representative datasets.
+
+```text
+Prepare quantized checkpoints
+→ Load the model with vLLM
+→ Run batched inference on selected tasks
+→ Measure task scores and generated tokens per second
+→ Compare AWQ, GPTQ, and FP8
+```
+
+These results should not be treated as a direct memory comparison with the BitsAndBytes experiments. vLLM reserves GPU memory for serving and manages the KV cache differently. The study found no single method that performed best across every task and setup.
+
+## Prompt length and output validity are part of serving cost
+
+Reducing weight memory does not remove every inference bottleneck. Few-shot examples make prompts longer, increasing the amount of context the model needs to process and the memory used by the KV cache.
+
+Chain-of-Thought (CoT) and Self-Consistency prompting can improve task performance, but they may also increase generated tokens and response time. For deployment, it is useful to measure several dimensions together:
+
+- **Accuracy:** How much does the target task score change from the full-precision baseline?
+- **Peak GPU memory:** Does the measurement include runtime allocations, not only model weights?
+- **Latency:** How long does one request take?
+- **Throughput:** How many generated tokens can the system produce per second?
+- **Output validity:** Are responses parseable and free from unwanted repetition?
+
+## What the public repository actually contains
+
+The paper links its code at [Learner4everrr/Benchmark_quantization](https://github.com/Learner4everrr/Benchmark_quantization). The README describes a Conda environment and installation through `requirements.txt`, but its example command refers to `benchmark.py`, which is not present in the current repository root. The root contains `main.py`, so the README and the checked-in entry point do not fully agree.
+
+The inspected `main.py` accepts `--model`, `--dataset`, and `--quantization`, and uses `--gen` and `--eval` to run generation and evaluation. Quantization settings are assembled in `model_manager/quantization.py`.
+
+```text
+main.py
+→ Validate model and dataset arguments
+→ Create ModelBase
+→ Build quantization settings with get_model_kwargs()
+→ Load the Transformers model
+→ Run dataset inference and save JSON results
+→ Calculate task metrics, memory, latency, and throughput
+```
+
+For example, the checked-in argument definitions include `Qwen2.5-7B` and the `hoc` dataset:
+
+```bash
+python main.py --model Qwen2.5-7B --dataset hoc --quantization 4bit --gen
+python main.py --model Qwen2.5-7B --dataset hoc --quantization 4bit --eval
+```
+
+These commands are examples derived from the argument parser and code path; they have not been executed as part of this review. Running them also requires the listed Python packages, a compatible CUDA environment, access to the model weights, and the required datasets. Because the README's `benchmark.py` example does not match the current root files, verify the repository's run instructions before treating it as a ready-to-run reproduction package.
+
+## What should developers take away?
+
+The conclusion is not that 4-bit quantization is always the right answer. Quantization is a useful way to reduce weight memory, but the resulting service quality depends on the model, task, prompt length, and inference engine.
+
+The paper states that its main experiments were conducted primarily on four NVIDIA A100 GPUs with 40 GB each. It did not directly benchmark RTX consumer GPUs. The results therefore do not prove that a 70B model will run reliably on a particular desktop GPU. The authors also identify the lack of direct consumer-GPU measurements for throughput, latency, and power use as a limitation.
+
+For a real deployment, start by defining the required task accuracy and response format. Then compare full precision, 8-bit, and 4-bit configurations on the same workload. Finally, measure memory, KV-cache behavior, latency, and throughput using the inference engine and hardware that will actually run the service.
+
+This is a benchmark study of quantization trade-offs in a specific application domain, not a proposal for a new general-purpose quantization algorithm. Its most useful contribution is the reminder that deployment decisions should be based on several measured outcomes rather than weight size alone.
+
+## Sources
+
+- Journal article: [Quantized large language models in biomedical natural language processing: evaluation and recommendation](https://doi.org/10.1038/s44401-026-00152-6)
+- Original preprint: [arXiv:2509.04534](https://arxiv.org/abs/2509.04534)
+- Official code repository: [Learner4everrr/Benchmark_quantization](https://github.com/Learner4everrr/Benchmark_quantization)
+- Repository entry point: [main.py](https://github.com/Learner4everrr/Benchmark_quantization/blob/master/main.py)
+- Quantization configuration: [model_manager/quantization.py](https://github.com/Learner4everrr/Benchmark_quantization/blob/master/model_manager/quantization.py)
