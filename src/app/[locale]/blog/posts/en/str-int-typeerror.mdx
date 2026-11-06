@@ -1,0 +1,102 @@
+---
+title: "[Troubleshooting] Resolving TypeError when concatenating str and int"
+publishedAt: "2026-11-06"
+summary: "This note explains the cause of TypeError when concatenating strings and integers in Python and provides solutions such as explicit type conversion and string formatting."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+When attempting to concatenate a string (str) and an integer (int) using the `+` operator in Python, a TypeError occurs.
+<Callout type="warning" title="Error Situation">
+`TypeError: can only concatenate str (not "int") to str`
+</Callout>
+
+The error occurs when executing the following code:
+
+```python
+things = 5
+print("You have " + things + " things.")
+```
+
+This error is a common phenomenon in Python 3.x environments.
+
+![Symptom screenshot](/blogs/str-int-typeerror-1.png)
+
+## Cause
+
+Python does not implicitly convert objects to other types.
+The `+` operator calculates the sum for numeric types and performs concatenation for sequence types.
+Since strings and integers are different types, performing an operation on them without explicit conversion raises a TypeError.
+To prevent confusing behavior, developers must explicitly specify types.
+
+```python
+>>> '3' + 5
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: can only concatenate str (not "int") to str
+```
+
+## Solution
+
+Explicitly convert the integer object to be concatenated into a string type using the `str()` function.
+Concatenating the converted strings yields the desired result without errors.
+
+```python
+things = 5
+print("You have " + str(things) + " things.")
+# Output: You have 5 things.
+```
+
+## Alternative Solutions
+
+Using string formatting allows inserting values without explicit type conversion.
+Among the three main methods, f-strings can be used in Python 3.6 and above.
+
+```python
+things = 5
+
+# 1. % interpolation (oldest, familiar to developers with C language background)
+print('You have %d things.' % things)
+
+# 2. str.format() method (provides various features)
+print('You have {} things.'.format(things))
+
+# 3. f-string (Python 3.6 and above)
+print(f'You have {things} things.')
+```
+
+Multiple arguments of the `print` function can also be concatenated using the `sep` keyword.
+
+```python
+things = 5
+print("You have", things, "things.")
+```
+
+## Additional Notes
+
+Performing an operation with the `/` operator on a string and an integer raises a TypeError.
+
+```python
+a = "100"
+print(a / 4)
+# TypeError: unsupported operand type(s) for /: 'str' and 'int'
+```
+
+In this case as well, explicit conversion with `int()` is required.
+
+```python
+a = "100"
+print(int(a) / 4)
+# 25.0
+```
+
+Since external data or keyboard input values are usually provided as strings, you must always check and convert types when performing mathematical operations.
+
+## Sources
+
+- StackOverflow: [How can I concatenate str and int objects?](https://stackoverflow.com/questions/25675943/how-can-i-concatenate-str-and-int-objects) — Author: Zero Piraeus(question), Zero Piraeus(answer) (CC BY-SA)
+- Tistory: [(파이썬) TypeError: unsupported operand type(s) for /: 'str' and 'int'](https://springcoming.tistory.com/20) — Author: 봄이오네
+- Tistory: [파이썬 에러 해결 방법: 자주 만나는 오류 총정리!](https://infobox9644.tistory.com/entry/%ED%8C%8C%EC%9D%B4%EC%8D%AC-%EC%97%90%EB%9F%AC-%ED%95%B4%EA%B2%B0-%EB%B0%A9%EB%B2%95-%EC%9E%90%EC%A3%BC-%EB%A7%8C%EB%82%98%EB%8A%94-%EC%98%A4%EB%A5%98-%EC%B4%9D%EC%A0%95%EB%A6%AC) — Author: infobox9644 님의 블로그
+
+Images are taken from the sources above.
