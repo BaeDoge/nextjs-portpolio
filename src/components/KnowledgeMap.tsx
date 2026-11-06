@@ -40,6 +40,9 @@ export default function KnowledgeMap() {
   const [question, setQuestion] = useState("");
   const [sampleIdx, setSampleIdx] = useState(0);
   const [note, setNote] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [answerError, setAnswerError] = useState("");
+  const [asking, setAsking] = useState(false);
 
   // 화면에 보일 때 한 번만 불러옵니다.
   useEffect(() => {
@@ -208,13 +211,84 @@ export default function KnowledgeMap() {
     };
   }, [status]);
 
-  const ask = (q: string) => {
+  const ask = async (q: string) => {
     const text = q.trim();
-    if (!text) return;
-    // 챗봇 위젯이 아직 로드되기 전이면 마운트 직후에 이어서 처리하도록 보관
-    (window as unknown as { __pendingAsk?: string }).__pendingAsk = text;
-    window.dispatchEvent(new CustomEvent("portfolio:ask", { detail: { q: text } }));
+    if (!text || asking) return;
     setQuestion("");
+    setAnswer("");
+    setAnswerError("");
+    setAsking(true);
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [{ role: "user", content: text }],
+          locale: isEn ? "en" : "ko",
+        }),
+      });
+
+      if (!response.ok || !response.body) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || `http_${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let fullText = "";
+      let streamError = "";
+
+      const consume = (event: string) => {
+        const dataLine = event.split(/\\r?\\n/).find((line) => line.startsWith("data: "));
+        if (!dataLine) return;
+        const raw = dataLine.slice(6);
+        if (raw === "[DONE]") return;
+        try {
+          const payload = JSON.parse(raw) as {
+            text?: string;
+            error?: string;
+            sources?: number[];
+            degraded?: boolean;
+          };
+          if (payload.sources) {
+            window.dispatchEvent(new CustomEvent("portfolio:sources", {
+              detail: { ids: payload.sources, degraded: !!payload.degraded },
+            }));
+          }
+          if (payload.error) streamError = payload.error;
+          if (payload.text) {
+            fullText += payload.text;
+            setAnswer(fullText);
+          }
+        } catch {
+          // Ignore malformed SSE frames; a later frame may still contain the answer.
+        }
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split(/\\r?\\n\\r?\\n/);
+        buffer = events.pop() ?? "";
+        for (const event of events) consume(event);
+      }
+      buffer += decoder.decode();
+      if (buffer.trim()) consume(buffer);
+
+      if (!fullText) throw new Error(streamError || "empty_response");
+      if (streamError) setAnswerError(streamError);
+    } catch (error) {
+      const code = error instanceof Error ? error.message : "request_failed";
+      setAnswerError(
+        isEn
+          ? `I couldn't generate an answer (${code}). Please try the chat button.`
+          : `답변을 생성하지 못했어요 (${code}). 우측 하단 챗봇으로도 시도해 주세요.`,
+      );
+    } finally {
+      setAsking(false);
+    }
   };
 
   const legend: [Point["c"], string][] = [
@@ -295,7 +369,7 @@ export default function KnowledgeMap() {
       </div>
 
       <form
-        onSubmit={(e) => { e.preventDefault(); ask(question); }}
+        onSubmit={(e) => { e.preventDefault(); void ask(question); }}
         style={{ display: "flex", gap: 6 }}
       >
         <input
@@ -317,7 +391,7 @@ export default function KnowledgeMap() {
         />
         <button
           type="submit"
-          disabled={!question.trim()}
+          disabled={!question.trim() || asking}
           style={{
             padding: "8px 12px",
             borderRadius: 8,
@@ -330,9 +404,29 @@ export default function KnowledgeMap() {
             color: "#fff",
           }}
         >
-          {isEn ? "Ask" : "질문"}
+          {asking ? (isEn ? "Thinking…" : "답변 중…") : (isEn ? "Ask" : "질문")}
         </button>
       </form>
+
+      {(answer || answerError) && (
+        <div
+          aria-live="polite"
+          style={{
+            padding: "10px 12px",
+            borderRadius: 10,
+            background: "var(--background-overlay, rgba(0,0,0,0.04))",
+            border: "0.5px solid var(--neutral-alpha-medium)",
+            color: "var(--neutral-on-background-strong)",
+            fontSize: 12,
+            lineHeight: 1.65,
+            whiteSpace: "pre-wrap",
+            overflowWrap: "anywhere",
+          }}
+        >
+          {answer || answerError}
+          {answerError && answer && <div style={{ marginTop: 6, color: "var(--neutral-on-background-weak)" }}>{answerError}</div>}
+        </div>
+      )}
     </div>
   );
 }
