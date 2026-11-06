@@ -1,0 +1,60 @@
+---
+title: "[Coding Test] Binary Prefix Divisible By 5"
+publishedAt: "2026-11-06"
+summary: "Determine if prefixes of a binary array are divisible by 5 by sequentially accumulating the values."
+tag: "Algorithm"
+---
+
+## Problem
+
+You are given an array `nums` consisting of binary digits (0 and 1). Let $x_i$ be the value of the subarray `nums[0..i]` interpreted as a binary number. Return a boolean array indicating whether $x_i$ is divisible by 5 for all $i$. For example, if the input is `[1,0,1]`, the binary numbers at each position are 1 (decimal 1), 10 (decimal 2), and 101 (decimal 5). Since only the last value is divisible by 5, the result is `[false, false, true]`.
+
+## Approach
+
+We can think of this as calculating the value as we extend the binary number one digit to the right. When converting a binary number to decimal, the relationship $x_{i} = x_{i-1} \times 2 + \text{nums}[i]$ holds. Since the array length can be up to $10^5$, the decimal integer value can become very large, easily exceeding the range of standard integer types and causing overflow. However, we can use the properties of modular arithmetic to check for divisibility by 5. Since $(A \times 2 + B) \pmod 5 = ((A \pmod 5) \times 2 + B) \pmod 5$, we only need to keep track of the remainder when divided by 5 at each step.
+
+## Solution
+
+Iterate through the array once while maintaining the remainder of the binary number formed so far divided by 5. Update the remainder when the next bit is 0 or 1, then check if it is divisible by 5. This method determines divisibility by 5 using constant space without overflow.
+
+```python
+def prefixesDivBy5(nums: list[int]) -> list[bool]:
+    answer = []
+    remainder = 0
+    
+    for bit in nums:
+        remainder = (remainder * 2 + bit) % 5
+        answer.append(remainder == 0)
+        
+    return answer
+```
+
+Time Complexity: $O(n)$
+Space Complexity: $O(n)$
+
+## Alternative Approaches
+
+Shift operations and bitmasking utilizing the properties of binary numbers are also possible. Looking at the condition for divisibility by 5 in binary, it is not enough to check only the rightmost 2 bits; the entire binary value must be divisible by $101_2$. Since checking only the last bit is insufficient, we can accumulate the value using shift operations and perform a bitwise AND (`&`) with $11111_2$ (decimal 31) to prevent overflow, effectively limiting the value to within 5 bits. Within 5 bits, checking for divisibility by 5 via division will not cause overflow. This method may show slight performance differences by using bitwise operations instead of modular arithmetic, but the complexity is the same.
+
+```python
+def prefixesDivBy5_bitwise(nums: list[int]) -> list[bool]:
+    answer = []
+    val = 0
+    
+    for bit in nums:
+        val = ((val << 1) | bit) & 31
+        answer.append(val % 5 == 0)
+        
+    return answer
+```
+
+Time Complexity: $O(n)$
+Space Complexity: $O(n)$
+
+## Additional Notes
+
+The key to this problem is understanding the associative property of modular arithmetic. The technique of maintaining only the remainder instead of storing large numbers directly in decimal is a pattern frequently used in other problems involving large numbers exceeding $10^9$. Additionally, since the binary number is input from the left, a multiplication operation to double the current value is required at each step, which should be recognized as equivalent to a bitwise shift operation (`<< 1`).
+
+## Sources
+
+- LeetCode: [LeetCode 1018 - Binary Prefix Divisible By 5](https://leetcode.com/problems/binary-prefix-divisible-by-5/)
