@@ -3,7 +3,6 @@
 // 메인 첫 화면의 인물 카드. 첫 진입 파티클 인트로와 3D 틸트만 유지합니다.
 //  - 처음 열리면 사진이 점(파티클)으로 모여들며 완성되고, 자연스럽게 선명한 사진으로 바뀝니다.
 //  - 마우스를 따라 사진이 기울고 빛이 번집니다 (3D 틸트).
-//  - "파티클 모드" 버튼을 누르면 점으로 된 초상화가 마우스에 반응합니다.
 //  - public/hero/loop.mp4 가 있으면 사진 대신 AI로 만든 루프 영상을 재생합니다 (docs/hero-video.md 참고).
 import { useEffect, useRef, useState } from "react";
 
@@ -125,10 +124,9 @@ export default function HeroStage({ src, videoSrc, name, role }: Props) {
       let t0 = performance.now();
 
       const loop = (now: number) => {
+        if (disposed || modeRef.current === "photo") return;
         raf = requestAnimationFrame(loop);
         if (!visible || document.hidden) return;
-        const m = modeRef.current;
-        if (m === "photo") return; // 사진이 보이는 동안은 그리지 않음
 
         const t = (now - t0) / 1000;
         buf.fill(0);
