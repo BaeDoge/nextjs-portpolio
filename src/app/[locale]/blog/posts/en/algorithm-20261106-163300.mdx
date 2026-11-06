@@ -1,0 +1,100 @@
+---
+title: "[Coding Test] Merge Two Binary Trees"
+publishedAt: "2026-11-06"
+summary: "Explains an algorithm to merge two binary trees recursively and iteratively to create a new tree."
+tag: "Algorithm"
+---
+
+## Problem
+
+You are given two binary trees, `root1` and `root2`. When nodes from the two trees overlap, sum their values into the new node value. Otherwise, the non-null node is used as the new tree's node. The merging process starts from the root nodes, and you should return the merged tree. The number of nodes in the trees is in the range of [0, 2000], and the node values are in the range of [-10^4, 10^4].
+
+## Approach
+
+Merge the two trees by simultaneously traversing them from the root. The recursive function returns a new node with the summed values if both nodes exist, returns the existing node if only one exists, and returns null if both are null. This process repeats recursively down to the child nodes.
+
+```python
+# Definition for a binary tree node.
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+def mergeTrees(root1: TreeNode, root2: TreeNode) -> TreeNode:
+    if not root1:
+        return root2
+    if not root2:
+        return root1
+    
+    root1.val += root2.val
+    root1.left = mergeTrees(root1.left, root2.left)
+    root1.right = mergeTrees(root1.right, root2.right)
+    return root1
+```
+
+## Solution
+
+The recursive function returns None if both nodes are null, or uses the existing node if only one exists. If both nodes exist, it updates `root1`'s value by adding `root2`'s value and performs a recursive call on the child nodes. Since this approach performs constant-time operations per node, the time complexity is O(N + M), where N and M are the number of nodes in each tree. The space complexity is O(H + K), where H and K are the heights of the trees, due to the depth of the recursive call stack.
+
+```python
+# Full execution example (simplified)
+def mergeTrees(root1: TreeNode, root2: TreeNode) -> TreeNode:
+    if not root1:
+        return root2
+    if not root2:
+        return root1
+    
+    root1.val += root2.val
+    root1.left = mergeTrees(root1.left, root2.left)
+    root1.right = mergeTrees(root1.right, root2.right)
+    return root1
+```
+
+## Alternative Approaches
+
+The iterative approach uses a stack (DFS) or queue (BFS) to process pairs of nodes. A stack contains pairs of `(node1, node2)`. If one node is null, attach the other node. If both exist, sum their values and add their child node pairs to the stack. This method eliminates the overhead of recursive calls, maintaining a time complexity of O(N + M), but may incur space overhead due to explicit stack usage.
+
+```python
+def mergeTreesIterative(root1: TreeNode, root2: TreeNode) -> TreeNode:
+    if not root1:
+        return root2
+    if not root2:
+        return root1
+        
+    stack = [(root1, root2)]
+    while stack:
+        n1, n2 = stack.pop()
+        if not n1 or not n2:
+            continue
+            
+        n1.val += n2.val
+        
+        if not n1.left:
+            n1.left = n2.left
+        else:
+            stack.append((n1.left, n2.left))
+            
+        if not n1.right:
+            n1.right = n2.right
+        else:
+            stack.append((n1.right, n2.right))
+            
+    return root1
+```
+
+The iterative solution uses an explicit stack, so its space complexity is O(min(N, M)) or proportional to the tree height, similar to the recursive solution.
+
+## Additional Notes
+
+- If one tree is empty, return the other tree as is.
+- Node values can be negative, but the summation logic applies identically.
+- The recursive solution is concise but may hit Python's recursion depth limit with very deep trees. Use the iterative approach in such cases.
+
+<Callout type="tip" title="Efficiency Comparison">
+The recursive solution is concise but may hit Python's recursion depth limit with very deep trees. Use the iterative approach in such cases.
+</Callout>
+
+## Sources
+
+- LeetCode: [LeetCode 617 - Merge Two Binary Trees](https://leetcode.com/problems/merge-two-binary-trees/)
