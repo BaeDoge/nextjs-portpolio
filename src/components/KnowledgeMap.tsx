@@ -240,7 +240,7 @@ export default function KnowledgeMap() {
       let streamError = "";
 
       const consume = (event: string) => {
-        const dataLine = event.split(/\\r?\\n/).find((line) => line.startsWith("data: "));
+        const dataLine = event.split(/\r?\n/).find((line) => line.startsWith("data: "));
         if (!dataLine) return;
         const raw = dataLine.slice(6);
         if (raw === "[DONE]") return;
@@ -270,7 +270,7 @@ export default function KnowledgeMap() {
         const { done, value } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
-        const events = buffer.split(/\\r?\\n\\r?\\n/);
+        const events = buffer.split(/\r?\n\r?\n/);
         buffer = events.pop() ?? "";
         for (const event of events) consume(event);
       }
