@@ -1,12 +1,11 @@
 "use client";
 
-// 메인 첫 화면의 인물 카드.
+// 메인 첫 화면의 인물 카드. 첫 진입 파티클 인트로와 3D 틸트만 유지합니다.
 //  - 처음 열리면 사진이 점(파티클)으로 모여들며 완성되고, 자연스럽게 선명한 사진으로 바뀝니다.
 //  - 마우스를 따라 사진이 기울고 빛이 번집니다 (3D 틸트).
 //  - "파티클 모드" 버튼을 누르면 점으로 된 초상화가 마우스에 반응합니다.
 //  - public/hero/loop.mp4 가 있으면 사진 대신 AI로 만든 루프 영상을 재생합니다 (docs/hero-video.md 참고).
 import { useEffect, useRef, useState } from "react";
-import { useLocale } from "next-intl";
 
 interface Props {
   src: string;
@@ -15,23 +14,12 @@ interface Props {
   role: string;
 }
 
-const CHIPS = [
-  { t: "Python", x: 6, y: 9 },
-  { t: "LLM · RAG", x: 62, y: 6 },
-  { t: "Kubernetes", x: 68, y: 33 },
-  { t: "AWS", x: 4, y: 40 },
-  { t: "FastAPI", x: 64, y: 58 },
-  { t: "Computer Vision", x: 5, y: 66 },
-];
-
-type Mode = "intro" | "photo" | "particles";
+type Mode = "intro" | "photo";
 
 export default function HeroStage({ src, videoSrc, name, role }: Props) {
-  const isEn = useLocale() === "en";
   const stageRef = useRef<HTMLDivElement>(null);
   const tiltRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
   const modeRef = useRef<Mode>("photo");
   const [mode, setModeState] = useState<Mode>("photo");
 
@@ -82,8 +70,6 @@ export default function HeroStage({ src, videoSrc, name, role }: Props) {
     let disposed = false;
     let introTimer: ReturnType<typeof setTimeout> | undefined;
     let visible = true;
-    let mx = -9999;
-    let my = -9999;
 
     const img = new Image();
     img.decoding = "async";
@@ -136,7 +122,6 @@ export default function HeroStage({ src, videoSrc, name, role }: Props) {
 
       const frame = new ImageData(w, h);
       const buf = new Uint32Array(frame.data.buffer);
-      const R = 64;
       let t0 = performance.now();
 
       const loop = (now: number) => {
@@ -150,15 +135,6 @@ export default function HeroStage({ src, videoSrc, name, role }: Props) {
         for (let i = 0; i < n; i++) {
           let ax = (hx[i] - px[i]) * 0.07;
           let ay = (hy[i] - py[i]) * 0.07;
-          const dx = px[i] - mx;
-          const dy = py[i] - my;
-          const d2 = dx * dx + dy * dy;
-          if (d2 < R * R) {
-            const d = Math.sqrt(d2) || 1;
-            const f = (1 - d / R) * 7;
-            ax += (dx / d) * f;
-            ay += (dy / d) * f;
-          }
           // 숨 쉬듯 미세하게 일렁임
           ax += Math.sin(t * 1.6 + hx[i] * 0.04) * 0.04;
           ay += Math.cos(t * 1.4 + hy[i] * 0.04) * 0.04;
@@ -180,29 +156,7 @@ export default function HeroStage({ src, videoSrc, name, role }: Props) {
       };
       raf = requestAnimationFrame(loop);
 
-      const onMove = (e: PointerEvent) => {
-        const r = canvas.getBoundingClientRect();
-        mx = ((e.clientX - r.left) / r.width) * w;
-        my = ((e.clientY - r.top) / r.height) * h;
-      };
-      const onLeave = () => { mx = my = -9999; };
-      const onClick = (e: PointerEvent) => {
-        // 클릭하면 점들이 사방으로 흩어졌다가 다시 모입니다.
-        const r = canvas.getBoundingClientRect();
-        const cx = ((e.clientX - r.left) / r.width) * w;
-        const cy = ((e.clientY - r.top) / r.height) * h;
-        for (let i = 0; i < n; i++) {
-          const dx = px[i] - cx;
-          const dy = py[i] - cy;
-          const d = Math.hypot(dx, dy) || 1;
-          const f = 26 * Math.max(0.15, 1 - d / (Math.max(w, h) * 0.7));
-          vx[i] += (dx / d) * f;
-          vy[i] += (dy / d) * f;
-        }
-      };
-      canvas.addEventListener("pointermove", onMove);
-      canvas.addEventListener("pointerleave", onLeave);
-      canvas.addEventListener("pointerdown", onClick);
+
 
       // 처음에는 파티클이 모여드는 연출 후 사진으로 전환
       if (!reduce) {
@@ -213,14 +167,8 @@ export default function HeroStage({ src, videoSrc, name, role }: Props) {
         }, 2600);
       }
 
-      cleanup = () => {
-        canvas.removeEventListener("pointermove", onMove);
-        canvas.removeEventListener("pointerleave", onLeave);
-        canvas.removeEventListener("pointerdown", onClick);
-      };
     };
 
-    let cleanup = () => {};
     const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting));
     io.observe(canvas);
     if (img.complete && img.naturalWidth) start();
@@ -231,17 +179,16 @@ export default function HeroStage({ src, videoSrc, name, role }: Props) {
       cancelAnimationFrame(raf);
       clearTimeout(introTimer);
       io.disconnect();
-      cleanup();
     };
   }, [src]);
 
-  const showCanvas = mode !== "photo";
+  const showCanvas = mode === "intro";
 
   return (
     <div ref={stageRef} className="hero-stage">
       <div ref={tiltRef} className="hero-tilt">
         {/* 사진 / 영상 */}
-        <img ref={imgRef} src={src} alt={name} className="hero-media" />
+        <img src={src} alt={name} className="hero-media" />
         {videoSrc && (
           <video
             className="hero-media"
@@ -263,26 +210,13 @@ export default function HeroStage({ src, videoSrc, name, role }: Props) {
           style={{
             opacity: showCanvas ? 1 : 0,
             transition: showCanvas ? "opacity 0.2s ease" : "opacity 0.9s ease",
-            pointerEvents: mode === "particles" ? "auto" : "none",
+            pointerEvents: "none",
           }}
           aria-hidden="true"
         />
 
         <div className="hero-glare" aria-hidden="true" />
         <div className="hero-scan" aria-hidden="true" />
-
-        {/* 떠다니는 기술 칩 */}
-        <div aria-hidden="true">
-          {CHIPS.map((c, i) => (
-            <span
-              key={c.t}
-              className="hero-chip"
-              style={{ left: `${c.x}%`, top: `${c.y}%`, animationDelay: `${i * 0.7}s` }}
-            >
-              {c.t}
-            </span>
-          ))}
-        </div>
 
         {/* 이름 오버레이 */}
         <div className="hero-caption">
@@ -291,14 +225,6 @@ export default function HeroStage({ src, videoSrc, name, role }: Props) {
         </div>
       </div>
 
-      <button
-        type="button"
-        className="hero-toggle"
-        aria-pressed={mode === "particles"}
-        onClick={() => setMode(mode === "particles" ? "photo" : "particles")}
-      >
-        <span aria-hidden="true">✦</span> {isEn ? "Particles" : "파티클 모드"}
-      </button>
     </div>
   );
 }
