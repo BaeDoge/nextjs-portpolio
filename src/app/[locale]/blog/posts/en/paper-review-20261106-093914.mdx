@@ -1,0 +1,64 @@
+---
+title: "[Paper Review] A Merging Strategy to Mitigate Interference in Knowledge Editing"
+publishedAt: "2026-11-06"
+summary: "This paper proposes a new framework that merges a MEMIT-based edited model with the original model to prevent performance degradation caused by interference when performing multiple knowledge edits on large language models."
+tag: "Paper Review"
+---
+
+## Paper and Research Background
+
+Large Language Models (LLMs) demonstrate exceptional language understanding and generation capabilities by being pre-trained on vast amounts of data. However, inaccurate information or biased knowledge contained in the training data can undermine the model's reliability. To address this, research on 'Knowledge Editing,' which updates specific knowledge by directly modifying the model's parameters, is actively underway.
+
+Knowledge Editing is efficient because it allows for the modification of specific factual relationships without retraining the model (Fine-tuning). However, in the 'Batch Knowledge Editing' environment where multiple pieces of knowledge are edited simultaneously, a phenomenon called 'Interference' occurs, where the process of modifying one piece of knowledge affects others. This leads to a problem where the model's overall performance collapses.
+
+## Core Problem and Authors' Claims
+
+The authors identify parameter interference as the core cause of performance degradation during multiple knowledge edits. The existing representative editing technique, `MEMIT` (Mass-Editing Memory in a Transformer), can efficiently insert multiple pieces of knowledge; however, as the number of edits increases, conflicts between the model and previously learned knowledge intensify.
+
+To solve this problem, the authors propose a new approach called 'Edit, Then Merge.' Their core claims are as follows:
+1. The interference occurring during multiple edits is a side effect caused by excessive modification of the model's parameters.
+2. Combining the knowledge of the edited model while preserving the information of the Original Model can mitigate parameter interference and maintain model consistency.
+3. Beyond simply inserting knowledge, the process of merging the edited model with the original model can simultaneously improve the accuracy and stability of knowledge editing.
+
+## Proposed Method and Key Mechanisms
+
+The framework proposed in this paper consists of two main stages.
+
+1. **MEMIT-based Batch Editing**: First, a given set of knowledge is applied to the model in batch using the `MEMIT` technique. During this process, the edited model reflects the new knowledge, but some performance degradation may occur due to the aforementioned interference issues.
+2. **Model Merging**: The edited model is merged with the original model according to a specific strategy. The authors aim to restore the accuracy of existing knowledge lost during the editing process and effectively reduce interference between parameters by integrating the edited results based on the original model.
+
+This method operates on the principle of balancing the model's existing knowledge system with new knowledge by harmoniously mixing the already edited model's weights with those of the original model, rather than retraining the entire model.
+
+## Experiments and Main Findings
+
+The authors report that the proposed framework demonstrates higher accuracy and stability in a multiple editing environment compared to using the existing `MEMIT` technique alone.
+
+- **Accuracy**: The reflection rate of edited knowledge in a multiple editing environment was measured to be higher than with existing methods.
+- **Stability**: The phenomenon of performance collapse in the model occurring during the editing process was mitigated, allowing for better maintenance of consistency between the model's general language processing abilities and the edited knowledge it previously possessed.
+
+*Note: This review was written based on the abstract. Specific dataset names, detailed settings of comparison models, and quantitative tables regarding accuracy scores included in the full paper cannot be confirmed from the abstract. For detailed experimental results, please refer to the original paper.*
+
+## Related Code and Reproduction
+
+Upon checking the official landing page and DOI of this paper, no official code repository or open-source implementation provided by the authors was found. Therefore, it is currently impossible to verify methods for directly installing or running this framework in a specific Python environment. Generally, reproducing such research would require obtaining the original `MEMIT` implementation (primarily based on the `Transformer` library) and then applying a custom implementation of the merging algorithm proposed by the authors at the weight operation stage. If an official repository is released in the future, the `README.md` of that repository should be consulted to check the dependency package installation and dataset preparation processes. Currently, the stage involves directly designing the model weight merging logic according to the logical flow presented in the paper.
+
+## Technical Implications and Limitations
+
+**Technical Implications**:
+This research has practical value in that it attempts to solve the chronic problem of 'interference' in knowledge editing through the technique of model merging. Specifically, presenting a framework that can inject new knowledge while maintaining the stability of existing models without the cost of retraining can be a useful strategy in service environments where continuous updates of LLMs are required.
+
+**Limitations and Future Research**:
+1. **Optimization of Merging Strategy**: It appears that the ratio and method of merging the original model with the edited model are key to performance, but the detailed algorithm for this was not specified in this abstract.
+2. **Generalizability**: Verification is needed to see if the same performance improvements appear when combined with other editing techniques besides `MEMIT` (e.g., ROME).
+3. **Knowledge Conflicts**: In-depth analysis is required for subsequent research on how the merging strategy operates when editing completely conflicting knowledge.
+
+---
+**Source and References**
+- Original Paper: [https://doi.org/10.5626/jok.2026.53.10.1061](https://doi.org/10.5626/jok.2026.53.10.1061)
+- Publication Date: 2026-10-27
+- Authors: Geon Park, Juoh Sun, Seonghee Lee, Harksoo Kim
+- Journal: Journal of KIISE
+
+## Sources
+
+- OpenAlex / 논문 원문: [Edit, Then Merge: Mitigating Interference in Batch Knowledge Editing](https://doi.org/10.5626/jok.2026.53.10.1061) — Author: Geon Park, Juoh Sun, Seonghee Lee, Harksoo Kim
