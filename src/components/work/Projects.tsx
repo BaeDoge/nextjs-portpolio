@@ -10,7 +10,7 @@ interface ProjectsProps {
 
 export async function Projects({ range, exclude }: ProjectsProps) {
   const locale = await getLocale();
-  let allProjects = getPostsByLocale(["src", "app", "[locale]", "work", "projects"], locale);
+  let allProjects = getPostsByLocale("work", locale);
 
   // Exclude by slug (exact match)
   if (exclude && exclude.length > 0) {
