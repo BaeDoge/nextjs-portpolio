@@ -7,7 +7,8 @@
     "build": "next build",
     "biome-write": "npx @biomejs/biome format --write .",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:groq": "node --env-file=.env scripts/test-groq.mjs"
   },
   "engines": {
     "node": "24.x"
@@ -18,7 +19,7 @@
     "@once-ui-system/core": "1.8.4",
     "@supabase/supabase-js": "2.101.1",
     "@vercel/analytics": "2.0.1",
-    "@xenova/transformers": "2.17.2",
+    "@huggingface/transformers": "4.3.2",
     "classnames": "2.5.1",
     "cookie": "1.0.2",
     "gray-matter": "4.0.3",
