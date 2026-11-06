@@ -42,7 +42,7 @@ export default function ThemeInitializer({ config }: { config: ThemeConfig }) {
       console.error("Failed to initialize theme:", error);
       root.setAttribute("data-theme", "dark");
     }
-  }, [config]);
+  }, [config.brand, config.accent, config.neutral, config.solid, config["solid-style"], config.border, config.surface, config.transition, config.scaling, config["viz-style"]]);
 
   return null;
 }
