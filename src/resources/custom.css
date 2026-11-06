@@ -239,7 +239,6 @@
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
   pointer-events: none;
 }
-.hero-toggle:focus-visible,
 .hero-repo:focus-visible {
   outline: 2px solid var(--brand-solid-strong, #4f7cff);
   outline-offset: 2px;
