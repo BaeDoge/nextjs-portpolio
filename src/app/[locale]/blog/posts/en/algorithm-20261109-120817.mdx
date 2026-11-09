@@ -1,0 +1,100 @@
+---
+title: "[Coding Test] Implement String Addition"
+publishedAt: "2026-11-09"
+summary: "An algorithm that adds two numbers represented as strings by iterating in reverse and handling carries without using BigInteger or direct integer conversion."
+tag: "Algorithm"
+---
+
+## Problem
+
+Two non-negative integers, `num1` and `num2`, are given as strings. You must return their sum as a string.
+
+Using large integer processing libraries (e.g., `BigInteger`) or converting the inputs directly to integers for arithmetic is prohibited.
+
+*   Constraints: The length of each string can be up to 10^4, and there are no leading zeros except for the number '0' itself.
+
+## Approach
+
+You must apply the standard hand-addition technique. Start from the right end (ones place) and move left, adding digits at each position.
+
+*   **Reverse Iteration**: Start from the last index of both strings and move down to 0.
+*   **Digit Summation**: Extract the digits at each position, sum them, and manage the `carry`.
+*   **Result Storage**: Append the calculated digit to a temporary list.
+*   **Final Combination**: After all operations, reverse the stored results to form the final string.
+
+<Callout type="tip" title="Note">Since string indexing starts at 0, you must decrement the index using `index--` (or `index -= 1`) to move from the end to the beginning.</Callout>
+
+## Solution
+
+Add the two strings from the end simultaneously, using the `carry` variable to handle carries to the next position.
+
+*   Loop Condition: Iterate up to the length of the longer string, continuing even if there is a remaining carry.
+*   Digit Extraction: If the index is out of the string's range, treat it as 0.
+*   Summation and Carry: Calculate the current digit as `(digit1 + digit2 + carry) % 10` and the next `carry` as `(digit1 + digit2 + carry) // 10`.
+
+```python
+def addStrings(num1: str, num2: str) -> str:
+    result = []
+    carry = 0
+    i, j = len(num1) - 1, len(num2) - 1
+
+    while i >= 0 or j >= 0 or carry:
+        digit1 = int(num1[i]) if i >= 0 else 0
+        digit2 = int(num2[j]) if j >= 0 else 0
+
+        total = digit1 + digit2 + carry
+        carry = total // 10
+        result.append(str(total % 10))
+
+        i -= 1
+        j -= 1
+
+    return "".join(reversed(result))
+```
+
+*   Time Complexity: O(max(N, M)) — Iterates through the length of the longer string.
+*   Space Complexity: O(max(N, M)) — The size of the list required to store the result.
+
+## Alternative Approaches
+
+The core algorithm logic remains the same, but you can use ASCII code differences instead of `int()` to extract digits.
+
+*   **ASCII Conversion**: Convert characters to integers using `ord(num1[i]) - ord('0')`.
+*   **Same Addition**: Apply the same addition logic using `digit1`, `digit2`, and `carry`, and append the result to the string.
+
+<Compare>
+<ComparePanel title="Existing (using int())" tone="good">The standard method in Python to convert characters to integers using `int()`.</ComparePanel>
+<ComparePanel title="Proposed (using ord())" tone="neutral">An alternative method that reduces conversion overhead by directly using ASCII code differences.</ComparePanel>
+</Compare>
+
+```python
+def addStrings(num1: str, num2: str) -> str:
+    result = []
+    carry = 0
+    i, j = len(num1) - 1, len(num2) - 1
+
+    while i >= 0 or j >= 0 or carry:
+        digit1 = ord(num1[i]) - ord('0') if i >= 0 else 0
+        digit2 = ord(num2[j]) - ord('0') if j >= 0 else 0
+
+        total = digit1 + digit2 + carry
+        carry = total // 10
+        result.append(str(total % 10))
+
+        i -= 1
+        j -= 1
+
+    return "".join(reversed(result))
+```
+
+## Additional Notes
+
+Since the string length constraint is up to 10^4, an $O(N^2)$ algorithm is not suitable. You must solve this in a single pass.
+
+*   **Carry Handling**: If `carry` is 1 at the end of the final loop, the loop runs one more time to append '1'.
+*   **Commonality**: All string addition problems follow the same logic.
+*   **Extensibility**: Similar structures apply when extending to other operations such as handling signs or multiplication.
+
+## Sources
+
+- LeetCode: [LeetCode 415 - Add Strings](https://leetcode.com/problems/add-strings/)
