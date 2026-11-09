@@ -1,0 +1,64 @@
+---
+title: "[Coding Test] Valid Phone Number Filtering"
+publishedAt: "2026-11-09"
+summary: "This note explains how to extract valid phone numbers from a file using `grep` and Bash regular expressions."
+tag: "Algorithm"
+---
+
+## Problem
+
+`file.txt` contains one phone number per line. You need to write a Bash script that prints only valid phone numbers from this file. A valid phone number must follow one of the following two formats:
+1. `(xxx) xxx-xxxx`
+2. `xxx-xxx-xxxx`
+
+Here, `x` represents a digit. Each line contains no leading or trailing whitespace, and lines that do not match the specified formats should be ignored.
+
+## Approach
+
+Since this problem requires line-by-line text filtering, using the `grep` command with regular expressions is appropriate. The `grep -E` option enables extended regular expressions, allowing easy handling of the `|` (OR condition). Because there are two valid phone number formats, we combine the regular expressions for each format into a single pattern. To ensure exact matching of the line boundaries and prevent partial matches with other characters, we use `^` and `$`.
+
+## Solution
+
+Use `grep -E` to apply a regular expression that matches both formats simultaneously.
+
+```bash
+grep -E '^(\([0-9]{3}\) [0-9]{3}-[0-9]{4}|[0-9]{3}-[0-9]{3}-[0-9]{4})$' file.txt
+```
+
+This command reads `file.txt` and outputs only the lines that match the regular expression pattern. The pattern starts with `^`, matches either the `(xxx) xxx-xxxx` or `xxx-xxx-xxxx` format, and ends with `$`.
+
+- **Time Complexity**: O(N), where N is the total number of lines in the file, as each line is scanned once.
+- **Space Complexity**: O(1), as no additional memory is used beyond the buffer for the current line.
+
+## Alternative Approaches
+
+You can use `grep -P` to leverage Perl Compatible Regular Expressions (PCRE) for syntactic convenience.
+
+```bash
+grep -P '^(\(\d{3}\) \d{3}-\d{4}|\d{3}-\d{3}-\d{4})$' file.txt
+```
+
+- **Difference**: `grep -P` allows the use of `\d` to represent digits, improving regular expression readability. Additionally, it may handle special characters inside character classes (`[]`) differently than `grep -E`.
+- **Disadvantage**: `grep -P` is not supported on all systems. `grep -E` is standard on most POSIX-compliant systems, making it the safer choice for this problem.
+
+## Additional Notes
+
+A key point when using regular expressions is to clearly define the pattern boundaries.
+
+<Callout type="warning" title="Regular Expression Boundary Constraints">
+If you do not enforce full-line matching using `^` and `$`, longer strings containing the same pattern (e.g., `abc(123) 456-7890xyz`) might be matched as partial matches. Always specify the start and end explicitly.
+</Callout>
+
+Additionally, parentheses `(` and `)` are reserved special characters in regular expressions for grouping. To match literal parentheses, they must be escaped (`\(` and `\)`)
+
+```bash
+# Parentheses for (xxx) format are special characters and must be escaped
+\(
+\)
+```
+
+If `file.txt` does not exist or lacks read permissions, `grep` will output an error and exit. In actual deployment scripts, you may want to add a check to verify the file's existence.
+
+## Sources
+
+- LeetCode: [LeetCode 193 - Valid Phone Numbers](https://leetcode.com/problems/valid-phone-numbers/)
