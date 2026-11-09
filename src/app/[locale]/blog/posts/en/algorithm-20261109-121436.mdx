@@ -1,0 +1,69 @@
+---
+title: "[Coding Test] Sorted List to BST Conversion"
+publishedAt: "2026-11-09"
+summary: "This note explains an algorithm to convert a sorted linked list into a height-balanced binary search tree."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given a singly linked list where the head is sorted in ascending order, convert it into a height-balanced binary search tree. The tree must be height-balanced, meaning the height difference between the left and right subtrees of any node is at most 1. The number of nodes is between 0 and 2×10⁴, the values are in the range -10⁵ to 10⁵, and an empty list should return None.
+
+## Approach
+
+First compute the length of the list. Then define a recursive function build(left, right) that constructs the tree using index ranges. Choose the middle index mid = (left + right) // 2 as the root, recursively build the left subtree, create the root node from the current list node, advance the list pointer, then recursively build the right subtree. By tracking the current node with an instance variable self.current, the list is consumed in inorder order, achieving O(n) time.
+
+## Solution
+
+```python
+# Definition for singly-linked list.
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+
+# Definition for a binary tree node.
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+class Solution:
+    def sortedListToBST(self, head: ListNode) -> TreeNode:
+        # calculate length
+        size = 0
+        cur = head
+        while cur:
+            size += 1
+            cur = cur.next
+        
+        self.current = head  # pointer to the current list node
+        
+        def build(left: int, right: int) -> TreeNode:
+            if left > right:
+                return None
+            mid = (left + right) // 2
+            left_child = build(left, mid - 1)
+            root = TreeNode(self.current.val)
+            root.left = left_child
+            self.current = self.current.next
+            root.right = build(mid + 1, right)
+            return root
+        
+        return build(0, size - 1)
+```
+
+Time complexity is O(n), and the recursion stack uses O(log n) space. The self.current variable uses O(1) extra space, so the overall space complexity is O(log n).
+
+## Alternative Approaches
+
+Copying the list values into an array and then using index-based recursion simplifies the implementation but requires O(n) extra space. Alternatively, using slow and fast pointers to find the middle node each time yields an intuitive approach but results in O(n log n) time complexity. These alternatives can be chosen based on implementation convenience and the trade-off between time and space.
+
+## Additional Notes
+
+If the list is empty (head is None), the function returns None immediately. Even with up to 2×10⁴ nodes, the tree depth is about 15, so Python's default recursion limit of 1000 will not cause a stack overflow. Using a nonlocal variable instead of self.current provides the same behavior.
+
+## Sources
+
+- LeetCode: [LeetCode 109 - Convert Sorted List to Binary Search Tree](https://leetcode.com/problems/convert-sorted-list-to-binary-search-tree/)
