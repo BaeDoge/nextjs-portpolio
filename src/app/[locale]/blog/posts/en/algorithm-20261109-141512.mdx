@@ -1,0 +1,97 @@
+---
+title: "[Coding Test] Maximum Stock Profit"
+publishedAt: "2026-11-09"
+summary: "Calculate the maximum profit achievable from a single buy-sell transaction given an array of stock prices."
+tag: "Algorithm"
+---
+
+## Problem
+
+The `prices` array represents the stock price on each day. You must buy the stock once and sell it on a later day to maximize profit. The buy day must strictly precede the sell day. If no profit can be made, return 0.
+
+```python
+# Example 1
+Input: prices = [7, 1, 5, 3, 6, 4]
+Output: 5
+# Buy at 1, sell at 6 (Profit 5)
+
+# Example 2
+Input: prices = [7, 6, 4, 3, 1]
+Output: 0
+# Prices decrease every day, so no trade is possible
+```
+
+## Approach
+
+To maximize profit, you should buy at the lowest previous price and sell at the highest subsequent price. It is efficient to iterate through the array from left to right, keeping track of the minimum price encountered so far and updating the maximum profit by calculating the difference between the current price and the minimum price.
+
+```python
+min_price = float('inf')
+max_profit = 0
+for price in prices:
+    min_price = min(min_price, price)
+    max_profit = max(max_profit, price - min_price)
+```
+
+## Solution
+
+Iterate through the array while maintaining `min_price` as the lowest stock price seen. The difference between each day's price and `min_price` represents potential profit, and the maximum of these differences determines the maximum profit. This approach is very fast because it scans the entire array only once.
+
+```python
+class Solution:
+    def maxProfit(self, prices: List[int]) -> int:
+        min_price = float('inf')
+        max_profit = 0
+        for price in prices:
+            if price < min_price:
+                min_price = price
+            elif price - min_price > max_profit:
+                max_profit = price - min_price
+        return max_profit
+```
+
+Time Complexity: O(n) (One pass through the array)
+Space Complexity: O(1) (Only two variables used)
+
+## Alternative Approaches
+
+You can solve this problem using a Dynamic Programming (DP) approach. Let `dp[i]` be the maximum profit achievable up to day `i`. `dp[i]` is calculated as the maximum of `dp[i-1]` (maximum profit up to the previous day) and `prices[i] - min_price` (profit if sold on day `i`). This approach accumulates the maximum profit for each day by iterating through the array.
+
+```python
+class Solution:
+    def maxProfit(self, prices: List[int]) -> int:
+        if not prices:
+            return 0
+        
+        # dp[i] represents the maximum profit up to day i
+        dp = [0] * len(prices)
+        min_price = prices[0]
+        
+        for i in range(1, len(prices)):
+            min_price = min(min_price, prices[i])
+            dp[i] = max(dp[i - 1], prices[i] - min_price)
+            
+        return dp[-1]
+```
+
+Time Complexity: O(n) (One pass through the array)
+Space Complexity: O(n) (Additional space needed to store the dp array)
+
+<Compare>
+<ComparePanel title="Single Pass (Main Solution)" tone="good">Space complexity is O(1), avoiding unnecessary array storage by tracking only the maximum profit.</ComparePanel>
+<ComparePanel title="Dynamic Programming (Alternative)" tone="bad">While time complexity is the same, it requires O(n) additional space to store the dp array.</ComparePanel>
+</Compare>
+
+## Additional Notes
+
+The length of the input array is up to $10^5$. A brute-force approach using two nested loops has a time complexity of $O(n^2)$, which will result in a time limit exceeded error at this scale. Therefore, an approach with O(n) time complexity is mandatory.
+
+<StatGrid>
+<Stat value="O(n)" label="Time Complexity" detail="Solved with a single loop" />
+<Stat value="O(1)" label="Space Complexity" detail="Only a constant number of variables needed" />
+<Stat value="10^5" label="Input Length Limit" detail="O(n^2) algorithms are unsuitable" />
+</StatGrid>
+
+## Sources
+
+- LeetCode: [LeetCode 121 - Best Time to Buy and Sell Stock](https://leetcode.com/problems/best-time-to-buy-and-sell-stock/)
