@@ -1,0 +1,97 @@
+---
+title: "[Troubleshooting] UnboundLocalError local variable referenced before assignment"
+publishedAt: "2026-11-09"
+summary: "This note explains the cause and solution for an error that occurs when a local variable is not initialized due to an unexecuted conditional statement."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+If a conditional statement inside a function evaluates to False and the variable assignment statement is not executed, an error occurs when referencing an undefined local variable in the `return` statement.
+
+<Callout type="warning" title="Error situation">
+UnboundLocalError: local variable 'T' referenced before assignment
+</Callout>
+
+The following code executes normally on the first call when the condition is satisfied, but on the second call, the condition is not satisfied, so the variable `T` is not created, resulting in an error. The external `tfile` object is opened outside the function.
+
+```python
+tfile = open("/home/path/to/file",'r')
+
+def temp_sky(lreq, breq):
+    for line in tfile:
+        data = line.split()
+        # If the condition is not satisfied, T = data[2] is not executed
+        if abs(float(data[0]) - lreq) <= 0.1 and abs(float(data[1]) - breq) <= 0.1:
+            T = data[2]
+    return T
+
+print(temp_sky(60, 60))
+print(temp_sky(10, -10))  # UnboundLocalError occurs
+```
+
+## Cause
+
+Python treats a variable as a **local variable** and generates bytecode if there is any value assignment statement (e.g., `T = ...`) in the function body.
+
+This scope determination is made at the time the function is compiled (bytecode generation). Therefore, if the `T = data[2]` statement is not executed due to a failed conditional statement, `T` remains an uninitialized local variable.
+
+When the function execution reaches `return T`, it attempts to read the still-uninitialized local variable `T`, resulting in an `UnboundLocalError`.
+
+## Solution
+
+Initialize the variable with a default value (e.g., `None`) outside the conditional statement so that the variable `T` always exists, regardless of whether the condition is satisfied.
+
+```python
+def temp_sky(lreq, breq):
+    T = None  # Initialize the variable first to prevent unassigned state
+    for line in tfile:
+        data = line.split()
+        if abs(float(data[0]) - lreq) <= 0.1 and abs(float(data[1]) - breq) <= 0.1:
+            T = data[2]
+    return T
+```
+
+![Solution screenshot](/blogs/unboundlocalerror-local-variable-referenced-before-assignmen-1.png)
+
+## Alternative Solutions
+
+A method that does not directly reference the variable in the `return` statement, but explicitly handles the value to return when the conditional statement fails.
+
+<Compare>
+<ComparePanel title="Variable initialization (existing)" tone="good">
+Resolves the scope issue by declaring the variable in advance, but may cause unintended behavior when the return value is None.
+</ComparePanel>
+<ComparePanel title="Conditional return (suggested)" tone="good">
+Returns immediately when the condition is satisfied without variable assignment, fundamentally avoiding the initialization issue.
+</ComparePanel>
+</Compare>
+
+```python
+def temp_sky(lreq, breq):
+    for line in tfile:
+        data = line.split()
+        if abs(float(data[0]) - lreq) <= 0.1 and abs(float(data[1]) - breq) <= 0.1:
+            return data[2]  # Return immediately when condition is satisfied
+    return None  # Return None if condition is not satisfied
+```
+
+## Additional Notes
+
+Assigning a value to a variable inside a function automatically makes it a local variable, so there is no need to use `global` or `nonlocal` unless you intend to modify an external global variable.
+
+In practice, it is recommended to avoid global state dependencies and use pure function structures that pass values through function arguments or return values.
+
+<Steps>
+<Step title="Check for errors">Check if there are any conditions in the function where the assignment statement is not executed.</Step>
+<Step title="Change initialization location">Move the variable declaration outside the conditional statement or set a default value to prevent unassigned states.</Step>
+<Step title="Improve return structure">Return immediately when the condition is satisfied to fundamentally avoid variable scope issues.</Step>
+</Steps>
+
+## Sources
+
+- StackOverflow: ["UnboundLocalError: local variable referenced before assignment" after an if statement](https://stackoverflow.com/questions/15367760/unboundlocalerror-local-variable-referenced-before-assignment-after-an-if-sta) — Author: user1958508(question), shx2(answer) (CC BY-SA)
+- Tistory: [[파이썬][Error] 019. UnboundLocalError - local variable 'x' referenced before assignment](https://about-ittt.tistory.com/346) — Author: about_IT
+- Tistory: [UnboundLocalError: local variable referenced before assignment: 원인과 해결 방법](https://ksmk.tistory.com/entry/UnboundLocalError-local-variable-referenced-before-assignment-%EC%9B%90%EC%9D%B8%EA%B3%BC-%ED%95%B4%EA%B2%B0-%EB%B0%A9%EB%B2%95) — Author: IT 잇슈 | 칼퇴를 부르는 실무 치트키
+
+Images are taken from the sources above.
