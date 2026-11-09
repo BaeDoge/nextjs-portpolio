@@ -1,0 +1,110 @@
+---
+title: "[Troubleshooting] Fixing IndexError in Index Assignment"
+publishedAt: "2026-11-09"
+summary: "This note explains the cause of `IndexError` when assigning values to an empty list by index and provides solutions using `.append()`, pre-allocation, and alternatives."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+An `IndexError` occurs when attempting to assign a value directly to a list using an index on a list that has been initialized but contains no elements. Although the list appears to exist, it is actually empty and has no allocated slots for elements.
+
+```python
+xs = list()
+for i in range(0, 9):
+   xs[i] = i
+```
+
+Execution result:
+
+```
+IndexError: list assignment index out of range
+```
+
+<Callout type="warning" title="Error Scenario">
+Creating an empty list with `list()` or `[]` results in a list with no elements. Attempting to access or assign a value to an arbitrary index on such a list will trigger a runtime error.
+</Callout>
+
+## Cause
+
+Python lists are dynamic arrays and do not have a fixed capacity. You cannot assign values to indices that do not yet exist; the list must already contain elements at those positions to allow access. Since indexing starts at 0, a list of length 10 must have at least 10 elements pre-existing before you can access index 9.
+
+## Solution
+
+To add elements to a list, you must use the `.append()` method. This method adds a new element to the end of the list, safely expanding the list without causing index assignment errors.
+
+```python
+xs = []
+for i in range(9):
+    xs.append(i)
+
+print(xs)  # [0, 1, 2, 3, 4, 5, 6, 7, 8]
+```
+
+<Steps>
+<Step title="Create an empty list">
+Declare an empty list using `xs = []` or `xs = list()`.
+</Step>
+<Step title="Call the .append() method">
+Inside the loop, call `xs.append(i)` to sequentially add elements.
+</Step>
+</Steps>
+
+![Solution screenshot](/blogs/indexerror-1.png)
+
+## Alternative Solutions
+
+If you need to create a list of a predetermined size and assign values by index, you must pre-fill the list with placeholder values of that size. Using the list multiplication operator to create a list initialized with `None` (or another dummy value) allows for index assignment.
+
+```python
+# Create a list of size 10 (all elements are None)
+xs = [None] * 10
+
+# Values can now be assigned to existing elements
+xs[1] = 5
+
+print(xs)  # [None, 5, None, None, None, None, None, None, None, None]
+```
+
+<Callout type="tip" title="Caution">
+`[None] * 10` creates a list of length 10. Therefore, valid indices are from 0 to 9. Assigning to `xs[10]` or `xs[15]` will still result in an `IndexError`.
+</Callout>
+
+## Additional Notes
+
+List creation and initialization can be performed using various methods.
+
+1. **List Comprehension**: This is the most concise method for generating regular data.
+
+```python
+xs = [x**2 for x in range(9)]
+# Result: [0, 1, 4, 9, 16, 25, 36, 49, 64]
+```
+
+2. **Using range Objects**: If the goal is a numeric sequence, you can use `range` directly or convert it explicitly without creating a separate list via loop assignment.
+
+```python
+# Python 3
+xs = list(range(10))
+# Result: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+```
+
+3. **Using a Dictionary**: If you need a key-value pair storage structure similar to index assignment, consider using a dictionary instead of a list.
+
+```python
+xs = {}
+for i in range(9):
+    xs[i] = i
+```
+
+<Checklist>
+<ul><li>Do not assign by index to an empty list</li><li>Use .append() to add elements</li><li>Use [None] * N when pre-allocating size</li><li>Recommend list comprehensions for regular data</li></ul>
+</Checklist>
+
+## Sources
+
+- StackOverflow: [Create an empty list with certain size in Python](https://stackoverflow.com/questions/10712002/create-an-empty-list-with-certain-size-in-python) — Author: Ronaldinho Learn Coding(question), varunl(answer) (CC BY-SA)
+- Tistory: [Python 파이썬에서 특정 크기의 빈 리스트를 만드는 방법, Create an empty list with certain size in Python](https://stcodelab.tistory.com/entry/Python-%ED%8C%8C%EC%9D%B4%EC%8D%AC%EC%97%90%EC%84%9C-%ED%8A%B9%EC%A0%95-%ED%81%AC%EA%B8%B0%EC%9D%98-%EB%B9%88-%EB%A6%AC%EC%8A%A4%ED%8A%B8%EB%A5%BC-%EB%A7%8C%EB%93%9C%EB%8A%94-%EB%B0%A9%EB%B2%95) — Author: 독학코딩
+- Tistory: [[Python] 파이썬의 기초](https://backenddeveloper.tistory.com/133) — Author: Wooah's Engineering & Data Science Lab
+
+Images are taken from the sources above.
