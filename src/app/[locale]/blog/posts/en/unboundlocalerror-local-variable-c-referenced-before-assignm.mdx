@@ -1,0 +1,110 @@
+---
+title: "[Troubleshooting] UnboundLocalError: local variable 'c' referenced before assignment"
+publishedAt: "2026-11-09"
+summary: "Explains the cause of UnboundLocalError when assigning to a global variable inside a function and provides solutions using the `global` keyword or passing arguments."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+An error occurs when you declare a global variable outside a function and attempt to reference it for calculation inside the function. Even if there is no assignment statement for the variable, Python treats it as a local variable as soon as it is read within the function, leading to an attempt to access it before initialization.
+
+<Callout type="warning" title="Error Situation">
+UnboundLocalError: local variable 'c' referenced before assignment
+</Callout>
+
+The minimal reproducible code that triggers this error is as follows:
+
+```python
+c = 1
+
+def f(n):
+    print(c + n)  # Works correctly
+
+def g(n):
+    c = c + n     # Error occurs when trying to read 'c'
+
+f(1)  # => 2
+g(1)  # => UnboundLocalError occurs
+```
+
+## Cause
+
+According to Python's scoping rules, if a function contains a statement that performs an assignment operation on a variable, Python treats that variable as a local variable to the function. This determination is made at compile time or at the start of execution.
+
+Because the statement `c = c + n` exists inside function `g`, Python determines that `c` is declared as a local variable. However, at the time the right-hand side `c` is evaluated, the local variable `c` has not yet been assigned a value, resulting in an error about referencing an unassigned local variable. In contrast, function `f` does not have an assignment statement for variable `c`, so it correctly references the global variable `c`.
+
+## Solution
+
+If you want to read and update a global variable inside a function, you must explicitly declare the variable as global using the `global` keyword. This guides Python to look for the variable in the global scope rather than treating it as a local variable.
+
+<Compare>
+<ComparePanel title="Existing (Error)" tone="bad">
+def g(n):
+    c = c + n
+</ComparePanel>
+<ComparePanel title="Proposed (Using global keyword)" tone="good">
+def g(n):
+    global c
+    c = c + n
+</ComparePanel>
+</Compare>
+
+The corrected code is as follows. Declaring `global c` at the beginning of the function allows it to run without errors.
+
+```python
+c = 1
+
+def g(n):
+    global c
+    c = c + n
+
+g(1)  # => 2
+```
+
+![Solution screenshot](/blogs/unboundlocalerror-local-variable-c-referenced-before-assignm-1.png)
+
+## Alternative Solutions
+
+You can avoid modifying global variables by passing values as arguments to the function and returning the result. This method prevents scope confusion entirely by not altering global state.
+
+```python
+def g(n, c):
+    return c + n
+
+c = 1
+result = g(1, c)  # => 2
+```
+
+## Additional Notes
+
+Variable scope confusion is a common issue in Python development. When using global variables, it is good practice to explicitly use the `global` keyword to clarify your intent.
+
+Additionally, for mutable objects such as lists or dictionaries, modifying only the elements (e.g., using `append`, `update`, etc.) without an assignment statement is not considered changing the global variable itself, so modification is possible without a `global` declaration. This is because calling a method on a mutable object is not the same as assigning a new value to the variable itself.
+
+```python
+a = ["tom", "jerry", "mike"]
+jjak = []
+
+def findjjak(lst):
+    for i in range(0, len(lst) - 1):
+        for j in range(i + 1, len(lst)):
+            jjak.append(a[i] + '-' + a[j])  # Adds elements to the global list
+
+findjjak(a)
+print(jjak)  # => ['tom-jerry', 'tom-mike', 'jerry-mike']
+```
+
+However, for immutable objects such as integers, you must use the `global` keyword or the argument/return pattern.
+
+<Callout type="info" title="Note">
+In Python, even if a variable is declared outside a function, it becomes a local variable rather than a global variable if the intention inside the function is to reassign its value.
+</Callout>
+
+## Sources
+
+- StackOverflow: [Python scope: "UnboundLocalError: local variable 'c' referenced before assignment"](https://stackoverflow.com/questions/146359/python-scope-unboundlocalerror-local-variable-c-referenced-before-assignmen) — Author: all-too-human(question), Greg Hewgill(answer) (CC BY-SA)
+- Tistory: [파이썬의 모든 변수는 지역변수이다.](https://knowledgeforengineers.tistory.com/25) — Author: LiDARism
+- Tistory: [[파이썬] 파이썬 에러 UnboundLocalError: local variable referenced before assignment](https://korbillgates.tistory.com/98) — Author: 생물정보학자의 블로그
+
+Images are taken from the sources above.
