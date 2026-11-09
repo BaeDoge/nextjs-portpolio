@@ -1,0 +1,111 @@
+---
+title: "[Troubleshooting] TypeError from redefining the built-in str function"
+publishedAt: "2026-11-09"
+summary: "Explains the cause and resolution of the TypeError that occurs when the built-in str function is reassigned as a global variable."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+Using a global variable named `str` to store a string causes a `TypeError` on the second call.
+
+The minimal code to reproduce the error is as follows.
+
+```python
+def example(parameter):
+    global str
+    str = str(parameter)
+    print(str)
+
+example(1)  # Runs successfully
+example(2)  # TypeError occurs
+```
+
+The first call succeeds, but the second call outputs an error indicating that the `str` object is not callable.
+
+<Callout type="warning" title="Error">
+
+```python
+TypeError: 'str' object is not callable
+```
+
+</Callout>
+
+## Cause
+
+`str` is a built-in function in Python that converts objects to strings.
+
+The `global str` declaration and the assignment `str = str(parameter)` overwrite the built-in `str` function with a local variable in the global namespace.
+
+During the first call, `str(parameter)` invokes the built-in function to create a string and stores the result in the `str` variable.
+
+On the second call, `str(parameter)` attempts to call the `str` variable, which has already been redefined as a string value.
+
+Since string objects are not callable, Python raises a `TypeError`.
+
+## Solution
+
+Change the local variable name to avoid conflict with the built-in function.
+
+Also, remove the `global` declaration to avoid polluting the global namespace.
+
+<Steps>
+<Step title="Rename variable">
+Use a meaningful variable name such as `result` or `msg` instead of `str`.
+</Step>
+<Step title="Remove global declaration">
+Since the function does not reference a global variable, delete the `global` keyword.
+</Step>
+</Steps>
+
+The corrected code is as follows.
+
+```python
+def example(parameter):
+    result = str(parameter)
+    print(result)
+
+example(1)  # Runs successfully
+example(2)  # Runs successfully
+```
+
+## Alternative Solutions
+
+If you have accidentally redefined `str` in an already running interpreter session, you can recover without restarting the interpreter.
+
+Import the `builtins` module and reassign the original `str` built-in function.
+
+```python
+import builtins
+str = builtins.str
+```
+
+After executing this command, `str` behaves again as the built-in function.
+
+This works because `str` is originally imported from the `builtins` module.
+
+## Additional Notes
+
+<Callout type="tip" title="Avoid using built-in function names">
+It is advisable not to use names of built-in functions or types such as `str`, `list`, `dict`, `int` as variable names.
+</Callout>
+
+Similar errors occur with `list = list(...)` or `dict = dict(...)` due to the same reason.
+
+Develop a habit of avoiding variable name conflicts to prevent overwriting built-in functions.
+
+```python
+# Incorrect example
+list = [1, 2, 3]
+print(list())  # TypeError: 'list' object is not callable
+
+# Correct example
+my_list = [1, 2, 3]
+print(my_list)  # Runs successfully
+```
+
+## Sources
+
+- StackOverflow: [Why does code like `str = str(...)` cause a TypeError, but only the second time?](https://stackoverflow.com/questions/6039605/why-does-code-like-str-str-cause-a-typeerror-but-only-the-second-time) — Author: P'sao(question), Greg Hewgill(answer) (CC BY-SA)
+- Tistory: [[Python] 파이썬 TypeError: can only concatenate str (not "int") to str 오류 해결](https://diary-developer.tistory.com/19) — Author: 일반인의 웹 개발일기
+- Tistory: [[파이썬][Error] 025. TypeError - can't multiply sequence by non-int of type 'str'](https://about-ittt.tistory.com/352) — Author: about_IT
