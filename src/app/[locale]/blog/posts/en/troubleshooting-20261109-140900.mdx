@@ -1,0 +1,123 @@
+---
+title: "[Troubleshooting] Floating-Point String to Integer Conversion Error"
+publishedAt: "2026-11-09"
+summary: "This article addresses the ValueError that occurs when converting strings containing decimal points to integers and provides solutions."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+Passing a string containing a decimal point directly to the `int()` function causes a parsing failure, resulting in a `ValueError`.
+
+<Callout type="warning" title="Error Case">
+ValueError: invalid literal for int() with base 10: '23.45678'
+</Callout>
+
+This error frequently occurs not only in standard string conversions but also when converting column types in `pandas` DataFrames.
+
+```python
+s = '23.45678'
+i = int(s)
+
+import pandas as pd
+
+df = pd.DataFrame({'col': ['0.001']})
+df['col'].astype(int)
+```
+
+![Symptom screenshot](/blogs/troubleshooting-20261109-140900-1.png)
+
+## Cause
+
+The `int()` built-in function performs parsing logic that interprets strings as decimal integer literals. Since strings containing decimal points do not conform to the decimal integer syntax, the parser fails to recognize them and rejects the conversion.
+
+<Callout type="info" title="Note">
+The `int()` function does not accept decimal points.
+</Callout>
+
+## Solution
+
+Convert the string to a floating-point number (`float`) first to include the decimal value, and then convert it to `int()`.
+
+```python
+s = '23.45678'
+i = int(float(s))
+```
+
+For `pandas` columns, use the `astype()` method to convert to `float` as an intermediate step, and then to `int`.
+
+```python
+import pandas as pd
+
+df = pd.DataFrame({'col': ['0.001']})
+df['col'] = df['col'].astype(float).astype(int)
+```
+
+<Compare>
+<ComparePanel title="Existing" tone="bad">
+
+```python
+int('23.45678') # Raises ValueError
+```
+
+</ComparePanel>
+<ComparePanel title="Suggested" tone="good">
+
+```python
+int(float('23.45678')) # 23
+```
+
+</ComparePanel>
+</Compare>
+
+## Alternative Solutions
+
+Using the `Decimal` class from the `decimal` module allows you to handle floating-point numbers with high precision before converting them to integers.
+
+```python
+from decimal import Decimal
+
+s = '23.45678'
+i = int(Decimal(s))
+```
+
+In a `pandas` environment, you can use `apply` combined with `split` to extract only the part before the decimal point and convert it using `int()`. This method avoids potential floating-point precision issues that may arise during `float` conversion.
+
+```python
+import pandas as pd
+
+df = pd.DataFrame({'col': ['0.001']})
+df['col'] = df['col'].apply(lambda x: int(x.split('.')[0]))
+```
+
+## Additional Notes
+
+Checking the variable type using the `type()` function before type conversion can prevent unexpected errors.
+
+```python
+money = "777"
+print(type(money))  # <class 'str'>
+```
+
+Attempting to perform arithmetic operations directly between a string-type value and an integer-type value results in a `TypeError: must be str, not int`. Ensure types are aligned before performing calculations.
+
+```python
+money = "777"
+print(int(money) + 333)
+```
+
+<Checklist>
+<ul>
+<li>Verify if the target string contains a decimal point</li>
+<li>Perform intermediate conversion using float</li>
+<li>Perform final integer conversion using int</li>
+</ul>
+</Checklist>
+
+## Sources
+
+- StackOverflow: [Convert a string to integer with decimal in Python](https://stackoverflow.com/questions/1094717/convert-a-string-to-integer-with-decimal-in-python) — Author: Matt Hampel(question), Paolo Bergantino(answer) (CC BY-SA)
+- Tistory: [[Python/파이썬] ValueError: invalid literal for int() with base 10: '' 에러 발생 -해결 solved](https://mrnoobiest.tistory.com/entry/Python%ED%8C%8C%EC%9D%B4%EC%8D%AC-ValueError-invalid-literal-for-int-with-base-10-%EC%97%90%EB%9F%AC-%EB%B0%9C%EC%83%9D-%ED%95%B4%EA%B2%B0-solved) — Author: Aminora 블로그
+- Tistory: [[Python]파이썬 must be str not int 오류 해결](https://lnsideout.tistory.com/entry/Python%ED%8C%8C%EC%9D%B4%EC%8D%AC-must-be-str-not-int-%EC%98%A4%EB%A5%98-%ED%95%B4%EA%B2%B0) — Author: 인사이드아웃
+
+Images are taken from the sources above.
