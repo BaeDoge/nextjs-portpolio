@@ -1,0 +1,110 @@
+---
+title: "[Troubleshooting] Resolving numpy.ndarray Hash Error"
+publishedAt: "2026-11-09"
+summary: "This guide explains how to resolve the TypeError encountered when using numpy arrays as keys in sets or dictionaries by converting them to hashable types."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+An error occurs when attempting to include a `numpy.ndarray` object directly in a `set` or use it as a key in a `dict`. This happens because arrays are unhashable types.
+
+<Callout type="warning" title="Error Scenario">
+
+```python
+import numpy as np
+
+arr = np.array([1, 2, 3])
+my_dict = {arr: "value"}
+```
+
+</Callout>
+
+```python
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+    my_dict = {arr: "value"}
+TypeError: unhashable type: 'numpy.ndarray'
+```
+
+## Cause
+
+Python `set` elements and `dict` keys must be hashable objects, which are generated via the `__hash__` method. `numpy.ndarray` has `__hash__` set to `None`, meaning it cannot generate a hash value. Consequently, attempting to add it to a set or use it as a dictionary key raises an error.
+
+## Solution
+
+Convert the `numpy.ndarray` to a hashable `tuple` before use. By using the `tuple()` function to convert the array, a hash value is generated, allowing it to be used as a set element or dictionary key.
+
+```python
+import numpy as np
+
+arr = np.array([1, 2, 3])
+# Convert array to tuple to use as dictionary key
+my_dict = {tuple(arr): "value"}
+print(my_dict)
+# { (1, 2, 3): 'value' }
+```
+
+## Alternative Solutions
+
+Instead of directly adding `numpy.ndarray` to set operations, extract a 1D array using indexing and remove duplicates using `np.unique()` before performing set operations. This method addresses scenarios often encountered when attempting to add 2D or higher-dimensional arrays to sets.
+
+<Compare>
+<ComparePanel title="Original (Error Occurs)" tone="bad">
+
+```python
+import numpy as np
+
+data = np.arange(9).reshape(-1, 3)
+energies = np.hsplit(data, 3)[0] # Maintains 2D array structure
+above = {1, 5, 10}
+
+# Error: 2D arrays are unhashable
+slice = set(energies) & above 
+```
+
+</ComparePanel>
+<ComparePanel title="Proposed (Indexing)" tone="good">
+
+```python
+import numpy as np
+
+data = np.arange(9).reshape(-1, 3)
+# Extract as 1D array
+energies = data[:, 0] 
+above = {1, 5, 10}
+
+# Convert to set after removing duplicates and perform operation
+slice = set(np.unique(energies)) & above
+```
+
+</ComparePanel>
+</Compare>
+
+## Additional Notes
+
+Caching decorators like `functools.lru_cache` require function arguments to be hashable. When applying caching to functions that accept `numpy.ndarray` arguments, convert the arguments (e.g., using `tolist()`) before passing them to ensure hashability.
+
+<Callout type="info" title="Caching Caution">
+
+```python
+import functools
+import pygmo
+import numpy as np
+
+# If arguments are numpy.ndarray, convert to list before applying caching
+@functools.lru_cache(maxsize=None)
+def calculate_hypervolume(obj_y, reference):
+    y_points = obj_y.tolist() if isinstance(obj_y, np.ndarray) else obj_y
+    ref = reference.tolist() if isinstance(reference, np.ndarray) else reference
+    hv = pygmo.hypervolume(y_points)
+    return hv.compute(ref)
+```
+
+</Callout>
+
+## Sources
+
+- StackOverflow: [TypeError: unhashable type: 'numpy.ndarray'](https://stackoverflow.com/questions/9022656/typeerror-unhashable-type-numpy-ndarray) — Author: user1171835(question), DSM(answer) (CC BY-SA)
+- Tistory: [Python : TypeError: unhashable type: 'numpy.ndarray'](https://mambo-coding-note.tistory.com/entry/Python-TypeError-unhashable-type-numpyndarray) — Author: 월곡동 로봇팔의 대학원일지
+- Tistory: [NumPy TypeError: unhashable type: 'numpy.ndarray' 오류 해결하기](https://workauto.tistory.com/entry/NumPy-TypeError-unhashable-type-numpyndarray-%EC%98%A4%EB%A5%98-%ED%95%B4%EA%B2%B0%ED%95%98%EA%B8%B0-1) — Author: 업무 자동화
