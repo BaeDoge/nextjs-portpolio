@@ -1,0 +1,116 @@
+---
+title: "[Troubleshooting] UnboundLocalError on global variable assignment"
+publishedAt: "2026-11-09"
+summary: "This note explains how to resolve the UnboundLocalError caused by assigning to a global variable inside a function."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+An error occurs when trying to read a global variable defined outside a function from within the function, if there is an assignment operation to that variable somewhere inside the function.
+
+<Callout type="warning" title="Error Situation">
+UnboundLocalError: local variable 'c' referenced before assignment
+</Callout>
+
+The minimum code to reproduce the error is as follows.
+
+```python
+a, b, c = (1, 2, 3)
+
+def test():
+    print(a)
+    print(b)
+    print(c)
+    c += 1
+
+test()
+```
+
+In the above code, commenting out the `c += 1` line allows it to work normally, but uncommenting it causes an error at the `print(c)` step.
+
+![Symptom screenshot](/blogs/unboundlocalerror-120320-1.png)
+
+## Cause
+
+When compiling a function, Python scans all assignment statements in the function body to determine the scope of variables.
+
+If a statement that assigns a value to a variable inside the function is found (e.g., `c = ...`, `c += 1`), the variable is treated as a local variable rather than a global variable.
+
+As a result, even before `c += 1` is called during function execution, `c` is already considered declared as a local variable, so it is judged as referencing an uninitialized local variable.
+
+## Solution
+
+To modify a global variable inside a function, you must explicitly specify the variable's scope using the `global` keyword.
+
+```python
+a, b, c = (1, 2, 3)
+
+def test():
+    global c
+    print(a)
+    print(b)
+    print(c)
+    c += 1
+
+test()
+```
+
+By specifying `global c` at the beginning of the function, `c` refers to the module-level global variable rather than a local variable.
+
+## Alternative Solutions
+
+You can refactor the code into a pure function structure using function parameters and return values.
+
+This method makes data flow clear without depending on global state, facilitating maintenance.
+
+```python
+def increment_pure(current_count):
+    return current_count + 1
+
+c = 3
+c = increment_pure(c)
+```
+
+Use the `nonlocal` keyword when you need to modify a local variable of an outer function from within a nested function (closure).
+
+```python
+def outer_function():
+    total = 100
+
+    def inner_function():
+        nonlocal total
+        total -= 10
+        print("남은 수량:", total)
+
+    inner_function()
+
+outer_function()
+```
+
+## Additional Notes
+
+Simply reading a variable inside a function (e.g., `print`, `return`) allows you to reference the global variable without the `global` keyword.
+
+Regardless of where the assignment operation is in the function body, an assignment statement in the function isolates the variable as a local variable.
+
+<Compare>
+<ComparePanel title="Using global" tone="good">
+This is a clear and intuitive method when you need to directly modify a global variable.
+</ComparePanel>
+<ComparePanel title="Parameters/Return Values" tone="good">
+It aims for pure functions without state changes, making bug tracking easier in large-scale code.
+</ComparePanel>
+</Compare>
+
+<Callout type="tip" title="Debugging Tip">
+First check where the variable is defined inside the function, and if you intend to use a global variable, you must explicitly specify `global`.
+</Callout>
+
+## Sources
+
+- StackOverflow: [UnboundLocalError trying to use a variable (supposed to be global) that is (re)assigned (even after first use)](https://stackoverflow.com/questions/370357/unboundlocalerror-trying-to-use-a-variable-supposed-to-be-global-that-is-rea) — Author: tba(question), recursive(answer) (CC BY-SA)
+- Tistory: [UnboundLocalError: local variable referenced before assignment: 원인과 해결 방법](https://ksmk.tistory.com/entry/UnboundLocalError-local-variable-referenced-before-assignment-%EC%9B%90%EC%9D%B8%EA%B3%BC-%ED%95%B4%EA%B2%B0-%EB%B0%A9%EB%B2%95) — Author: IT 잇슈 | 칼퇴를 부르는 실무 치트키
+- Tistory: [[파이썬][Error] 019. UnboundLocalError - local variable 'x' referenced before assignment](https://about-ittt.tistory.com/346) — Author: about_IT
+
+Images are taken from the sources above.
