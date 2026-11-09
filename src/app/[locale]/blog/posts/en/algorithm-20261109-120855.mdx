@@ -1,0 +1,94 @@
+---
+title: "[Coding Test] Shopping Offers Optimization"
+publishedAt: "2026-11-09"
+summary: "This is a recursive search problem to find the minimum cost to fulfill required item quantities using special offers."
+tag: "Algorithm"
+---
+
+## Problem
+
+You want to buy $n$ items from the 'LeetCode Store'. Each item has an individual price, and special offers bundling multiple types of items are also available.
+
+Given the desired quantity for each item, you need to find a way to purchase exactly the required quantities at the minimum cost, ensuring that the total number of items purchased does not exceed the requested amounts. Special offers can be used multiple times.
+
+Input:
+- `price`: Array of individual item prices
+- `special`: Array of special offers (consisting of quantities for $n$ items + offer price)
+- `needs`: Array of required quantities for each item
+
+Constraints: The number of item types $n$ is 6 or less, and required quantities and offer prices are 10 and 50 or less, respectively.
+
+## Approach
+
+This problem can be viewed as a variation of the 'Unbounded Knapsack Problem'. It can be approached using a recursive structure where you decide which offers to use from the given list and then process the remaining required quantities.
+
+The key is to apply **Memoization**. The state is determined by the 'remaining required item quantities'. If the same state (remaining quantities) is visited again, the previously calculated minimum cost is reused to eliminate redundant calculations.
+
+Additionally, validation must be performed to ensure that applying an offer does not exceed the required quantities. Since buying all items at individual prices might be cheaper than using any offers, this scenario must also be considered, either by comparing it at the end or setting it as the initial value.
+
+## Solution
+
+A recursive function `dfs` is used to find the minimum cost based on the remaining `needs` array. A `memo` dictionary stores the minimum cost for each state (converted `needs` as a tuple).
+
+```python
+class Solution:
+    def shoppingOffers(self, price: List[int], special: List[List[int]], needs: List[int]) -> int:
+        # dictionary for memoization
+        memo = {}
+        n = len(price)
+
+        def dfs(current_needs):
+            # return stored value if the state has already been calculated
+            if tuple(current_needs) in memo:
+                return memo[tuple(current_needs)]
+            
+            # 1. Case where all remaining items are purchased at individual prices (base case)
+            direct_cost = sum(c * p for c, p in zip(current_needs, price))
+            min_cost = direct_cost
+            
+            # 2. Try applying each special offer
+            for offer in special:
+                # the last value of the offer is the price, the rest are item quantities
+                offer_price = offer[-1]
+                offer_counts = offer[:-1]
+                
+                # check if applying the offer exceeds the required quantities
+                next_needs = []
+                valid = True
+                for i in range(n):
+                    if current_needs[i] < offer_counts[i]:
+                        valid = False
+                        break
+                    next_needs.append(current_needs[i] - offer_counts[i])
+                
+                # if the offer is valid, make a recursive call
+                if valid:
+                    min_cost = min(min_cost, offer_price + dfs(next_needs))
+            
+            # store the calculated minimum cost
+            memo[tuple(current_needs)] = min_cost
+            return min_cost
+
+        return dfs(needs)
+```
+
+- **Time Complexity**: $O(M^N)$ or $O(S \cdot M^N)$. Here, $N$ is the number of item types (max 6), $M$ is the max required quantity per item (max 10), and $S$ is the number of offers. Thanks to memoization, in practice, far fewer states are explored.
+- **Space Complexity**: $O(M^N)$. The `memo` table uses space proportional to the size of the state space, and the recursive call stack depth is also at most $N \times M$.
+
+## Alternative Approaches
+
+**Using a DP Table**: Instead of recursion, a multi-dimensional array (DP Table) can be used. Each dimension represents the required quantity of an item, defining the state as `dp[a][b][c]...`. The initial values are filled with the cost of buying at individual prices, and the minimum value can be updated sequentially by applying offers one by one. This approach requires a more lengthy implementation but may have a smaller constant time factor due to the absence of recursion overhead.
+
+**Enhanced Branch and Bound**: The search space can be reduced by pre-filtering offers where the unit price is higher than or equal to the individual item price. Additionally, applying the most cost-effective offers first in the recursion order can help find the optimal solution faster, improving pruning efficiency.
+
+## Additional Notes
+
+<Callout type="tip" title="State Representation">
+When using the `needs` array as a key in a dictionary, it must be converted to an immutable type, such as a tuple (`tuple`). Note that lists are not hashable in Python.
+</Callout>
+
+The core of this problem is state space exploration leveraging the fact that $N$ is very small (6 or less). If the number of item types increases, it becomes inefficient due to the curse of dimensionality, so it is essential to check the problem constraints.
+
+## Sources
+
+- LeetCode: [LeetCode 638 - Shopping Offers](https://leetcode.com/problems/shopping-offers/)
