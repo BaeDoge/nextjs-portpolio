@@ -1,0 +1,75 @@
+---
+title: "[Coding Test] Calculating the Sum of 3D Orthogonal Projections"
+publishedAt: "2026-11-09"
+summary: "Calculate the total projection area of stacked cubes on a grid by summing the top, front, and side view areas."
+tag: "Algorithm"
+---
+
+## Problem
+
+An $n \times n$ grid `grid` is given. Each cell `grid[i][j]` contains `v` stacked 1x1x1 cubes of height `v`. The task is to calculate the sum of the areas of the orthogonal projections of this shape onto three planes.
+* **xy projection (top)**: The view from above; each cell with at least one cube contributes an area of 1.
+* **yz projection (front)**: The view from the x-axis direction; the maximum height in each row contributes to the projection area.
+* **zx projection (side)**: The view from the y-axis direction; the maximum height in each column contributes to the projection area.
+The grid size $n$ and cube heights are both limited to 50 or less.
+
+## Approach
+
+Calculate the areas of the three projections independently and sum them up.
+1. **xy area**: Count the number of cells in `grid` that have a value greater than 0.
+2. **yz area**: Find the maximum value among the elements in each row and sum them.
+3. **zx area**: Find the maximum value among the elements in each column and sum them.
+Since the projection onto each plane is determined by the outer silhouette height viewed from a direction orthogonal to that axis, extracting the maximum values for each row and column is sufficient to calculate the orthogonal projections.
+
+## Solution
+
+```python
+class Solution:
+    def projectionArea(self, grid: List[List[int]]) -> int:
+        n = len(grid)
+        
+        # xy projection: Count of cells where cubes exist
+        xy_area = sum(1 for row in grid for v in row if v > 0)
+        
+        # yz projection: Sum of maximum heights in each row
+        yz_area = sum(max(row) for row in grid)
+        
+        # zx projection: Sum of maximum heights in each column
+        zx_area = 0
+        for col_idx in range(n):
+            col_max = max(grid[row_idx][col_idx] for row_idx in range(n))
+            zx_area += col_max
+            
+        return xy_area + yz_area + zx_area
+```
+
+- **Time Complexity**: $O(n^2)$. We iterate through all elements of the $n \times n$ grid to find the maximum values for each row and column, resulting in $O(n^2)$ time.
+- **Space Complexity**: $O(1)$. We use only a constant amount of extra space for variables without additional data structures.
+
+## Alternative Approaches
+
+Using `zip(*grid)` allows you to transpose the matrix, making it easy to iterate over columns and resulting in more concise code.
+
+```python
+class Solution:
+    def projectionArea(self, grid: List[List[int]]) -> int:
+        xy = sum(v > 0 for row in grid for v in row)
+        yz = sum(max(row) for row in grid)
+        zx = sum(max(col) for col in zip(*grid))
+        return xy + yz + zx
+```
+
+- **Comparison**: The above method has high code readability by using `zip` to generate column data. However, `zip` creates a new list of tuples, which can consume $O(n^2)$ additional memory. Since the constraint is $n \le 50$, this does not exceed practical memory limits.
+
+## Additional Notes
+
+<Callout type="tip" title="Verify Projection Directions">
+The problem statement might define 'front' and 'side' directions ambiguously, but the 'projection area' in an orthogonal coordinate system is defined by the maximum silhouette on the plane perpendicular to the respective axis. Therefore, taking only the maximum values for each row and column is sufficient.
+</Callout>
+* **xy projection**: The height (vertical dimension) of the cubes does not affect this area; only their presence matters.
+* **yz/xz projections**: These are affected by both the presence and the height of the cubes. In a stacked structure like bricks, the tallest pillar obscures the shadow of shorter ones behind it.
+* **Edge Case**: If all values are 0, each projection area is 0, resulting in a total sum of 0.
+
+## Sources
+
+- LeetCode: [LeetCode 883 - Projection Area of 3D Shapes](https://leetcode.com/problems/projection-area-of-3d-shapes/)
