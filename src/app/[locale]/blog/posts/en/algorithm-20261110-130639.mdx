@@ -1,0 +1,89 @@
+---
+title: "[Coding Test] Finding a Lucky Integer in an Array"
+publishedAt: "2026-11-10"
+summary: "Use a hash map to find the largest integer in an array whose value is equal to its frequency."
+tag: "Algorithm"
+---
+
+## Problem
+
+An integer array `arr` is given as input. A lucky integer is defined as an integer in the array whose value is equal to its frequency in the array. You need to return the largest lucky integer in the given array, or `-1` if no lucky integer exists.
+
+The length of the array is at most 500, and its elements are between 1 and 500, inclusive.
+
+```python
+arr = [1, 2, 2, 3, 3, 3]
+```
+
+In the example above, 1 has a frequency of 1, 2 has a frequency of 2, and 3 has a frequency of 3, making all of them lucky integers. Among these, the largest value, 3, should be returned.
+
+## Approach
+
+The most intuitive and efficient approach is to count the occurrences of each number. Iterate through the array and store the count of each number in a hash map (dictionary). Then, check all entries in the map to find cases where `value == frequency`.
+
+If there are multiple numbers that satisfy the condition, find the maximum among them. Since the elements in the array are small (500 or less), hash map lookups are very fast, and traversing the entire array once or twice is efficient.
+
+<Callout type="tip" title="Core Condition">
+The condition for a lucky integer is `the number == the count of that number in the array`.
+</Callout>
+
+## Solution
+
+Use a hash map to calculate the frequency of each integer and find the largest integer that satisfies the condition.
+
+```python
+def findLucky(arr: list[int]) -> int:
+    freq = {}
+    
+    # Count the frequency of each number
+    for num in arr:
+        freq[num] = freq.get(num, 0) + 1
+        
+    lucky = -1
+    # Find the maximum value while checking if the frequency equals the number itself
+    for num, count in freq.items():
+        if num == count:
+            lucky = max(lucky, num)
+            
+    return lucky
+```
+
+- **Time Complexity**: $O(N)$
+  Linear time because it iterates through the array length to count frequencies and repeats for the number of entries in the hash map (up to 500).
+- **Space Complexity**: $O(N)$
+  Data must be stored in the hash map for the number of unique integers.
+
+## Alternative Approaches
+
+An approach utilizing sorting is also possible. After sorting the array in descending order, count the consecutive occurrences of each number and check if the condition is met. Since the first number that satisfies the condition will be the largest, you can return it immediately.
+
+<Compare>
+<ComparePanel title="Hash Map Approach" tone="good">
+Iterates through the array 1-2 times to calculate frequencies and find the maximum value. Implementation is simple and intuitive.
+</ComparePanel>
+<ComparePanel title="Sorting Approach" tone="bad">
+Takes $O(N \log N)$ time to sort the array. Space complexity may be lower than the hash map method, but it is not advantageous in terms of time.
+</ComparePanel>
+</Compare>
+
+## Additional Notes
+
+As a constraint, both `arr.length` and `arr[i]` are 500 or less. Since the array size is very small, instead of a separate hash map, a regular array of size 501 can be used as a count array to count frequencies. This eliminates hash map overhead and allows constant-time access, but in Python, hash maps are fast enough and memory usage is not an issue, so the hash map approach is recommended.
+
+```python
+# Example using a count array (for reference)
+count = [0] * 501
+for num in arr:
+    count[num] += 1
+
+for i in range(500, 0, -1):
+    if count[i] == i:
+        return i
+return -1
+```
+
+Both the code above and the hash map method have an $O(N)$ time complexity. The count array method has a limitation in that its space complexity depends on the maximum value of the array.
+
+## Sources
+
+- LeetCode: [LeetCode 1394 - Find Lucky Integer in an Array](https://leetcode.com/problems/find-lucky-integer-in-an-array/)
