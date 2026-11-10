@@ -1,0 +1,90 @@
+---
+title: "[Coding Test] Remove Duplicates from Sorted Array"
+publishedAt: "2026-11-10"
+summary: "Solve the problem of removing duplicate elements from a sorted array and returning the count of unique elements using the two-pointer technique."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given a sorted integer array `nums`, remove the duplicates such that each unique element appears only once. The relative order of the elements must be kept the same.
+
+After modification, the first `k` elements of the array should contain the unique elements in sorted order. The function returns the number of unique elements, `k`. Elements after `k` are ignored.
+
+The length of the input array is between `1` and `3 * 10^4`, and element values are between `-100` and `100`. The array is sorted in 'non-decreasing' order.
+
+## Approach
+
+Since the array is already sorted, duplicate values are guaranteed to be adjacent. This allows for in-place processing without additional data structures.
+
+Use two pointers, `slow` and `fast`. The `fast` pointer iterates to the end of the array to find new unique values. The `slow` pointer points to the index where the next unique value should be stored.
+
+When `fast` finds a value different from the previous unique value, it copies that value to the position pointed to by `slow` and increments `slow`. Repeating this process organizes the unique values at the beginning of the array.
+
+<Callout type="tip" title="Key Point">
+The condition that the array is sorted is crucial. It allows us to determine if an element is a duplicate by comparing only adjacent elements.
+</Callout>
+
+## Solution
+
+Initialize the `slow` pointer to `1`. The `fast` pointer iterates from `1` to the end of the array. `slow` represents the count of processed unique elements and also the position where the next unique element will be placed.
+
+Compare `nums[fast]` with `nums[slow - 1]`. If they are different, `nums[fast]` is a new unique element, so assign it to `nums[slow]` and increment `slow`.
+
+After the loop, the value of `slow` becomes the total count of unique elements, `k`. This algorithm is efficient as it traverses the array only once.
+
+```python
+class Solution:
+    def removeDuplicates(self, nums: List[int]) -> int:
+        if not nums:
+            return 0
+        
+        slow = 1
+        for fast in range(1, len(nums)):
+            if nums[fast] != nums[slow - 1]:
+                nums[slow] = nums[fast]
+                slow += 1
+                
+        return slow
+```
+
+- Time Complexity: $O(n)$ — Traverses the array once.
+- Space Complexity: $O(1)$ — Uses no additional data structures.
+
+## Alternative Approaches
+
+Another approach is to use a Hash Set to remove duplicates and then refill the array in sorted order.
+
+While a Hash Set automatically removes duplicate values, it does not guarantee insertion or sorted order. Therefore, the elements stored in the set must be sorted again.
+
+This approach has a time complexity of $O(n \log n)$. Even though the input is a sorted array, using a set loses the sorting information, requiring a re-sorting process. Additionally, it requires $O(n)$ extra space to store the set.
+
+<Compare>
+<ComparePanel title="Two Pointers" tone="good">
+- Time: $O(n)$
+- Space: $O(1)$
+- Leverages sorted condition
+</ComparePanel>
+<ComparePanel title="Hash Set" tone="bad">
+- Time: $O(n \log n)$
+- Space: $O(n)$
+- Does not leverage sorted condition
+</ComparePanel>
+</Compare>
+
+## Additional Notes
+
+This problem requires 'in-place' modification. Creating and returning a new array is not allowed.
+
+You must handle the case where the length of `nums` is `0`. The code handles this with `if not nums: return 0` or by checking before starting the loop to ensure safety.
+
+LeetCode's Custom Judge system validates only the first `k` elements of the array based on the returned value `k`. The values after `k` do not matter.
+
+<StatGrid>
+<Stat value="3 * 10^4" label="Max Array Length" detail="Requires O(n) time complexity" />
+<Stat value="-100 ~ 100" label="Element Range" detail="Value magnitude does not affect algorithm" />
+</StatGrid>
+
+## Sources
+
+- LeetCode: [LeetCode 26 - Remove Duplicates from Sorted Array](https://leetcode.com/problems/remove-duplicates-from-sorted-array/)
