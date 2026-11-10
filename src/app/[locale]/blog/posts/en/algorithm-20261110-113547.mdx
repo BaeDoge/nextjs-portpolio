@@ -1,0 +1,62 @@
+---
+title: "[Coding Test] Binary Tree Level Order Traversal Algorithm"
+publishedAt: "2026-11-10"
+summary: "Implements level order traversal of a binary tree."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given the root node of a binary tree, perform level order traversal and return a list of lists containing node values at each level from left to right. Levels start from the root; if the tree is empty, return an empty list. The number of nodes is 0 to 2000, and values range from -1000 to 1000.
+
+## Approach
+
+Use a BFS strategy to store current level nodes in a queue and iterate level by level, collecting values. At each level, record the current length of the queue, then pop that many nodes, append their values to a list, and enqueue their children for the next level. This processes each level in one pass.
+
+## Solution
+
+The following code is a Python function that implements BFS using a deque. If the root node is absent, it returns an empty list, and for each level it creates a new list to fill with values.
+
+```python
+from collections import deque
+from typing import List, Optional
+
+# Definition for a binary tree node.
+class TreeNode:
+    def __init__(self, val: int = 0, left: Optional['TreeNode'] = None, right: Optional['TreeNode'] = None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+def levelOrder(root: Optional[TreeNode]) -> List[List[int]]:
+    if not root:
+        return []
+    result = []
+    queue = deque([root])
+    while queue:
+        level_size = len(queue)
+        level_vals = []
+        for _ in range(level_size):
+            node = queue.popleft()
+            level_vals.append(node.val)
+            if node.left:
+                queue.append(node.left)
+            if node.right:
+                queue.append(node.right)
+        result.append(level_vals)
+    return result
+```
+
+The time complexity is O(n) and the additional space complexity is O(n).
+
+## Alternative Approaches
+
+Using DFS, you can store level information at each node and recursively traverse to obtain the same result. This method increases stack space usage by the tree depth, resulting in O(n) space complexity in the worst case. Although both BFS and DFS have O(n) time complexity, BFS is more straightforward to implement because queue operations are simpler.
+
+## Additional Notes
+
+In this problem, level order traversal is implemented via a queue-based approach independent of the tree structure. Test cases include examples 1, 2, and 3; empty trees and single-node trees also work correctly.
+
+## Sources
+
+- LeetCode: [LeetCode 102 - Binary Tree Level Order Traversal](https://leetcode.com/problems/binary-tree-level-order-traversal/)
