@@ -1,0 +1,61 @@
+---
+title: "[Coding Test] Calculate Integer Hamming Distance"
+publishedAt: "2026-11-10"
+summary: "Finding the number of differing bit positions between two integers using XOR operation and bit counting."
+tag: "Algorithm"
+---
+
+## Problem
+
+This problem asks for the Hamming Distance between two integers `x` and `y`. Hamming distance refers to the total number of positions where the bits differ in the binary representations of two integers. Given two integers `x` and `y` as inputs, you must return the Hamming distance between them as an integer. The constraint is that `x` and `y` are within the 32-bit integer range from `0` to `2^31 - 1`.
+
+<Callout type="warning" title="Problem Type Classification">
+This problem (LC 461) is about finding the Hamming distance. While its essence is the same as LeetCode 2220 (Minimum Bit Flips to Convert Number), it is a different problem.
+</Callout>
+
+## Approach
+
+The clearest way to find differing bits in the binary representations of two numbers is the XOR operation. The XOR operator returns `1` if the two bits are different and `0` if they are the same. Therefore, performing an XOR operation (`^`) on `x` and `y` generates a new integer where differing bit positions are `1` and identical positions are `0`. Counting the number of `1`s (bit counting) in this XOR result gives the Hamming distance between the two numbers.
+
+## Solution
+
+This solution calculates the Hamming distance by counting the number of `1`s in the XOR result of `x` and `y`. The code is implemented using Python's `bin()` function and `count()` method. Using `count('1')` is efficient because counting `0`s or conversion using string slicing incurs higher computational costs.
+
+```python
+class Solution:
+    def hammingDistance(self, x: int, y: int) -> int:
+        # XOR operation of two numbers: differing bits are 1, identical bits are 0
+        xor_result = x ^ y
+        # Count the number of '1's in the binary string
+        return bin(xor_result).count('1')
+```
+
+- Time Complexity: `O(1)` (The number of operations is constant since the input integer is in a fixed 32-bit range)
+- Space Complexity: `O(1)` (Uses only constant-sized variables to store results)
+
+## Alternative Approaches
+
+Instead of Python built-in functions, you can use the Brian Kernighan algorithm, which directly utilizes bitwise operators. This algorithm takes advantage of the property that performing an AND operation (`&`) on `n` and `n - 1` changes the rightmost `1` in the binary representation of `n` to `0`. It calculates the Hamming distance by repeating a loop equal to the number of `1`s in the XOR result.
+
+```python
+class Solution:
+    def hammingDistance(self, x: int, y: int) -> int:
+        xor_result = x ^ y
+        distance = 0
+        # Repeat until the rightmost 1 is removed
+        while xor_result:
+            xor_result &= (xor_result - 1)
+            distance += 1
+        return distance
+```
+
+- Time Complexity: `O(1)` (At most 32 iterations since it is a 32-bit integer)
+- Space Complexity: `O(1)`
+
+## Additional Notes
+
+This problem can be solved by understanding and applying the concept that the minimum number of bit flips required in the binary representations of `x` and `y` equals the Hamming distance. Since the XOR operation is the most fundamental operator for binary comparison, it is frequently used in bit manipulation problems. Python's `bin()` works correctly for unsigned positive numbers, and searching the string via `count()` provides the most concise code implementation.
+
+## Sources
+
+- LeetCode: [LeetCode 461 - Hamming Distance](https://leetcode.com/problems/hamming-distance/)
