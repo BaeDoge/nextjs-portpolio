@@ -1,0 +1,40 @@
+---
+title: "[Coding Test] Target Array Creation Simulation"
+publishedAt: "2026-11-10"
+summary: "This is a simulation problem that constructs a target array by inserting elements according to rules using nums and index arrays."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given two integer arrays `nums` and `index`, create an initially empty `target` array and insert `nums[i]` at position `index[i]`. The goal is to find the final state of the `target` array after processing all elements. Per constraints, array length is between 1 and 100, and `index[i]` is always ≤ `i`, guaranteeing valid insertion. In Example 1, input `nums=[0,1,2,3,4]`, `index=[0,1,2,2,1]` yields output `[0,4,1,3,2]`.
+
+## Approach
+
+This is a direct simulation approach that iterates through `nums` and `index` in order, using Python's `list.insert()` method to insert elements into the `target` array. Since the maximum array length is 100, the cost of insertion operations is small, making this approach sufficiently efficient. This method is the most intuitive way to implement the problem's rules directly.
+
+## Solution
+
+Direct implementation using Python's `list.insert`. At each step, insert the value at the given index to build the `target` array.
+
+```python
+def create_target_array(nums, index):
+    target = []
+    for i in range(len(nums)):
+        target.insert(index[i], nums[i])
+    return target
+```
+
+Time complexity is O(n²) in the worst case due to insertion operations, and space complexity is O(n) for the `target` array.
+
+## Alternative Approaches
+
+Since the array size is small (≤ 100), direct insertion simulation is the simplest and fastest implementation. Even with optimization using other data structures, the swap cost would be larger, so this approach is preferred in actual coding tests.
+
+## Additional Notes
+
+The constraint `index[i] <= i` ensures insertion is always at a valid position. The provided example can be tested with the same logic.
+
+## Sources
+
+- LeetCode: [LeetCode 1389 - Create Target Array in the Given Order](https://leetcode.com/problems/create-target-array-in-the-given-order/)
