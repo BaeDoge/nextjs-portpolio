@@ -1,0 +1,77 @@
+---
+title: "[Coding Test] Length of Continuous Increasing Subsequence"
+publishedAt: "2026-11-10"
+summary: "This article explains an algorithm to find the maximum length of a continuous increasing subsequence in an integer array."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given an integer array `nums`, return the length of the longest continuous increasing subsequence (Continuous Increasing Subsequence). A continuous increasing subsequence consists of adjacent elements, and these elements must have consecutive indices. Also, the sequence must be strictly increasing, so the relation `nums[i] < nums[i + 1]` must hold between neighboring elements. Unlike the general increasing subsequence, non‑continuous subsequences where indices are not consecutive are not allowed.
+
+The array length is at most $10^4$, and element values range from $-10^9$ to $10^9$. For example, in `[1,3,5,4,7]`, the longest such subsequence is `[1,3,5]`, and in cases like `[2,2,2,2,2]` where all elements are equal or decreasing, the length is 1.
+
+## Approach
+
+This problem can be solved by traversing the array once while tracking the length of the current increasing sequence. Compare each element with the previous one to check if it is increasing. If the current element is larger than the previous one, increment the length of the current continuous increasing subsequence by 1. Otherwise (if it is equal or smaller), the current sequence breaks, so we treat it as the start of a new sequence and reset the length to 1.
+
+By updating the maximum length recorded during this process, we obtain the final answer. This approach avoids unnecessary data structures and complex computations, and it processes each element in constant time, making it efficient.
+
+## Solution
+
+Although the array length is guaranteed to be at least 1 by the constraints, we set a default value of 1 for safety and loop through the array. The `current_length` variable tracks the length of the current continuous increasing subsequence, and `max_length` tracks the overall maximum length.
+
+```python
+class Solution:
+    def findLengthOfLCIS(self, nums: list[int]) -> int:
+        if not nums:
+            return 0
+        
+        max_length = 1
+        current_length = 1
+        
+        for i in range(1, len(nums)):
+            if nums[i] > nums[i - 1]:
+                current_length += 1
+                if current_length > max_length:
+                    max_length = current_length
+            else:
+                current_length = 1
+                
+        return max_length
+```
+
+Time complexity: O(N) (single pass through the array)  
+Space complexity: O(1) (only a constant number of variables used)
+
+## Alternative Approaches
+
+This problem is most naturally solved with a greedy approach. Dynamic programming can also be applied. Define `dp[i]` as the length of the longest continuous increasing subsequence ending at `nums[i]`. Then, if `nums[i] > nums[i-1]`, `dp[i] = dp[i-1] + 1`; otherwise, `dp[i] = 1`. The final answer is the maximum value in the `dp` array.
+
+<Compare>
+<ComparePanel title="Greedy (current solution)" tone="good">
+The space complexity can be optimized to O(1). Since only the previous state is needed, there is no need to store the entire DP table.
+</ComparePanel>
+<ComparePanel title="Dynamic Programming" tone="bad">
+The space complexity becomes O(N). Allocating a DP table for the entire array increases memory usage.
+</ComparePanel>
+</Compare>
+
+## Additional Notes
+
+<Callout type="tip" title="Key Caution">
+Do not confuse a continuous increasing subsequence with a general increasing subsequence (LeetCode 300). Continuity requires that indices be consecutive; the general increasing subsequence allows non‑consecutive indices.
+</Callout>
+
+<StatGrid>
+<Stat value="10^4" label="Maximum array length" detail="Constraint" />
+<Stat value="O(N)" label="Time complexity" detail="Single pass" />
+</StatGrid>
+
+To understand the problem clearly, you must distinguish the following two cases.
+1. Strict increase: `nums[i] < nums[i+1]` must hold. If equal values appear, the continuity is broken.
+2. Non‑decreasing increase: If the problem allowed `nums[i] <= nums[i+1]`, you could modify the condition, but this problem requires a strict increase.
+
+## Sources
+
+- LeetCode: [LeetCode 674 - Longest Continuous Increasing Subsequence](https://leetcode.com/problems/longest-continuous-increasing-subsequence/)
