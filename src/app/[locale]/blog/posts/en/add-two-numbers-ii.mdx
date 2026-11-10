@@ -1,0 +1,98 @@
+---
+title: "[Coding Test] Add Two Numbers II"
+publishedAt: "2026-11-10"
+summary: "Explains how to add two linked lists that store digits from most significant to least significant and return the sum as a linked list."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given two non-empty linked lists, each node stores a single digit from 0 to 9. The lists represent numbers with the most significant digit first, and the input numbers have no leading zeros. Return the sum of the two numbers as a linked list of the same form. Each list contains between 1 and 100 nodes.
+
+```python
+# ListNode definition (for reference)
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+```
+
+## Approach
+
+Because we must process digits starting from the most significant side, we traverse each input list and push the node values onto a stack. Since a stack is LIFO, popping the values later yields the digits in increasing order of significance. We then pop values from both stacks, add them digit by digit, and handle the carry. By linking each new node to the previously created node, the result list automatically has the most significant digit first. Finally, prev points to the head of the result list, so we return it.
+
+```python
+def addTwoNumbersII(l1: ListNode, l2: ListNode) -> ListNode:
+    stack1, stack2 = [], []
+    while l1:
+        stack1.append(l1.val)
+        l1 = l1.next
+    while l2:
+        stack2.append(l2.val)
+        l2 = l2.next
+
+    carry = 0
+    prev = None
+    while stack1 or stack2 or carry:
+        v1 = stack1.pop() if stack1 else 0
+        v2 = stack2.pop() if stack2 else 0
+        total = v1 + v2 + carry
+        carry = total // 10
+        node = ListNode(total % 10)
+        node.next = prev
+        prev = node
+
+    return prev
+```
+
+## Solution
+
+The stack-based solution moves each linked list into a stack, effectively reversing the order, then adds digits with carry. By linking each new node to the previous one, the resulting list ends up with the most significant digit first. This approach does not modify the input lists; it uses two stacks and the result list.
+
+- **Time complexity:** `O(N + M)` – each node is processed once.
+- **Space complexity:** `O(N + M)` – nodes are stored in the two stacks and the result list.
+
+```python
+def addTwoNumbersII(l1: ListNode, l2: ListNode) -> ListNode:
+    stack1, stack2 = [], []
+    while l1:
+        stack1.append(l1.val)
+        l1 = l1.next
+    while l2:
+        stack2.append(l2.val)
+        l2 = l2.next
+
+    carry = 0
+    prev = None
+    while stack1 or stack2 or carry:
+        v1 = stack1.pop() if stack1 else 0
+        v2 = stack2.pop() if stack2 else 0
+        total = v1 + v2 + carry
+        carry = total // 10
+        node = ListNode(total % 10)
+        node.next = prev
+        prev = node
+
+    return prev
+```
+
+## Alternative Approaches
+
+| Method | Description | Complexity |
+|--------|-------------|------------|
+| **Reversing the input lists** | Reverse each list, apply the standard Add Two Numbers algorithm, then reverse the result. | Time `O(N + M)`, Space `O(1)` (excluding recursion stack) |
+| **Recursive approach** | Recursively traverse the lists in reverse order, compute the sum recursively, and handle the carry on return. | Time `O(N + M)`, Space `O(max(N, M))` (recursion depth) |
+| **Length‑based merging** | Compute the lengths of both lists, start from the longer list, and add digits at the same depth. | Time `O(N + M)`, Space `O(max(N, M))` (result list) |
+
+All of these methods satisfy the constraints; the stack approach does not modify the input, while the reversal approach works in-place without additional space.
+
+## Additional Notes
+
+- If the result is 0, it is returned as a single node (0), which is a valid answer.
+- If a carry occurs at the most significant digit, an additional node is created.
+- In subsequent problems, you can solve without using a stack by employing a recursive or length‑based method that does not modify the input.
+- Since the maximum number of nodes is 100, all approaches complete within the allowed time.
+
+## Sources
+
+- LeetCode: [LeetCode 445 - Add Two Numbers II](https://leetcode.com/problems/add-two-numbers-ii/)
