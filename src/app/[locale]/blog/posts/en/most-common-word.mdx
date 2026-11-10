@@ -1,0 +1,92 @@
+---
+title: "[Coding Test] Most Common Word HashMap Solution"
+publishedAt: "2026-11-10"
+summary: "This problem involves finding the most frequent word in a given string, excluding a list of banned words."
+tag: "Algorithm"
+---
+
+## Problem
+
+You are given a string `paragraph` and an array of banned words `banned`. You need to return the most frequent word from `paragraph` that is not in the `banned` list.
+
+The problem follows these conditions:
+- Words are case-insensitive, and the return value must be in lowercase.
+- Punctuation marks are not part of a word and should be ignored.
+- The answer is guaranteed to be unique, and there is at least one non-banned word present.
+
+For example, if `paragraph` is "Bob hit a ball, the hit BALL flew far after it was hit." and `banned` is ["hit"], "hit" appears 3 times but is banned, so it is excluded. "ball" appears 2 times, making it the correct answer.
+
+## Approach
+
+To solve this problem, we need to process the string and count the frequency of each word. The key steps are as follows:
+
+1. **Normalization**: Convert the input `paragraph` to lowercase to ignore case differences.
+2. **Word Extraction**: Replace punctuation marks with spaces or use regular expressions to separate words consisting only of English alphabets.
+3. **Frequency Counting**: Record the occurrence count of the separated words using a `HashMap` (or hash map).
+4. **Finding the Maximum**: Iterate through the `HashMap` to find the word with the highest frequency that is not in the `banned` set.
+
+<Callout type="tip" title="Handling Punctuation">
+After replacing punctuation with spaces, splitting by space allows words with adjacent punctuation to be separated naturally.
+</Callout>
+
+## Solution
+
+First, convert the `banned` array into a `HashSet` for fast lookups. Convert `paragraph` to lowercase and replace non-alphabetic characters with spaces. Then, split the string into words and count their occurrences. Finally, select the word with the highest frequency that is not in the banned list.
+
+```python
+import re
+from collections import Counter
+
+class Solution:
+    def mostCommonWord(self, paragraph: str, banned: list[str]) -> str:
+        # Convert banned array to a set for fast lookup
+        banned_set = set(banned)
+        
+        # Convert to lowercase and replace non-alphabetic characters with spaces
+        # Equivalent to re.sub(r'[^a-z]', ' ', paragraph.lower())
+        words = re.findall(r'\b[a-z]+\b', paragraph.lower())
+        
+        # Count word frequencies
+        word_counts = Counter(words)
+        
+        # most_common(1) returns the (word, count) tuple with the highest frequency
+        # Filter to find the word not in the banned list
+        for word, count in word_counts.most_common():
+            if word not in banned_set:
+                return word
+                
+        return ""
+```
+
+- **Time Complexity**: $O(N + M)$, where $N$ is the length of `paragraph` and $M$ is the length of `banned`. String processing and hash map insertions/lookups are performed in linear time.
+- **Space Complexity**: $O(N + M)$, proportional to the size of the hash map and set used to store the words.
+
+## Alternative Approaches
+
+Instead of using regular expressions, you can iterate through each character of the string to construct words directly.
+
+1. Convert `paragraph` to lowercase.
+2. Read characters one by one; if it is an alphabet, add it to the current word.
+3. If it is not an alphabet, add the current word to the counter if it is not empty, and reset the current word.
+4. Handle the last word after the loop ends.
+
+This method reduces library dependencies but results in longer code and requires implementing punctuation handling logic manually, which may reduce readability and maintainability compared to the regex-based approach. The time complexity remains $O(N)$.
+
+<Compare>
+<ComparePanel title="Regex-based" tone="good">
+The code is concise and highly readable. You can easily handle punctuation using Python's `re` module or Java's `Pattern`.
+</ComparePanel>
+<ComparePanel title="Character iteration-based" tone="bad">
+While it has fewer library dependencies, the implementation logic is more complex and prone to bugs.
+</ComparePanel>
+</Compare>
+
+## Additional Notes
+
+- **Input Constraints**: The length of `paragraph` is at most 1000, and the length of `banned` is at most 100. Both $O(N)$ and $O(N^2)$ algorithms are acceptable, but the $O(N)$ approach using a hash map is optimal.
+- **Definition of a Word**: In this problem, a 'word' refers to a string composed only of English alphabets. Numbers and special characters are not considered words.
+- **Case Sensitivity**: It is important to unify both input and comparison to lowercase. Since the words in the `banned` array are also provided in lowercase, no case conversion is needed when comparing directly.
+
+## Sources
+
+- LeetCode: [LeetCode 819 - Most Common Word](https://leetcode.com/problems/most-common-word/)
