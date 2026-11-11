@@ -1,0 +1,111 @@
+---
+title: "[Troubleshooting] Python pickle UnicodeDecodeError"
+publishedAt: "2026-11-11"
+summary: "Resolve encoding errors when reading binary pickle files in text mode."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+The following error occurs when deserializing a file serialized with `pickle.dump` using `pickle.load` in Python.
+
+<Callout type="warning" title="Error Situation">
+
+```
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0x80 in position 0: invalid start byte
+```
+
+</Callout>
+
+The expected failing code is as follows.
+
+```python
+import pickle
+
+# File mode error location
+f = open('sample_classifier.pickle', encoding="utf8")
+cl = pickle.load(f)    
+f.close()
+```
+
+![Symptom screenshot](/blogs/python-pickle-unicodedecodeerror-1.png)
+
+## Cause
+
+The `pickle` module serializes objects into a binary stream.
+Therefore, when executing `pickle.dump`, the file must be opened in `'wb'` (binary write) mode.
+Conversely, when reading the file, it must be opened in binary mode `'rb'` rather than text mode `'r'`, which applies encoding.
+Specifying `encoding="utf8"` causes Python to attempt converting raw bytes to UTF-8 text, but since pickle's byte sequences are not valid UTF-8 characters, the conversion fails.
+
+## Solution
+
+Correct the file opening mode and encoding settings to handle the file in binary mode.
+
+**Before modification (Error occurrence):**
+
+```python
+f = open('sample_classifier.pickle', encoding="utf8")
+```
+
+**After modification (Normal operation):**
+
+```python
+import pickle
+
+# Change to 'rb' (read binary) mode and remove encoding
+with open('sample_classifier.pickle', 'rb') as f:
+    cl = pickle.load(f)    
+```
+
+<Steps title="Modification Procedure">
+<Step title="Change File Opening Mode">
+Change the mode argument of the `open` function from `'r'` to `'rb'`.
+</Step>
+<Step title="Remove Encoding">
+Do not specify the `encoding` parameter in binary mode.
+</Step>
+</Steps>
+
+![Solution screenshot](/blogs/python-pickle-unicodedecodeerror-2.png)
+
+## Alternative Solutions
+
+If you are processing a text file (e.g., CSV) directly instead of a `textblob` `NaiveBayesClassifier` object, you must check and explicitly specify the actual file encoding.
+However, for pickle serialized objects, changing to binary mode is the only correct method.
+
+<Compare title="File Mode Comparison">
+<ComparePanel title="Reading Text Files" tone="good">
+
+```python
+# Specify encoding for general text files
+with open('data.csv', 'r', encoding='cp949') as f:
+    text = f.read()
+```
+
+</ComparePanel>
+<ComparePanel title="Reading Pickle Files" tone="good">
+
+```python
+# Use rb mode without encoding for binary serialized files
+with open('data.pkl', 'rb') as f:
+    obj = pickle.load(f)
+```
+
+</ComparePanel>
+</Compare>
+
+## Additional Notes
+
+Files saved with `pickle` may not be compatible depending on the platform or Python version.
+Similar encoding errors often occur when reading binary files where the `encoding` argument is unnecessary, so always verify whether to use `'b'` mode based on the file format.
+<Callout type="info" title="Encoding Reference">
+If the text file's encoding differs from UTF-8 (e.g., CP949), you must specify the `encoding` parameter accurately to avoid `UnicodeDecodeError`.
+</Callout>
+
+## Sources
+
+- StackOverflow: [Python pickle error: UnicodeDecodeError](https://stackoverflow.com/questions/32957708/python-pickle-error-unicodedecodeerror) — Author: 90abyss(question), donkopotamus(answer) (CC BY-SA)
+- Tistory: [파이썬 에러 해결 방법 UnicodeDecodeError / UnicodeEncodeError](https://digital-play.tistory.com/103) — Author: 디지털 플레이
+- Tistory: [파이썬 UTF-8 디코딩 오류 해결｜UnicodeDecodeError 원인과 인코딩 설정](https://neos35.tistory.com/entry/%ED%8C%8C%EC%9D%B4%EC%8D%AC-UTF-8-%EB%94%94%EC%BD%94%EB%94%A9-%EC%98%A4%EB%A5%98-%ED%95%B4%EA%B2%B0%EF%BD%9CUnicodeDecodeError-%EC%9B%90%EC%9D%B8%EA%B3%BC-%EC%9D%B8%EC%BD%94%EB%94%A9-%EC%84%A4%EC%A0%95) — Author: 컴공대생 mr.ko
+
+Images are taken from the sources above.
