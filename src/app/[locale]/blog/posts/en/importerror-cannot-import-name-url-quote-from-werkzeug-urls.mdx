@@ -1,0 +1,85 @@
+---
+title: "[Troubleshooting] ImportError: cannot import name 'url_quote' from werkzeug.urls"
+publishedAt: "2026-11-11"
+summary: "The ImportError occurs because Flask 2.2.2 tries to import url_quote from werkzeug.urls, which was removed in Werkzeug 3.0.0."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+When running tests with Flask 2.2.2, an error occurs because `url_quote` cannot be imported from the `werkzeug.urls` module. The error message is as follows:
+
+<Callout type="warning" title="Error Situation">
+ImportError: cannot import name 'url_quote' from 'werkzeug.urls'
+</Callout>
+
+The minimal environment and traceback that trigger the error are as follows:
+
+```text
+# 환경
+Python 3.10.11
+Flask==2.2.2
+Werkzeug==3.0.0 (자동 설치됨)
+
+Traceback (most recent call last):
+  File ".../flask/app.py", line 30, in <module>
+    from werkzeug.urls import url_quote
+ImportError: cannot import name 'url_quote' from 'werkzeug.urls'
+```
+
+## Cause
+
+Flask 2.2.2 references `werkzeug.urls.url_quote`, but this function was removed in Werkzeug 3.0.0. Because Flask 2.2.2's dependency specification only sets a lower bound of `Werkzeug>=2.2.0` without an upper bound, the package manager can automatically install the latest Werkzeug 3.0.0, causing an ImportError.
+
+## Solution
+
+Pin a compatible version of `Werkzeug` in the `requirements.txt` file.
+
+```
+# requirements.txt
+Flask==2.2.2
+Werkzeug==2.2.2
+```
+
+Reinstall the packages to align versions.
+
+<Terminal title="Run Command">
+pip install -r requirements.txt
+</Terminal>
+
+## Alternative Solutions
+
+Update `Flask` to the latest version to make it compatible with `Werkzeug 3.0.0`.
+
+```
+# requirements.txt
+Flask==3.0.0
+```
+
+After updating, reinstall the packages to resolve dependencies.
+
+## Additional Notes
+
+<Steps>
+<Step title="Check Version">
+Check the installed package versions.
+</Step>
+<Step title="Fix Dependencies">
+Specify compatible versions in requirements.txt.
+</Step>
+<Step title="Reinstall and Test">
+Reinstall packages and rerun tests.
+</Step>
+</Steps>
+
+<Callout type="info" title="Prevention Tip">
+When updating major packages, check compatibility and dependency versions in advance.
+</Callout>
+
+Because similar errors can occur due to version mismatches, regularly check version consistency across packages.
+
+## Sources
+
+- StackOverflow: [Why did Flask start failing with "ImportError: cannot import name 'url_quote' from 'werkzeug.urls'"?](https://stackoverflow.com/questions/77213053/why-did-flask-start-failing-with-importerror-cannot-import-name-url-quote-fr) — Author: stevezkw(question), Scrashdemix(answer) (CC BY-SA)
+- Tistory: [cannot import name 'url_quote' from 'werkzeug.urls'](https://second-brain-storage.tistory.com/5) — Author: MY Second Brain
+- Tistory: [【Python】 파이썬 주요 트러블슈팅 [61-80]](https://nate9389.tistory.com/2366) — Author: 정빈이의 공부방
