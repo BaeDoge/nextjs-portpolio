@@ -1,0 +1,89 @@
+---
+title: "[Troubleshooting] attempted relative import"
+publishedAt: "2026-11-11"
+summary: "This note explains the cause and solutions for the 'attempted relative import' error in Python when running scripts directly."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+The following error occurs when trying to import modules from the current directory (`.`) or parent directory (`..`) in a Python script.
+
+<Callout type="warning" title="Error Situation">
+
+```python
+ImportError: attempted relative import with no known parent package
+```
+
+</Callout>
+
+This error happens when the script is loaded as a top-level script rather than as part of a package.
+For example, running a sub-module directly via the command line in the project structure causes this error.
+
+```python
+# package/module1.py
+from .utils import helper
+```
+
+```bash
+$ python package/module1.py
+```
+
+## Cause
+
+Relative imports calculate paths based on the current module's location, so relative paths cannot be interpreted without the context of a parent package.
+
+Python loads files in two ways.
+First, executing it directly like `python myfile.py` loads it as a top-level script.
+Second, importing it from another file loads it as a module.
+
+When a script is executed as a top-level script, `__name__` is set to `__main__`.
+In this case, since the module is not part of a package hierarchy, relative paths (`.` or `..`) cannot be used.
+
+```python
+# When executed directly, __name__ becomes '__main__'
+print(__name__)  # Output: __main__
+```
+
+## Solution
+
+You can maintain relative imports by running the entire package structure from the project root.
+Using the `-m` option to execute the module as part of the package allows Python to recognize the package context.
+
+```bash
+# Run from the project root directory
+$ python -m package.module1
+```
+
+In this method, `__name__` is set to `package.module1` instead of `__main__`, allowing relative imports to work correctly.
+
+## Alternative Solutions
+
+You can resolve the error by changing relative imports to absolute imports and specifying the full path of the package.
+Use absolute paths starting from the package name instead of relative paths.
+
+```python
+# Before modification (Relative import - Error occurs)
+from .utils import helper
+
+# After modification (Absolute import - Works correctly)
+from package.utils import helper
+```
+
+This ensures the module's location is clearly specified, even if the script is executed directly.
+
+## Additional Notes
+
+Relative imports are only valid when the module is executed as part of a package.
+It is safer to use absolute imports when executing directly.
+
+<Callout type="tip" title="Prevention Tip">
+Do not mix relative and absolute imports.
+Choose a consistent import style within your project to facilitate maintenance.
+</Callout>
+
+## Sources
+
+- StackOverflow: [How to resolve the Python error 'attempted relative import'](https://stackoverflow.com/questions/14132789/how-to-resolve-the-python-error-attempted-relative-import) — Author: user1881400(question), BrenBarn(answer) (CC BY-SA)
+- Tistory: [[파이썬][Error] 055. ImportError - attempted relative import with no known parent package](https://about-ittt.tistory.com/382) — Author: about_IT
+- Velog: [[Python] ImportError: attempted relative import with no known parent package.](https://velog.io/@2021bong/Python-ImportError-attempted-relative-import-with-no-known-parent-package-8v7kz9in)
