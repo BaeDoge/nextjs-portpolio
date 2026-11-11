@@ -1,0 +1,92 @@
+---
+title: "[Troubleshooting] cannot import name partially initialized module error"
+publishedAt: "2026-11-11"
+summary: "This note explains the cause of ImportError due to circular imports between modules and how to resolve it through refactoring or delayed imports."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+An `ImportError` occurs when running `manage.py makemigrations` during a Django application upgrade or execution.
+
+<Callout type="warning" title="Error Situation">
+`ImportError: cannot import name 'get_sentinel' from partially initialized module 'authentication.models' (most likely due to a circular import)`
+</Callout>
+
+The error traceback is as follows.
+
+```python
+File "/home/eduardo/projdevs/upgrade-intra/corporate/models/section.py", line 9, in <module>
+    from authentication.models import get_sentinel
+
+ImportError: cannot import name 'get_sentinel' from partially initialized module 'authentication.models' (most likely due to a circular import)
+```
+
+![Symptom screenshot](/blogs/cannot-import-name-partially-initialized-module-1.png)
+
+## Cause
+
+This error occurs when **Circular Import** happens between modules.
+Python executes code while loading a module, and execution pauses when it imports another module.
+In this case, a circular structure exists where `authentication.models` imports `corporate.models`, and `corporate.models` needs `authentication.models` again.
+
+The specific reference path is as follows:
+1. `corporate.models` is loaded due to the `from corporate.models import ...` statement in the `authentication/models.py` file.
+2. The `corporate/models/section.py` file is imported by `corporate.models`.
+3. A circular import occurs when the `from authentication.models import get_sentinel` statement in the `section.py` file is executed.
+
+Since `section` module tries to import content from `authentication.models` before `authentication.models` is fully loaded, the module is in a 'partially initialized' state and cannot find the name (function).
+
+## Solution
+
+To resolve circular imports, you must reorganize the import order between modules or use delayed imports.
+The most clear method is to organize modules into a hierarchical structure so that lower-level modules do not import higher-level modules.
+
+<Steps>
+<Step title="Identify circular reference path">
+Identify the path: `authentication.models` → `corporate.models` → `section` → `authentication.models`.
+</Step>
+<Step title="Apply delayed import">
+In `section.py`, which is the core of the circular reference, delay the import of `authentication.models` to inside the function or when needed.
+</Step>
+</Steps>
+
+```python
+# Before modification (section.py)
+from authentication.models import get_sentinel
+
+# After modification (section.py) - import inside function
+def some_function():
+    from authentication.models import get_sentinel
+    # ...
+```
+
+![Solution screenshot](/blogs/cannot-import-name-partially-initialized-module-2.jpg)
+
+## Alternative Solutions
+
+In addition to delayed imports, you can break the cycle by adjusting the import order of modules.
+You must organize modules according to directory structure or logical hierarchy and improve the structure so that lower-level modules do not reference upper-level modules.
+
+<Compare>
+<ComparePanel title="Existing Structure" tone="bad">
+Imports occur bidirectionally between modules, causing circular references.
+</ComparePanel>
+<ComparePanel title="Proposed Structure" tone="good">
+Organize modules hierarchically so that only lower-level modules reference upper-level modules.
+</ComparePanel>
+</Compare>
+
+## Additional Notes
+
+It is best to prevent circular imports during the module design stage.
+You can use a strategy of separating commonly used models or constants into a separate module to break the cycle.
+When organizing modules, always verify that a module is defined before other modules or follows a hierarchical structure.
+
+## Sources
+
+- StackOverflow: [ImportError: cannot import name '...' from partially initialized module '...' (most likely due to a circular import)](https://stackoverflow.com/questions/64807163/importerror-cannot-import-name-from-partially-initialized-module-m) — Author: 3WZ(question), John Gordon(answer) (CC BY-SA)
+- Tistory: [[Python] import Error : cannot import name module 에러 해결](https://sillutt.tistory.com/entry/Python-import-Error-cannot-import-name-module-%EC%97%90%EB%9F%AC-%ED%95%B4%EA%B2%B0) — Author: ⌒＿⌒
+- Tistory: [[Solution]Python pip - ImportError: cannot import name main](https://figureking.tistory.com/126) — Author: T.E. 201
+
+Images are taken from the sources above.
