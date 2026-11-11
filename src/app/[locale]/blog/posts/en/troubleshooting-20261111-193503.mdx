@@ -1,0 +1,108 @@
+---
+title: "[Troubleshooting] Dynamically Calling Module Functions via String"
+publishedAt: "2026-11-11"
+summary: "This note explains how to dynamically invoke a module function using its name stored in a string variable."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+When attempting to call a module function using a string variable containing the function name, Python does not interpret this automatically.
+
+<Callout type="warning" title="Error Situation">
+The syntax `call(foo, func_name)` does not exist in Python when `foo` is a variable, and it will result in a NameError.
+</Callout>
+
+```python
+import foo
+
+func_name = "bar"
+
+# Attempting direct function call (Error occurs)
+# call(foo, func_name) 
+# The above code does not execute; a separate mechanism is required to dynamically reference object attributes.
+```
+
+## Cause
+
+In Python, a variable (`foo`) points to a module object, and `bar` is an attribute of that object.
+
+Since a string (`func_name`) is merely text, there is no built-in mechanism to directly link it to the logic for exploring or calling attributes of a module object.
+
+Therefore, you must explicitly perform the process of finding the object corresponding to the string name.
+
+## Solution
+
+Use the built-in `getattr` function to dynamically retrieve the attribute (function) with the string name from the module object, and then call it.
+
+```python
+import foo
+
+func_name = "bar"
+
+# Get the function object using getattr(target_object, 'attribute_name')
+bar_func = getattr(foo, func_name)
+
+# Call the retrieved function object
+result = bar_func()
+```
+
+<Steps>
+<Step title="Prepare the module or class instance">
+Prepare the module or class instance containing the function you want to call.
+</Step>
+<Step title="Get the function object using getattr">
+Assign the function object to a variable using `getattr(target_object, 'function_name_string')`.
+</Step>
+<Step title="Call the function">
+Execute the assigned variable by adding parentheses, just like a normal function call.
+</Step>
+</Steps>
+
+## Alternative Solutions
+
+You can use the `locals()` or `globals()` functions to call functions from the current local or global namespace using a string.
+
+```python
+def my_function():
+    return "Called successfully"
+
+func_name = "my_function"
+
+# Get the function object from the current local namespace and call it
+result = locals()[func_name]()
+```
+
+<Compare>
+<ComparePanel title="Using getattr" tone="good">
+It is universally applicable for accessing object attributes such as modules, classes, and instances, and allows you to clearly specify the namespace path.
+</ComparePanel>
+<ComparePanel title="Using locals()/globals()" tone="info">
+It can only access functions within the local or global scope of the currently executing function, so `getattr` is more suitable for modularized code.
+</ComparePanel>
+</Compare>
+
+## Additional Notes
+
+If you need to import the module itself dynamically, you can use the `__import__` function.
+
+```python
+module_name = "foo"
+func_name = "bar"
+
+# Dynamic import of module
+module = __import__(module_name)
+
+# Dynamic call of module function
+func = getattr(module, func_name)
+func()
+```
+
+`getattr` applies equally to various object types, including class instance bound methods, module-level methods, and class methods.
+In actual code, it is recommended to pre-check with `hasattr` or use a `try-except` block to handle the `AttributeError` that may occur if the function does not exist.
+
+## Sources
+
+- StackOverflow: [Calling a function of a module by using its name (a string)](https://stackoverflow.com/questions/3061/calling-a-function-of-a-module-by-using-its-name-a-string) — Author: ricree(question), Patrick Johnmeyer(answer) (CC BY-SA)
+- Tistory: [[python] 이름(문자열)을 사용하여 모듈의 함수 호출](https://zooheon.tistory.com/entry/python-%EC%9D%B4%EB%A6%84%EB%AC%B8%EC%9E%90%EC%97%B4%EC%9D%84-%EC%82%AC%EC%9A%A9%ED%95%98%EC%97%AC-%EB%AA%A8%EB%93%88%EC%9D%98-%ED%95%A8%EC%88%98-%ED%98%B8%EC%B6%9C) — Author: 잡다한 이야기
+- Tistory: [[Python] if __name__ == "__main__": 의미](https://pinocc.tistory.com/175) — Author: 땅뚱 창고
