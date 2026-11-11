@@ -1,0 +1,100 @@
+---
+title: "[Troubleshooting] ValueError when checking for None in numpy array"
+publishedAt: "2026-11-11"
+summary: "Resolves the ambiguous truth value error for multi-dimensional numpy arrays when using the `not` operator by switching to `is None`."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+When checking if a variable is `None` using a condition like `if not a:`, an exception is raised if `a` is assigned a `numpy` array.
+
+<Callout type="warning" title="Error Situation">
+ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+</Callout>
+
+The minimal code to reproduce the error is as follows.
+
+```python
+import numpy as np
+
+def check_a(a):
+    if not a:
+        print("please initialize a")
+
+a = np.array([1, 2])
+check_a(a)
+```
+
+## Cause
+
+The `not` operator evaluates the Truth Value of its operand. While `None` evaluates to false and works as intended, the Truth Value of a `numpy` array is ambiguous if it has one or more elements.
+
+Since `numpy` arrays perform element-wise comparisons, applying `not` makes it impossible to determine if the entire array is true or false, resulting in a `ValueError`.
+
+```python
+a = np.array([1, 2])
+# if not a:  <- Error occurs here
+```
+
+## Solution
+
+The most common and safe way to check if an object is `None` is to use the `is` operator. Since `is` compares object identity, it does not go through the truth value evaluation process, making it safe even for `numpy` arrays.
+
+```python
+def check_a(a):
+    if a is None:
+        print("please initialize a")
+```
+
+![Solution screenshot](/blogs/numpy-none-valueerror-1.png)
+
+## Alternative Solutions
+
+To check if a `numpy` array object exists, you must compare the type. Since `np.array` is a factory function, the actual type of the array is `np.ndarray`.
+
+Directly comparing `type` does not account for subclasses, so you can use `isinstance` to check for subclasses as well.
+
+```python
+import numpy as np
+
+a = np.array([1, 2])
+
+# Method 1: Direct type comparison
+if type(a) is np.ndarray:
+    print("is ndarray")
+
+# Method 2: Check including subclasses (e.g., np.matrix)
+if isinstance(a, np.ndarray):
+    print("is ndarray instance")
+```
+
+## Additional Notes
+
+You should not use the `==` operator instead of `is`. The `==` operator performs element-wise comparison on `numpy` arrays, returning a boolean array, which causes the same `ValueError` when used in an `if` statement.
+
+```python
+a = np.array([1, 2])
+
+# Incorrect example: Element-wise comparison result (array) causes error in if statement
+if a == None:
+    print("None")
+
+# Correct example: Element-wise comparison requires .any() or .all()
+if (a == None).any():
+    print("Contains None")
+```
+
+<Callout type="tip" title="Core Summary">
+1. Checking for `None`: Use `if a is None:`
+2. Checking for `numpy` array: Use `if isinstance(a, np.ndarray):`
+3. `not a` or `a == None` raises a `ValueError`
+</Callout>
+
+## Sources
+
+- StackOverflow: [ValueError when checking if variable is None or numpy.array](https://stackoverflow.com/questions/36783921/valueerror-when-checking-if-variable-is-none-or-numpy-array) — Author: Light Yagmi(question), Jerfov2(answer) (CC BY-SA)
+- Tistory: [ValueError: could not convert string to float](https://gils-lab.tistory.com/138) — Author: GIL's LAB
+- Tistory: [TriviaQA 논문 확인 및 평가 코드 작성](https://yoonschallenge.tistory.com/1087) — Author: 공대생 도전 일지
+
+Images are taken from the sources above.
