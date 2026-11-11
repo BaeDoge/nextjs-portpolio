@@ -1,0 +1,113 @@
+---
+title: "[Troubleshooting] Resolving Python Relative Path Import Errors"
+publishedAt: "2026-11-11"
+summary: "This note explains the cause and solutions for relative import errors that occur when executing Python scripts directly."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+When executing a module inside a package directly as a script, importing another module from the same package using a relative path results in an error.
+The error message is as follows:
+
+<Callout type="warning" title="Error Situation">
+ImportError: attempted relative import with no known parent package
+</Callout>
+
+```python
+# myothermodule.py
+from .mymodule import as_int
+```
+
+```bash
+$ python mypackage/myothermodule.py
+Traceback (most recent call last):
+  File "mypackage/myothermodule.py", line 1, in <module>
+    from .mymodule import as_int
+ImportError: attempted relative import with no known parent package
+```
+
+![Symptom screenshot](/blogs/python-import-195527-1.png)
+
+## Cause
+
+The Python interpreter determines the reference location for importing a module based on the `__name__` attribute.
+When a file is executed directly via the Python interpreter, `__name__` is set to `'__main__'`.
+In this case, the interpreter cannot determine the parent path of the package to which the module belongs, so it cannot resolve relative paths (`.`).
+
+## Solution
+
+According to the official Python documentation, modules used as the main module of an application should always use absolute paths.
+The error is resolved by specifying the full package path for the import instead of a relative path.
+
+```python
+# myothermodule.py
+# Before: from .mymodule import as_int
+# After: Use absolute path
+from mypackage.mymodule import as_int
+```
+
+```python
+# main.py
+from mypackage.myothermodule import add
+
+def main():
+    print(add('1', '1'))
+
+if __name__ == '__main__':
+    main()
+```
+
+![Solution screenshot](/blogs/python-import-195527-2.png)
+
+## Alternative Solutions
+
+To maintain relative path imports while running as a script, you must run it as a module using the `-m` option.
+This method works because `__name__` is set to the module name rather than `'__main__'`, allowing relative paths to function correctly.
+
+<Steps>
+<Step title="Use the module execution command">
+Use the `python3 -m mypackage.myothermodule` command.
+</Step>
+</Steps>
+
+<Callout type="info" title="Caution">
+This method can be cumbersome to use with a shebang (`#!/usr/bin/env python3`).
+</Callout>
+
+Additionally, if the project structure causes absolute paths to become long or complex, you can resolve the issue by modifying `sys.path`.
+
+```python
+import sys
+import os
+
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
+
+from mypackage.mymodule import as_int
+```
+
+## Additional Notes
+
+The `__init__.py` file serves to indicate that the directory is part of a package.
+Since Python 3.3, directories are recognized as packages even without an `__init__.py` file, but it is safer to create it for backward compatibility with older versions.
+
+<Compare>
+<ComparePanel title="Relative path import" tone="bad">
+Errors occur when running as a script. While code readability is high, it has execution environment constraints.
+</ComparePanel>
+<ComparePanel title="Absolute path import" tone="good">
+No errors when running as a script. This is the recommended approach for main modules.
+</ComparePanel>
+</Compare>
+
+A similar error, `SystemError: Parent module '' not loaded, cannot perform relative import`, may also occur.
+This is caused by the same issue and can be resolved by using absolute path imports or executing with the `-m` option.
+
+## Sources
+
+- StackOverflow: [Relative imports in Python 3](https://stackoverflow.com/questions/16981921/relative-imports-in-python-3) — Author: John Smith Optional(question), Aya(answer) (CC BY-SA)
+- Velog: [[python]절대경로&상대경로, 상대경로 import 에러 이유와 해결](https://velog.io/@anjaekk/python%EC%A0%88%EB%8C%80%EA%B2%BD%EB%A1%9C%EC%83%81%EB%8C%80%EA%B2%BD%EB%A1%9C-%EC%83%81%EB%8C%80%EA%B2%BD%EB%A1%9C-import-%EC%97%90%EB%9F%AC%EC%9D%B4%EC%9C%A0%EC%99%80-%ED%95%B4%EA%B2%B0)
+- Velog: [[Python] calculator 패키지](https://velog.io/@chaduri7913/Python-calculator-%ED%8C%A8%ED%82%A4%EC%A7%80)
+
+Images are taken from the sources above.
