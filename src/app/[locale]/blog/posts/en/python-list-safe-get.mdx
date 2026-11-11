@@ -1,0 +1,90 @@
+---
+title: "[Troubleshooting] Why Python lists don't have a safe get method"
+publishedAt: "2026-11-11"
+summary: "Explains the structural reasons why Python lists lack a `get()` method like dictionaries and provides implementation patterns for safe access."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+Dictionaries raise a `KeyError` for missing keys but allow setting a default value via the `get()` method for exception-free access.
+In contrast, lists raise an `IndexError` when accessing an out-of-bounds index, and lists do not have a built-in `get()` method for this purpose.
+
+```python
+>>> d = {'a':'b'}
+>>> d.get('c', 'fail')
+'fail'
+
+>>> l = [1]
+>>> l[10]
+IndexError: list index out of range
+```
+
+<Callout type="warning" title="Error Scenario">
+You cannot directly use a feature equivalent to `dict.get()` to prevent execution from stopping due to index errors in lists.
+</Callout>
+
+![Symptom screenshot](/blogs/python-list-safe-get-1.png)
+
+## Cause
+
+Dictionaries are collections of name-value pairs, where checking for key existence and returning values is efficiently linked to the exception-throwing mechanism.
+Lists are ordered collections, where checking the length via the `len()` method during index access is very low-cost.
+Since the exception-throwing mechanism (`IndexError`) during index access is sufficiently efficient, the design does not require a separate `get()` method.
+
+## Solution
+
+To implement a safe access method that returns a default value in lists, you must catch the `IndexError` using a `try-except` block.
+
+```python
+def safe_list_get(l, idx, default):
+  try:
+    return l[idx]
+  except IndexError:
+    return default
+```
+
+## Alternative Solutions
+
+Monkey-patching the built-in `list` type to add a `get` method is not recommended as it affects all code globally.
+Instead, you can define a subclass that inherits from `list` and adds a `get` method, applying this functionality only to specific list instances used in your code.
+
+```python
+class SafeList(list):
+    def get(self, idx, default=None):
+        try:
+            return self[idx]
+        except IndexError:
+            return default
+```
+
+<Compare>
+<ComparePanel title="Existing Approach" tone="bad">
+You must write a `try-except` block every time due to the potential for `IndexError` during index access.
+</ComparePanel>
+<ComparePanel title="Alternative Approach" tone="good">
+By creating a `SafeList` class that inherits from `list`, you can naturally use the `get()` method in subclasses.
+</ComparePanel>
+</Compare>
+
+## Additional Notes
+
+The `dict.get()` method is optimized for retrieving values by key, differing from data structures like lists that retrieve values by index.
+List index errors are more suitable for exception handling mechanisms that immediately signal a mismatch between the index value and the data length.
+
+<Steps>
+<Step title="Define Function">
+Define the `safe_list_get` function to create a `try-except` structure.
+</Step>
+<Step title="Subclassing">
+Create a class inheriting from `list` and add the `get()` method to improve reusability.
+</Step>
+</Steps>
+
+## Sources
+
+- StackOverflow: [Why doesn't list have safe "get" method like dictionary?](https://stackoverflow.com/questions/5125619/why-doesnt-list-have-safe-get-method-like-dictionary) — Author: Mikhail M.(question), Nick Bastin(answer) (CC BY-SA)
+- Tistory: [음성인식, 합성 및 가상비서 만들기](https://yjhtpi.tistory.com/186) — Author: AI Agent
+- Tistory: [AFL++ 구조 분석[1]](https://ddyoru.tistory.com/entry/AFL-%EA%B5%AC%EC%A1%B0-%EB%B6%84%EC%84%9D1) — Author: Ddyoru
+
+Images are taken from the sources above.
