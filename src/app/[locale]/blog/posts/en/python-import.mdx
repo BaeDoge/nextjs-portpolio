@@ -1,0 +1,78 @@
+---
+title: "[Troubleshooting] Python Dynamic Import Module String"
+publishedAt: "2026-11-11"
+summary: "This note outlines the standard method for loading modules by name using `importlib.import_module`."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+When dynamically loading a module based on a module name (string) received as a command-line argument or similar input in a Python application, directly calling the built-in function `__import__` is complex and prone to errors.
+For example, in a structure like `python myapp.py command1`, you need to map the string `command1` to a module path for execution.
+<Callout type="warning" title="Error Situation">
+If the `fromlist` argument is not set correctly when using `__import__`, only the package root is loaded, and the object of the actually requested sub-module is not obtained.
+</Callout>
+
+```python
+import sys
+
+command = sys.argv[1]
+try:
+    # You must pass the module name list to fromlist to correctly import the sub-module
+    command_module = __import__("myapp.commands.%s" % command, fromlist=["myapp.commands"])
+except ImportError:
+    # Display error message
+    pass
+```
+
+## Cause
+
+The `__import__` function is a built-in function that receives the module name as a string and loads it, but its behavior in a package context is complex.
+Specifically, if the `fromlist` argument is not used or used incorrectly, only the package root is loaded, and the object of the actually requested sub-module is not obtained.
+Since Python 2.7 and 3.1, the standard library provides a clear API to address this, and it is no longer recommended to use the built-in function directly.
+<Steps>
+<Step title="Confirm Dynamic Load Requirement">
+Receive the module name (e.g., 'myapp.commands.command1') as a string from user input or configuration.
+</Step>
+<Step title="Attempt Module Load">
+Find the module based on the received string and return it as an object.
+</Step>
+</Steps>
+
+## Solution
+
+Using the `import_module` function of the `importlib` module in Python 2.7 and later, and Python 3, is the standard recommendation.
+This function accepts the module name as a string and clearly returns the module object, with intuitive exception handling.
+
+```python
+import importlib
+
+module_name = "myapp.commands.command1"
+try:
+    command_module = importlib.import_module(module_name)
+    command_module.run()
+except ImportError:
+    print(f"모듈 {module_name}을(를) 찾을 수 없습니다.")
+```
+
+## Alternative Solutions
+
+If you must use the `__import__` function directly, you must pass the `fromlist` argument in the form of a list (or tuple).
+If you need to load multiple modules at once, you can use it in combination with the `map` function, but this is suitable for situations where the root module is loaded rather than the sub-module.
+
+```python
+# Example of loading multiple modules simultaneously
+module_names = ['sys', 'os', 're', 'unittest']
+modules = map(__import__, module_names)
+```
+
+## Additional Notes
+
+`importlib.import_module` was introduced in Python 3.1 and is the recommended approach in all current major Python versions.
+Dynamic loading can pose security risks, so validation of input values (e.g., checking against an allowed list of modules) is required.
+
+## Sources
+
+- StackOverflow: [How can I import a module dynamically given its name as string?](https://stackoverflow.com/questions/301134/how-can-i-import-a-module-dynamically-given-its-name-as-string) — Author: Kamil Kisiel(question), Harley Holcombe(answer) (CC BY-SA)
+- Tistory: [Python 파이썬에서 딕셔너리를 확장하는 "extend", Python "extend" for a dictionary](https://stcodelab.tistory.com/entry/Python-%ED%8C%8C%EC%9D%B4%EC%8D%AC%EC%97%90%EC%84%9C-%EB%94%95%EC%85%94%EB%84%88%EB%A6%AC%EB%A5%BC-%ED%99%95%EC%9E%A5%ED%95%98%EB%8A%94-extend) — Author: 독학코딩
+- Tistory: [Python 파이썬을 사용하여 파일 이름을 바꾸는 방법, How to rename a file using Python](https://stcodelab.tistory.com/entry/Python-%ED%8C%8C%EC%9D%B4%EC%8D%AC%EC%9D%84-%EC%82%AC%EC%9A%A9%ED%95%98%EC%97%AC-%ED%8C%8C%EC%9D%BC-%EC%9D%B4%EB%A6%84%EC%9D%84-%EB%B0%94%EA%BE%B8%EB%8A%94-%EB%B0%A9%EB%B2%95) — Author: 독학코딩
