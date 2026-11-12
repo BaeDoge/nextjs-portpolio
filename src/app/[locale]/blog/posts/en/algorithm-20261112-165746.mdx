@@ -1,0 +1,94 @@
+---
+title: "[Coding Test] Determining Valid Anagrams"
+publishedAt: "2026-11-12"
+summary: "This document summarizes an algorithm that checks if two strings are anagrams by comparing character frequency counts."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given two strings `s` and `t`, determine if `t` is an anagram of `s`.
+An anagram is a word or phrase formed by rearranging the letters of a different word or phrase, typically using all the original letters exactly once.
+Return `true` if `t` is an anagram of `s`, and `false` otherwise.
+The strings consist of only lowercase English letters and have a maximum length of 50,000 characters.
+
+## Approach
+
+For two strings to be anagrams, they must satisfy all of the following conditions:
+First, the lengths of the two strings must be equal.
+Second, the frequency of each character must be exactly the same in both strings.
+Third, since there are no restrictions on character types, a data structure capable of handling all characters is required.
+
+<Steps>
+<Step title="Length Comparison">If the lengths of the two strings differ, they cannot be anagrams, so return `false`.</Step>
+<Step title="Frequency Storage">Use an array or a hash map to store the frequency of each character.</Step>
+<Step title="Frequency Comparison">Iterate through the characters to update the counts, and finally verify that the counts in both structures match.</Step>
+</Steps>
+
+## Solution
+
+If the lengths of the two strings differ, immediately return `false`.
+Since only lowercase English letters are considered, an array of size 26 can be used.
+Iterate through the first string `s` and count the frequency of each character.
+Iterate through the second string `t` and decrement the count for each character.
+Finally, iterate through the entire array; if any value is not 0, return `false`. If all values are 0, return `true`.
+
+```python
+class Solution:
+    def isAnagram(self, s: str, t: str) -> bool:
+        if len(s) != len(t):
+            return False
+        
+        count = [0] * 26
+        
+        for char in s:
+            count[ord(char) - ord('a')] += 1
+            
+        for char in t:
+            count[ord(char) - ord('a')] -= 1
+            
+        for c in count:
+            if c != 0:
+                return False
+                
+        return True
+```
+
+- Time Complexity: $O(n + k)$ - The strings are traversed twice based on length, and the array of size 26 is traversed once. Here, $n$ is the string length and $k$ is the number of alphabet characters (26).
+- Space Complexity: $O(1)$ - A fixed-size array of 26 elements is used, resulting in constant space.
+
+## Alternative Approaches
+
+A method using sorting is available.
+Sort both strings in ascending order and then compare if the two strings are identical.
+This approach can solve the problem without creating a separate frequency structure.
+
+```python
+class Solution:
+    def isAnagram(self, s: str, t: str) -> bool:
+        if len(s) != len(t):
+            return False
+        
+        return sorted(s) == sorted(t)
+```
+
+<Compare>
+<ComparePanel title="Sorting Approach" tone="bad">
+The time complexity is $O(n \log n)$, which can be slower than the hash map or array approach.
+</ComparePanel>
+<ComparePanel title="Frequency Array Approach" tone="good">
+The time complexity is $O(n)$, making it more efficient than the sorting method. For English letters, the space complexity is also $O(1)$.
+</ComparePanel>
+</Compare>
+
+## Additional Notes
+
+If the input contains Unicode characters, an array of size 26 cannot be used.
+In this case, you must use a hash map (Map) or dictionary (Dict) structure provided by the language.
+Using a hash map requires space proportional to the length of the string, resulting in a space complexity of $O(n)$.
+The time complexity remains $O(n)$.
+In anagram detection problems, it is important to choose the most suitable data structure based on the nature of the input.
+
+## Sources
+
+- LeetCode: [LeetCode 242 - Valid Anagram](https://leetcode.com/problems/valid-anagram/)
