@@ -1,0 +1,60 @@
+---
+title: "[Coding Test] Calculating Exclusive Time Using a Stack"
+publishedAt: "2026-11-12"
+summary: "This note explains how to compute each function's exclusive time from execution logs using a stack."
+tag: "Algorithm"
+---
+
+## Problem
+
+In a single-threaded CPU, `n` functions execute, each with a unique ID from `0` to `n-1`. Logs are recorded at start and end events in the format `"id:start|end:timestamp"`. The exclusive time of a function is the total time spent across all its invocations, including recursive calls. Given an array of logs, return an array of exclusive times for each function ID. Constraints: `n` is between 1 and 100, log length is between 2 and 500, timestamps are between 0 and 10^9, start and end times are distinct, and each start has a matching end.
+
+## Approach
+
+Process the logs sequentially while maintaining a stack of currently executing functions. Parse each log entry: if it is a start event, push the function onto the stack and accumulate time for the previously running function (the top of the stack). If it is an end event, pop the function, compute the time up to the end timestamp, and add it to that function's exclusive time. To correctly handle the end timestamp, add 1. The algorithm runs in linear time since each log is processed once.
+
+## Solution
+
+```python
+def exclusiveTime(n: int, logs: list[str]) -> list[int]:
+    ans = [0] * n
+    stack = []          # (function_id, start_time)
+    prev_time = 0
+
+    for entry in logs:
+        fid, typ, ts = entry.split(':')
+        fid, ts = int(fid), int(ts)
+
+        if typ == 'start':
+            if stack:
+                # Add time for the previous function up to the start
+                ans[stack[-1][0]] += ts - prev_time
+            stack.append((fid, ts))
+            prev_time = ts
+        else:  # 'end'
+            # Pop the ending function
+            cur_id, start = stack.pop()
+            # Include the time at the end
+            ans[cur_id] += ts - prev_time + 1
+            prev_time = ts + 1   # +1 for the next start
+
+    return ans
+```
+
+Time complexity: `O(L)` (L = logs.length)  
+Space complexity: `O(n)` (stack stores at most n entries)
+
+## Alternative Approaches
+
+- **Recursive Simulation**: Parse the logs and model nested calls as a recursive function, accumulating exclusive time at return points. It is intuitive but may be inefficient due to recursion depth limits.
+- **Two-Pass Parsing**: First sort start/end events by time, then use a stack to merge intervals. It has the same time complexity but incurs sorting overhead.
+
+## Additional Notes
+
+- End logs always follow start logs, so the stack remains valid.
+- Timestamps are integers; adding 1 at the end clarifies the boundary with the next start.
+- During recursive calls, the same ID may appear multiple times on the stack; each entry represents an independent call.
+
+## Sources
+
+- LeetCode: [LeetCode 636 - Exclusive Time of Functions](https://leetcode.com/problems/exclusive-time-of-functions/)
