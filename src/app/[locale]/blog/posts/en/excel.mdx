@@ -1,0 +1,87 @@
+---
+title: "[Coding Test] Excel Column Number Conversion"
+publishedAt: "2026-11-12"
+summary: "Implement an algorithm to convert Excel sheet column title strings into decimal integers."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given a string `columnTitle` representing an Excel sheet column title, return its corresponding decimal column number.
+
+Column titles consist of uppercase English letters where A is 1, B is 2, ..., and Z is 26. It operates as a 1-based system similar to base-26 but without a zero, such as AA being 27 and AB being 28.
+
+The input string length is between 1 and 7, inclusive, and consists only of uppercase English letters.
+
+## Approach
+
+This problem is essentially converting a base-26 number to a decimal number.
+
+Each character has a weight based on its position, with the place value increasing from right to left.
+
+For example, in "AB", B is in the ones place (26^0) and A is in the twenty-sixes place (26^1).
+
+To convert each character to a number where 'A' is 1 and 'Z' is 26, subtract the ASCII value of 'A' from the character's ASCII value and add 1.
+
+## Solution
+
+Iterate through the string from left to right and calculate the cumulative value.
+
+The cumulative value is updated by multiplying the current result by 26 and adding the numeric value of the current character.
+
+This approach is equivalent to sequentially applying the base-26 conversion formula.
+
+```python
+class Solution:
+    def titleToNumber(self, columnTitle: str) -> int:
+        result = 0
+        for char in columnTitle:
+            # Convert character to number: 'A' -> 1, 'B' -> 2, ..., 'Z' -> 26
+            value = ord(char) - ord('A') + 1
+            # Multiply existing result by 26 and add current value
+            result = result * 26 + value
+        return result
+```
+
+Time Complexity: O(N) - Iterates once through the string of length N.
+Space Complexity: O(1) - Uses no additional space.
+
+## Alternative Approaches
+
+An alternative approach uses a recursive function to process characters starting from the right end.
+
+The last character of the string is calculated for the current place value, and the remaining string is processed via a recursive call, multiplied by 26, and added to the current value.
+
+```python
+class Solution:
+    def titleToNumber(self, columnTitle: str) -> int:
+        if not columnTitle:
+            return 0
+        # Calculate the value of the last character
+        last_char_value = ord(columnTitle[-1]) - ord('A') + 1
+        # Multiply the recursive result of the remaining string by 26 and add current value
+        return self.titleToNumber(columnTitle[:-1]) * 26 + last_char_value
+```
+
+Time Complexity: O(N^2) - String slicing creates a new string copy in each call.
+Space Complexity: O(N) - The recursive call stack depth reaches N.
+
+The loop-based solution is more efficient and avoids stack overflow risks in languages without tail-call optimization.
+
+## Additional Notes
+
+A key point in this base-26 conversion is that it is a 1-based system without a zero.
+
+While standard base-26 uses 0-25, this problem uses 1-26, requiring an addition of 1 during character conversion.
+
+The maximum input "FXSHRXW" fits within the range of 2^31-1 (approximately 2.1 billion), so it can be represented by a 32-bit integer (`int`).
+
+Python supports arbitrary-precision integers, but since the value fits within 32-bit limits, standard `int` types in Java or C++ can also be used directly.
+
+<Callout type="tip" title="Key Point">
+Efficient conversion is achieved by iterating the string from left to right and applying the formula `result = result * 26 + value`.
+</Callout>
+
+## Sources
+
+- LeetCode: [LeetCode 171 - Excel Sheet Column Number](https://leetcode.com/problems/excel-sheet-column-number/)
