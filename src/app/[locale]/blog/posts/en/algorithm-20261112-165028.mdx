@@ -1,0 +1,52 @@
+---
+title: "[Coding Test] Bit Count DP"
+publishedAt: "2026-11-12"
+summary: "A dynamic programming problem that computes the number of 1 bits in the binary representation of each integer from 0 to n in linear time."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given an integer n, return an array ans of length n+1. For each index i (0 ≤ i ≤ n), ans[i] should be the number of 1 bits in the binary representation of i. You must solve it without using built‑in functions such as `__builtin_popcount`. Constraints: 0 ≤ n ≤ 10^5.
+
+## Approach
+
+The most intuitive approach is to iterate over each number and count its bits, which takes O(n log n) time. To achieve O(n) linear time, we must reuse already computed results. The key observation is that the number of 1 bits in i equals the number of 1 bits in i >> 1 (i divided by 2) plus the least‑significant bit i & 1. Therefore the recurrence ans[i] = ans[i >> 1] + (i & 1) holds. Filling the array from 1 to n in a single pass solves the problem.
+
+## Solution
+
+```python
+def countBits(n: int) -> list[int]:
+    ans = [0] * (n + 1)
+    for i in range(1, n + 1):
+        ans[i] = ans[i >> 1] + (i & 1)
+    return ans
+```
+
+- Time complexity: O(n) — each index is visited once.
+- Space complexity: O(n) — stores the result array.
+
+## Alternative Approaches
+
+**Brian Kernighan algorithm usage**  
+The operation `i & (i - 1)` clears the lowest set bit. Hence the recurrence ans[i] = ans[i & (i - 1)] + 1 also holds. This also runs in O(n) time and O(n) space and may be more intuitive from a bit‑manipulation perspective.
+
+```python
+def countBits_kernighan(n: int) -> list[int]:
+    ans = [0] * (n + 1)
+    for i in range(1, n + 1):
+        ans[i] = ans[i & (i - 1)] + 1
+    return ans
+```
+
+Both methods run in linear time, but the shift‑based solution performs fewer operations and can be slightly faster in practice.
+
+## Additional Notes
+
+- Satisfies the follow‑up requirements of O(n) time, single pass, and no use of built‑in functions.
+- `i >> 1` is equivalent to `i // 2`, and `i & 1` is equivalent to `i % 2`. Bitwise operations are faster than constant‑time arithmetic.
+- If memory optimization is needed, it could be streamed via a generator, but the problem requires returning an array.
+
+## Sources
+
+- LeetCode: [LeetCode 338 - Counting Bits](https://leetcode.com/problems/counting-bits/)
