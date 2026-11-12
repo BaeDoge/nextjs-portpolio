@@ -1,0 +1,99 @@
+---
+title: "[Coding Test] Valid Parentheses using Stack"
+publishedAt: "2026-11-12"
+summary: "Validates the correctness of a string containing parentheses by using a stack to match opening and closing brackets in the correct order."
+tag: "Algorithm"
+---
+
+## Problem
+
+A string `s` consisting only of round `()`, curly `{}`, and square `[]` brackets is given. You must implement a function that determines whether this string is valid.
+
+**Validity Conditions:**
+1. Opening brackets must be closed by the same type of closing bracket.
+2. Opening brackets must be closed in the correct order. (e.g., `([)]` is invalid)
+3. Every closing bracket must have a corresponding matching opening bracket.
+
+**Constraints:**
+- The length of the string is between 1 and 10,000, inclusive.
+- The string consists only of the specified bracket characters.
+
+<Callout type="info" title="Key Condition">
+When a closing bracket appears, it must match the type of the most recent opening bracket remaining on the stack. If the stack is empty, it is immediately considered invalid.
+</Callout>
+
+## Approach
+
+This problem can be solved efficiently by leveraging the Last-In-First-Out (LIFO) property of the **Stack** data structure.
+
+**Algorithm Steps:**
+1. Traverse the string sequentially from left to right.
+2. If an opening bracket (`(`, `{`, `[`) is encountered, push it onto the stack.
+3. If a closing bracket (`)`, `}`, `]`) is encountered, pop the most recent opening bracket from the stack.
+   - If the stack is empty or the popped bracket does not match the type of the current closing bracket, return `false`.
+4. After traversal is complete, if the stack is empty, all brackets have been correctly closed, so return `true`.
+
+## Solution
+
+Using a hash map to define the relationship between closing brackets and their matching opening brackets simplifies the code logic. An optimization is applied to immediately return `false` if the length of the input string is odd.
+
+```python
+def is_valid(s: str) -> bool:
+    # If the length is odd, it cannot be valid
+    if len(s) % 2 != 0:
+        return False
+
+    # Initialize stack
+    stack = []
+    # Hash map where keys are closing brackets and values are matching opening brackets
+    # Time complexity: Hash map lookup is O(1)
+    mapping = {')': '(', '}': '{', ']': '['}
+
+    for char in s:
+        if char in mapping:
+            # Pop the top element from the stack. Returns '#' fake value if stack is empty
+            top_element = stack.pop() if stack else '#'
+            
+            # If they do not match, it is invalid
+            if mapping[char] != top_element:
+                return False
+        else:
+            # Push opening brackets onto the stack
+            stack.append(char)
+
+    # The stack must be empty after processing all characters for the string to be valid
+    return not stack
+```
+
+**Time Complexity:** $O(N)$
+- We iterate through the string of length $N$, and stack insertion/deletion operations take constant time $O(1)$, resulting in a total of $O(N)$.
+
+**Space Complexity:** $O(N)$
+- In the worst case, where all characters are opening brackets, the stack stores all of them, requiring $O(N)$ memory.
+
+## Alternative Approaches
+
+**Recursive functions** can also be used to process brackets. When an opening bracket is encountered, a recursive call handles the inner brackets. When a closing bracket is encountered, the validity of the current call frame is determined.
+
+- **Time Complexity:** $O(N)$
+  - It visits each character in the string exactly once, so it is $O(N)$.
+- **Space Complexity:** $O(N)$
+  - The recursion stack can grow up to the length of the string, resulting in $O(N)$ space.
+
+<Compare>
+<ComparePanel title="Stack Solution" tone="good">
+Being iteration-based, it has no call overhead. You do not need to worry about call stack limit errors when processing long strings.
+</ComparePanel>
+<ComparePanel title="Recursive Solution" tone="bad">
+As the number of recursive calls increases, the stack depth increases, which may lead to exceptions due to call limits.
+</ComparePanel>
+</Compare>
+
+## Additional Notes
+
+1. **Handling Empty Strings:** Since the problem constraints specify a minimum length of 1, empty strings do not need to be considered. However, in general validity checks, it is conventional to treat an empty string as `true`.
+2. **Use of Fake Values:** To prevent exceptions caused by calling `pop()` on an empty stack, you can use a pattern that returns a non-matching fake value (such as `'#'`) when the stack is empty. This makes the code more concise.
+
+## Sources
+
+- LeetCode: [LeetCode 20 - Valid Parentheses](https://leetcode.com/problems/valid-parentheses/)
