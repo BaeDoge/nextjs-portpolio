@@ -1,0 +1,42 @@
+---
+title: "Music Library — Background Music Collection and Mixer"
+publishedAt: "2026-11-14"
+summary: "A desktop and CLI tool for organising local and external music catalogs by genre and mood, then editing and merging tracks to fit a video."
+images: []
+tag: "Python / Media Automation"
+link: "https://github.com/BaeDoge/python-youtube-audio-library-crawler"
+---
+
+## Overview
+
+I built this music library to reduce the repetitive work of finding background music for video footage and editing multiple tracks to fit a target duration. It manages both locally owned tracks and selected external catalogs, then creates mixes based on genre, mood, and length.
+
+## Features
+
+- **Music collection:** Local tracks and catalogs from Jamendo, Openverse, and YouTube Audio Library
+- **Classification and search:** Genre, mood, instruments, vocals, and license metadata
+- **Duration-based mixing:** Track selection for a target length, with crossfades and optional trimming of the final track
+- **Playlist editing:** Add, remove, and reorder tracks; dismissed tracks are excluded from automatic refill
+- **Exports:** A merged audio file, track timeline, and credit information
+- **Interfaces:** Desktop menu and CLI workflows
+
+## Implementation
+
+The application is written in Python. Track metadata and playlists are stored locally, while audio tooling is used to render the final mix. External catalogs are separated into provider modules, so a user can choose to work only with a local library or include selected sources.
+
+| Area | Technologies |
+| --- | --- |
+| Language | Python 3.11 |
+| Runtime | uv |
+| Metadata | SQLite |
+| Providers | Local, Jamendo, Openverse, YouTube Audio Library |
+| Audio | FFmpeg / ffprobe |
+| Optional browser integration | Playwright |
+
+## Development Process
+
+After I started filming videos, I found it time-consuming to search for music and edit it to the length of each clip. I defined the workflow around that use case. AI tools helped me refine genre and mood classification, work through provider integrations, and implement playlist editing. I listened to the generated mixes and checked the selection and editing behaviour before making further changes.
+
+## Licensing Notes
+
+The license metadata and filtering logic are tools for organising candidates, not a guarantee that a track can be used in a particular video or monetised. Before publishing, check the current terms of the source platform and the license for each track. Include generated credits when attribution is required. The YouTube Audio Library integration depends on an authenticated YouTube Studio browser session and an internal web API, which may change over time.

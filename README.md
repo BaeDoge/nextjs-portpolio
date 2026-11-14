@@ -1,59 +1,118 @@
-# 배승호 | AI Platform Engineer
+# Seung Ho Bae — Personal Portfolio
 
-AI 기능을 실제 서비스에 연결하고 운영하는 엔지니어입니다. 금융 상담 서비스, 생성형 AI 챗봇, 데이터 처리 파이프라인과 클라우드 기반 애플리케이션 개발 경험을 정리한 개인 포트폴리오입니다.
+Personal portfolio of **Seung Ho Bae**, an AI Platform Engineer at KB Kookmin Bank. The site presents my professional experience, selected engineering projects, technical writing, and independent side projects.
 
-## 주요 기능
+- **Live site:** https://baeseungho.vercel.app
+- **GitHub:** https://github.com/BaeDoge
+- **Primary focus:** AI services, backend engineering, cloud infrastructure, and product-minded development
 
-| 영역 | 설명 |
+## What you can explore
+
+- **About:** Professional experience, education, technical skills, awards, and publications
+- **Work:** Project write-ups covering production AI services and independent projects
+- **Blog:** Technical notes and articles
+- **Gallery:** Selected project and event highlights
+- **AI assistant:** A portfolio Q&A interface grounded in profile and project information
+
+## Selected side projects
+
+| Project | Description |
 | --- | --- |
-| About | 경력, 학력, 기술 스택 및 연구 경험 |
-| Work | 프로젝트별 목표, 담당 역할과 구현 내용 |
-| Blog | 개발 과정에서 정리한 기술 문서 |
-| Gallery | 수상 내역과 주요 이력 |
-| Chat | 포트폴리오 정보를 검색해 답변하는 RAG 기반 챗봇 |
+| [BAND NIGHT](https://github.com/BaeDoge/nextjs-band-concert-webpage) | Mobile-first concert invitation and audience participation platform |
+| [BUYMA Price Manager](https://github.com/BaeDoge/python-buyma-management) | Competitor price comparison and controlled price-update workflow |
+| [Baejoon](https://github.com/BaeDoge/nextjs-tech-blog) | Technical learning blog for algorithms, troubleshooting, papers, and open source |
+| [Team Calendar](https://github.com/BaeDoge/python-share-calender) | Shared team calendar, to-do, and work-document platform |
+| [Music Library](https://github.com/BaeDoge/python-youtube-audio-library-crawler) | Music catalog and duration-based background-music mixer |
+| [Knowledge Vault](https://github.com/BaeDoge/python-knowledge-store) | Searchable knowledge base using FastAPI and SQLite FTS5 |
 
-## 기술 구성
+## Technology
 
-- **Frontend:** Next.js 16 App Router, React 19, TypeScript
-- **UI / i18n:** Once UI, next-intl (한국어/영어)
-- **RAG:** Groq API (Llama 3.3 70B), Supabase Postgres, pgvector
-- **Deployment:** Vercel
-- **Knowledge-base sync:** GitHub Actions
+- **Frontend:** Next.js 16, React 19, TypeScript, Once UI
+- **Internationalisation and content:** next-intl, Markdown, MDX
+- **Portfolio assistant:** Hugging Face Transformers.js embeddings, Supabase vector search, Groq streaming responses
+- **Deployment and integrations:** Vercel, Supabase, GitHub Actions
 
-## RAG 챗봇 지식 베이스
+## Portfolio assistant
 
-챗봇이 참고하는 프로필과 프로젝트 지식은 `kb/`에서 관리합니다. 관련 콘텐츠가 변경되면 GitHub Actions의 `kb-sync` 워크플로를 통해 Supabase 지식 베이스를 갱신하도록 구성했습니다.
+The chat assistant follows a retrieval-augmented generation flow:
 
-서비스 상태 확인용 `/api/health` 엔드포인트와 예약 실행 기반 keepalive 점검도 포함합니다.
+1. Converts a question into an embedding using Xenova/paraphrase-multilingual-MiniLM-L12-v2.
+2. Searches portfolio content through the Supabase match_chunks function.
+3. Streams a response from the configured Groq model.
+4. Falls back to the local profile documents in kb/ when embedding or retrieval is unavailable.
 
-## 로컬 실행
+The assistant depends on external services and their credentials. Its responses are generated from the available portfolio knowledge base and should be treated as an aid for navigating the portfolio, not as a replacement for direct confirmation.
 
-Node.js와 npm이 필요합니다.
+## Run locally
 
-```bash
-npm install
-```
+**Requirements:** Node.js 24.x and npm.
 
-환경 변수 예시 파일을 복사하고 필요한 값을 설정합니다.
+    git clone https://github.com/BaeDoge/nextjs-portpolio.git
+    cd nextjs-portpolio
+    npm ci
 
-Windows PowerShell:
+Create a local environment file:
 
-```powershell
-Copy-Item .env.example .env.local
-```
+    cp .env.example .env.local
 
-macOS / Linux:
+On Windows Command Prompt:
 
-```bash
-cp .env.example .env.local
-```
+    copy .env.example .env.local
 
-그다음 개발 서버를 실행합니다.
+Add the credentials required by the features you want to run, then start the development server:
 
-```bash
-npm run dev
-```
+    npm run dev
 
-## 라이선스
+Open http://localhost:3000.
 
-이 프로젝트는 [Magic Portfolio](https://github.com/once-ui-system/magic-portfolio) 템플릿을 기반으로 합니다. 원본 템플릿 및 프로젝트의 라이선스 조건은 저장소의 `LICENSE` 파일을 확인하세요.
+For a production build:
+
+    npm run build
+    npm start
+
+## Environment variables
+
+Copy .env.example and configure only the integrations you use.
+
+| Variable | Purpose |
+| --- | --- |
+| NEXT_PUBLIC_SUPABASE_URL | Supabase project URL |
+| NEXT_PUBLIC_SUPABASE_ANON_KEY | Public Supabase client integrations |
+| SUPABASE_SERVICE_ROLE_KEY | Server-side vector search and privileged database operations |
+| GROQ_API_KEY | Portfolio chat completions |
+| GROQ_MODEL | Optional Groq model override |
+| PAGE_ACCESS_PASSWORD | Password for the portfolio admin page |
+| RESEND_API_KEY | Contact and email delivery integrations |
+| CRON_SECRET | Protects health and keepalive endpoints |
+| GITHUB_TOKEN | Optional read-only GitHub API token |
+
+Never commit .env.local or production credentials. In particular, keep SUPABASE_SERVICE_ROLE_KEY, GROQ_API_KEY, RESEND_API_KEY, and CRON_SECRET on the server.
+
+## Adding a project
+
+Project pages are written as MDX files:
+
+- Korean: src/app/[locale]/work/projects/<slug>.mdx
+- English: src/app/[locale]/work/projects/en/<slug>.mdx
+
+Use the same filename in both locations so the locale switcher can find the translated page. Frontmatter supports title, publishedAt, summary, images, tag, and link. The Work page reads project entries from these files and sorts them by publication date.
+
+## Repository structure
+
+    src/
+      app/[locale]/
+        work/projects/       # Korean project pages and en/ translations
+        blog/                # Portfolio articles
+      components/            # Shared UI and portfolio components
+      resources/             # Profile and site content
+      utils/                 # RAG, GitHub, SEO, and helper logic
+    kb/                      # Assistant reference documents
+    scripts/                 # Maintenance and integration scripts
+
+## AI-assisted development
+
+I use AI tools as part of my development workflow, not as a substitute for engineering decisions. I define the problem, user flow, requirements, and acceptance criteria; use AI to explore implementation options, draft code, and investigate errors; then review, run, integrate, and revise the result myself. The side projects linked above reflect that process across web applications, automation, internal tools, and media workflows.
+
+## Licence
+
+See [LICENSE](LICENSE) for the repository's current licence and attribution conditions. The site is based on the Once UI / Magic Portfolio project; review the applicable licence before reusing or redistributing any part of the code.
