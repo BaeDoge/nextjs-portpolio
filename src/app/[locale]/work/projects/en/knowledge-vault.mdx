@@ -1,0 +1,42 @@
+---
+title: "Knowledge Vault — Searchable Workspace Knowledge Base"
+publishedAt: "2026-11-14"
+summary: "A lightweight knowledge store for organising work notes and recurring solutions with categories and tags, and finding them through full-text search."
+images: []
+tag: "Python / Knowledge Management"
+link: "https://github.com/BaeDoge/python-knowledge-store"
+---
+
+## Overview
+
+Work notes and solutions to recurring problems often end up scattered across personal memory, chat messages, and documents. I built a lightweight knowledge store to organise that information with categories and tags, making it easier to retrieve when needed.
+
+## Features
+
+- **Knowledge records:** Create and edit entries with titles, content, categories, and tags
+- **Full-text search:** Search titles, content, and tags with SQLite FTS5
+- **Category management:** Add and remove categories to fit the team's work
+- **Attachments:** Store files alongside individual knowledge entries
+- **CLI:** Search and inspect the knowledge base from a terminal
+- **Backup:** Includes a script for backing up the database and attachments
+
+## Implementation
+
+The application uses FastAPI and SQLite, so it can run without a separate database server. SQLite FTS5 provides full-text search, while knowledge entries, categories, and attachment metadata are stored separately. The browser interface and CLI use the same API.
+
+| Area | Technologies |
+| --- | --- |
+| Backend | Python, FastAPI |
+| Database / Search | SQLite, FTS5 |
+| Templates | Jinja2 |
+| Runtime | uv, Uvicorn |
+
+## Planning and Development
+
+The main design goal was to make information easy to retrieve later, not just easy to save. I chose categories, tags, and full-text search as the foundation, then added editing and file attachments around the way the information is used.
+
+AI tools helped me review the data model and search flow and speed up repetitive API and CLI implementation. I decided how to structure and classify the knowledge itself, then refined the features against the intended workflow.
+
+## Intended Use
+
+The current implementation is a lightweight tool for personal use or a trusted internal environment, not a product with an account system or organisation-wide access control. When storing work materials, access to the host environment and backup location should be managed separately.
