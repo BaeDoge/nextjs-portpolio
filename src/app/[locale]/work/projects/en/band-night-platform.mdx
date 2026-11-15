@@ -1,45 +1,106 @@
 ---
 title: "BAND NIGHT — Concert Invitation and Audience Platform"
-publishedAt: "2026-11-14"
-summary: "A mobile-first concert website combining event information, audience interaction, an admin dashboard, and a post-event photo archive."
+publishedAt: "2026-11-16"
+summary: "A mobile-first event platform that connects concert information, audience participation, event administration, and a post-event photo archive."
 images: []
-tag: "Web / Product"
+tag: "Next.js / Supabase"
 link: "https://github.com/BaeDoge/nextjs-band-concert-webpage"
 ---
 
-## Overview
+<Feedback icon variant="success" title="At a glance" description="Extended a concert invitation page into a mobile event platform with audience interaction and administration features" />
 
-I built a mobile-first web invitation for an in-house band concert. The page brings together practical event information such as the schedule, venue, members, and setlist. I also wanted it to be more than a static announcement, so I added ways for the audience to participate before and after the show.
+## Background
 
-The live site is available at [BAND NIGHT](https://daeil-band.vercel.app).
+The first requirement for our in-house band concert was a simple way to share the schedule, venue, members, and setlist. I started with that invitation page, but wanted the website to be more than a static announcement. The audience should be able to take part in the event, while organisers should have a practical way to review those interactions.
 
-## Features
+I added emoji cheers, questions, and after-party responses, along with a separate admin view for reviewing visitor activity and audience messages.
 
-- **Event information:** Schedule, venue, map links, band members, and setlist
-- **Audience interaction:** Nickname registration, emoji cheers, questions, and after-party responses
-- **Admin dashboard:** Visitor activity, cheers, questions, RSVP responses, and visitor management
-- **Event memories:** Photo gallery and an archive that remains available after the concert
-- **Post-event mode:** Keeps the core content available as a static page without depending on the database
+Live site: [BAND NIGHT](https://daeil-band.vercel.app)
 
-## Implementation
+<CalloutBox type="info">
+  This project was planned and deployed for a real in-house band event. The primary access path is a QR code opened on a mobile browser, without requiring a separate app or an audience account.
+</CalloutBox>
 
-The frontend is built with Next.js and designed for mobile browsers. Supabase stores audience interaction data and supports the admin features. The site is deployed on Vercel and can be opened directly from a QR code or a link without installing an app.
+## User Flow
 
-| Area | Technologies |
-| --- | --- |
-| Frontend | Next.js, React, JavaScript |
-| Database | Supabase |
-| Deployment | Vercel |
-| Media | Responsive images, video, and WebP assets |
+1. **Discover the event** — Visitors open the shared link or QR code and check the schedule, venue, members, and setlist.
+2. **Take part** — They register a display name and leave emoji cheers, questions, or an after-party response.
+3. **Manage the event** — Organisers use a separate dashboard to review visitor activity, cheers, questions, and RSVP responses.
+4. **Keep the memories** — After the event, interactive features are retired and the page remains as a photo archive.
 
-## Planning and Development
+## System Design
 
-I defined the event flows and priorities based on what the band and audience actually needed, then translated them into screens and data structures. I used AI tools such as ChatGPT to compare UI approaches, reason through API flows, draft SQL changes, and investigate errors. I did not treat generated code as finished work: I tested it in mobile browsers and the deployed environment, then adjusted the implementation based on what I observed.
+<TechStack items={["Next.js", "React", "JavaScript", "Supabase", "Vercel"]} />
 
-I handled the planning, feature prioritisation, implementation, deployment, and follow-up improvements.
+<Table
+  data={{
+    headers: [
+      { content: "Area", key: "area" },
+      { content: "Technology", key: "stack" },
+      { content: "Responsibility", key: "role" }
+    ],
+    rows: [
+      ["Frontend", "Next.js 16 / React 19", "Mobile invitation, audience interaction, and admin screens"],
+      ["Backend / API", "Next.js Route Handlers", "Cheer, question, RSVP, and admin operations"],
+      ["Database", "Supabase", "Audience activity and event settings"],
+      ["Deployment", "Vercel", "Next.js hosting and static asset delivery"],
+      ["Media", "WebP / MP4", "Event images, video, and photo archive"]
+    ]
+  }}
+/>
 
-## Design Considerations
+~~~text
+Audience mobile browser
+        │
+        ▼
+Next.js pages and Route Handlers
+        │
+        ├── Event information / members / setlist
+        ├── Cheers / questions / after-party APIs
+        │
+        ▼
+Supabase
+  ├── cheers
+  ├── questions
+  ├── rsvps
+  ├── visitors
+  └── site_settings
 
-The audience can participate without creating an account. The current implementation uses a browser identifier, so moderation is browser-based rather than account-based; a visitor using another device or a private browsing session may receive a different identifier. It should not be considered a full account-authentication system.
+Organiser browser ── /host ── Activity review and administration
+~~~
 
-The post-event mode hides interactive features after the event and keeps the photo archive available as static content.
+## Features and Implementation
+
+<AccordionGroup
+  items={[
+    { title: "Audience interaction", content: <Text variant="body-default-s" onBackground="neutral-weak">The website stores emoji cheers, questions, and RSVP responses against a display name. The public page refreshes cheer statistics through a single endpoint and skips unnecessary polling while the browser tab is hidden.</Text> },
+    { title: "Admin dashboard", content: <Text variant="body-default-s" onBackground="neutral-weak">Organisers can review visitor counts, cheer statistics, questions and replies, and after-party responses. The dashboard also supports visitor-level activity review and browser-identifier-based moderation.</Text> },
+    { title: "Post-event archive", content: <Text variant="body-default-s" onBackground="neutral-weak">After the configured event end time, the site stops calling audience-interaction APIs and hides input controls. Event information and the photo archive remain available as static content, independent of the database.</Text> }
+  ]}
+/>
+
+## Design Decisions
+
+### Separating live-event behaviour from the archive
+
+Before the concert, cheers, questions, and RSVP interactions are useful. After the event, those controls are no longer needed. I used the event end time to switch the page into an archive mode, keeping the remaining content available without relying on database requests.
+
+### Keeping audience reads lightweight
+
+A concert page may receive a burst of visitors at the same time. I moved cheer aggregation into a database function and made the public page request a consolidated result. Detailed information needed only by organisers stays in the admin view.
+
+### Scope of visitor identification
+
+<CalloutBox type="warning">
+  Visitors are identified by a browser UUID rather than an account login. The same person may appear as a different visitor when using another device or a private browsing session. This is not a full account-authentication or identity-management system.
+</CalloutBox>
+
+## AI-assisted Development and My Contribution
+
+I defined the requirements and user flows, designed the data structure, and used AI tools such as ChatGPT to compare UI approaches, reason through API flows, draft SQL changes, and investigate errors. I split evolving requirements into smaller features, integrated the changes into the existing application, and checked the results in mobile browsers and the deployed environment.
+
+Rather than treating generated code as complete, I reviewed and adapted it to the existing architecture. I handled the planning, prioritisation, implementation, integration, deployment, and operational improvements.
+
+## Takeaways
+
+Even a small event website needs service-level thinking once visitors can interact with it and organisers depend on its data. The project gave me practical experience balancing new features with post-event behaviour, request volume, operational convenience, and the limits of lightweight visitor identification.

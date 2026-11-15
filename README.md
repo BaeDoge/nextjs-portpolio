@@ -21,6 +21,7 @@ Personal portfolio of **Seung Ho Bae**, an AI Platform Engineer at KB Kookmin Ba
 | [BAND NIGHT](https://github.com/BaeDoge/nextjs-band-concert-webpage) | Mobile-first concert invitation and audience participation platform |
 | [BUYMA Price Manager](https://github.com/BaeDoge/python-buyma-management) | Competitor price comparison and controlled price-update workflow |
 | [Baejoon](https://github.com/BaeDoge/nextjs-tech-blog) | Technical learning blog for algorithms, troubleshooting, papers, and open source |
+| [AI Illustration Studio](https://github.com/BaeDoge/python-image-generator) | Local image-generation experiments for character illustrations and multi-panel stories |
 | [Team Calendar](https://github.com/BaeDoge/python-share-calender) | Shared team calendar, to-do, and work-document platform |
 | [Music Library](https://github.com/BaeDoge/python-youtube-audio-library-crawler) | Music catalog and duration-based background-music mixer |
 | [Knowledge Vault](https://github.com/BaeDoge/python-knowledge-store) | Searchable knowledge base using FastAPI and SQLite FTS5 |
@@ -97,13 +98,15 @@ Project pages are written as MDX files:
 
 Use the same filename in both locations so the locale switcher can find the translated page. Frontmatter supports title, publishedAt, summary, images, tag, and link. The Work page reads project entries from these files and sorts them by publication date.
 
+The MDX renderer supports reusable components such as Feedback, Table, AccordionGroup, TechStack, MetricRow, CalloutBox, and ImageGrid.
+
 ## Repository structure
 
     src/
       app/[locale]/
         work/projects/       # Korean project pages and en/ translations
         blog/                # Portfolio articles
-      components/            # Shared UI and portfolio components
+      components/            # Shared UI and MDX components
       resources/             # Profile and site content
       utils/                 # RAG, GitHub, SEO, and helper logic
     kb/                      # Assistant reference documents
@@ -115,4 +118,4 @@ I use AI tools as part of my development workflow, not as a substitute for engin
 
 ## Licence
 
-See [LICENSE](LICENSE) for the repository's current licence and attribution conditions. The site is based on the Once UI / Magic Portfolio project; review the applicable licence before reusing or redistributing any part of the code.
+See LICENSE for the repository's current licence and attribution conditions. The site is based on the Once UI / Magic Portfolio project; review the applicable licence before reusing or redistributing any part of the code.

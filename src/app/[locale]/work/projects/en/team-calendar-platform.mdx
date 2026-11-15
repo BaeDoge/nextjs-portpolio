@@ -1,42 +1,110 @@
 ---
-title: "Team Calendar — Shared Schedule and Task Platform"
-publishedAt: "2026-11-14"
-summary: "A lightweight web platform for sharing team calendars, to-dos, work items, and related documents in one place."
+title: "Team Calendar — Shared Platform for Team Schedules and Work"
+publishedAt: "2026-11-16"
+summary: "An internal FastAPI application for managing team schedules, to-dos, work details, comments, and deliverables in one place."
 images: []
-tag: "Python / Internal Tools"
+tag: "FastAPI / Internal Tools"
 link: "https://github.com/BaeDoge/python-share-calender"
 ---
 
-## Overview
+<Feedback icon variant="success" title="At a glance" description="An internal team tool that brings schedules, to-dos, work documents, and collaboration records together" />
 
-When team schedules and work updates are scattered across chat rooms, personal calendars, and file folders, it becomes difficult to find information or keep everyone aligned. I built a shared calendar that brings schedules, to-dos, and work-related information into one place.
+## Background
 
-## Features
+When schedules and work updates are scattered across chat messages, personal calendars, spreadsheets, and file folders, it becomes difficult to find information or understand who is working on what.
 
-- **Calendar:** Monthly and weekly views, with schedule creation and editing
-- **Work categories:** Schedule types such as SR, CM, meetings, and leave, with environment, assignee, and ticket details
-- **To-dos:** Personal and shared tasks with owners, due dates, priorities, and status
-- **Collaboration:** Comments on events and attachments for plans and deliverables
-- **Administration:** User and schedule management, deleted-item history, and recovery
-- **Task overview:** Search, pagination, and a Kanban-style view
+I built an internal web application to manage schedules and to-dos in one calendar and attach plans or deliverables to the related work items. The focus was not on building a large enterprise suite, but on bringing the information and navigation used repeatedly by the team into one place.
 
-## Implementation
+## Feature Overview
 
-The application is built with FastAPI and SQLite as a lightweight web service intended for an internal network. It uses SQLite WAL mode and foreign keys, with separate records for schedules, to-dos, attachments, comments, and activity history.
+<Table
+  data={{
+    headers: [
+      { content: "Area", key: "area" },
+      { content: "Features", key: "features" },
+      { content: "Purpose", key: "purpose" }
+    ],
+    rows: [
+      ["Calendar", "Monthly and weekly schedules, event types, owners, and ticket details", "Share team schedules and work periods"],
+      ["To-do", "Personal and shared tasks, due dates, priorities, and status", "Track individual and common work"],
+      ["Collaboration", "Event comments and attachments for plans or deliverables", "Keep work context and documents together"],
+      ["Kanban", "Work grouped by status with paginated lists", "Review active, pending, and completed work"],
+      ["Administration", "User management, deletion history, and recovery", "Maintain operational records"]
+    ]
+  }}
+/>
 
-| Area | Technologies |
-| --- | --- |
-| Backend | Python, FastAPI |
-| Database | SQLite |
-| Template / UI | Jinja2, HTML, CSS, JavaScript |
-| Runtime | uv, Uvicorn |
+## Technology
 
-## Development Process
+<TechStack items={["Python", "FastAPI", "SQLite", "Jinja2", "JavaScript", "uv"]} />
 
-I designed the data model and screens around the way the team manages schedules and work documents. After the initial version, I incorporated feedback and added comments, attachments, a Kanban view, administrative history, and search.
+<Table
+  data={{
+    headers: [
+      { content: "Area", key: "area" },
+      { content: "Implementation", key: "stack" },
+      { content: "Design rationale", key: "reason" }
+    ],
+    rows: [
+      ["Backend", "FastAPI", "APIs and business rules for schedules, tasks, files, and comments"],
+      ["Database", "SQLite", "Simple operation on an internal network without a separate DB server"],
+      ["Persistence", "WAL / Foreign Keys", "Concurrent access and relational integrity"],
+      ["Frontend", "Jinja2 / HTML / CSS / JavaScript", "Lightweight web interface"],
+      ["Runtime", "uv / Uvicorn", "Python environment and application server"]
+    ]
+  }}
+/>
 
-AI tools helped me break requests into implementable features, review data models and screen flows, and speed up repetitive implementation and debugging. I made the decisions about how the tool should fit the team's workflow and handled the integration and follow-up changes.
+## Data Model and Request Flow
 
-## Deployment and Security
+~~~text
+User browser
+      │
+      ▼
+FastAPI
+      │
+      ├── Calendar Events
+      ├── Todo Items
+      ├── Comments
+      ├── Attachments
+      └── User / Activity History
+      │
+      ▼
+SQLite
+  ├── users
+  ├── events
+  ├── todos
+  ├── attachments
+  ├── event_comments
+  └── activity_logs
+~~~
 
-The current implementation identifies users using a browser identifier and connection IP rather than account-based authentication. It is therefore not a replacement for an SSO-backed service or a full role-based identity system. It is intended for a trusted internal network; a public deployment would require additional authentication, access control, backup, and data-retention measures.
+Schedules and to-dos are stored separately, while comments and attachments have their own records. This keeps each feature from becoming overly dependent on another feature's data structure. SQLite foreign keys and WAL mode are used, and the admin functions provide access to supported deletion history and activity records.
+
+## Implementation Focus
+
+<AccordionGroup
+  items={[
+    { title: "Connecting schedules with work details", content: <Text variant="body-default-s" onBackground="neutral-weak">The calendar distinguishes SR, CM, meetings, leave, and other event types. Work-related events can also include an environment (Dev, Stg, Prd), an assignee, and a ticket number.</Text> },
+    { title: "Personal and shared to-dos", content: <Text variant="body-default-s" onBackground="neutral-weak">Tasks can be personal or shared, with due dates, priorities, assignees, and status. Both list and Kanban-style views help users review their workload.</Text> },
+    { title: "Work documents and change history", content: <Text variant="body-default-s" onBackground="neutral-weak">Comments and multiple attachments can be linked to an event so its context and deliverables stay together. Administrative history and activity logs help review changes made during operation.</Text> }
+  ]}
+/>
+
+## Deployment and Security Scope
+
+<CalloutBox type="warning">
+  This is a lightweight tool intended for a trusted internal network. User identification currently uses a browser identifier and connection IP rather than account-based authentication. It does not provide organisation-wide SSO or a full role-based permission system. A public deployment would require additional authentication, authorisation, HTTPS, access controls, and backup policies.
+</CalloutBox>
+
+Because the application may contain work documents, access to the host and data directory must be protected, and backups should be managed separately. Before expanding it into an organisation-wide service, the identity and role model should be strengthened.
+
+## AI-assisted Development and My Contribution
+
+I defined the requirements around the team's actual scheduling and document-sharing workflow, then designed the data model and screens. As the team began using the initial version, I split new requests into features and added comments, attachments, a Kanban view, administrative history, and search.
+
+AI tools helped turn requests into implementable tasks, review data structures and screen flows, and speed up repetitive coding and debugging. I checked whether the proposed changes fitted the existing data and operating model, and handled integration, revisions, and final behaviour checks.
+
+## Takeaways
+
+This project showed me that even a small internal tool needs a coherent data model once schedules, users, attachments, and change history are connected. Observing how the team actually works and improving the tool in small increments helped me develop a practical approach to internal application design and operation.

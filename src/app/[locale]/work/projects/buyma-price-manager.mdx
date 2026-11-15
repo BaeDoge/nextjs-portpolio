@@ -1,44 +1,123 @@
 ---
-title: "BUYMA Price Manager — 경쟁 상품 가격 비교 및 관리 자동화"
-publishedAt: "2026-11-14"
-summary: "Google Sheets에 정리한 상품 URL을 기준으로 BUYMA 경쟁 가격을 비교하고, 설정한 인하 기준에 따라 판매 가격 변경을 지원하는 Python 도구입니다."
+title: "BUYMA Price Manager — 경쟁 가격 비교 및 판매가 관리 자동화"
+publishedAt: "2026-11-16"
+summary: "Google Sheets의 상품 목록을 기준으로 경쟁 가격을 비교하고, 변경 한도와 예외 조건을 적용해 판매가 조정을 지원하는 Python 자동화 도구입니다."
 images: []
 tag: "Python / Automation"
 link: "https://github.com/BaeDoge/python-buyma-management"
 ---
 
-## 프로젝트 개요
+<Feedback icon variant="success" title="한 줄 요약" description="경쟁 상품 가격 수집부터 변경 가능 여부 판단, API 반영과 실행 이력 기록까지 연결한 가격 관리 자동화" />
 
-BUYMA에서 판매하는 상품의 경쟁 가격을 반복해서 확인하고 직접 수정하는 작업을 줄이기 위해 만든 자동화 프로그램입니다. Google Sheets에 정리된 상품 URL을 읽어 경쟁 가격을 비교하고, 조건을 만족하는 상품에 한해 BestShip 판매 상품의 가격 변경을 요청합니다.
+## 프로젝트 배경
 
-## 주요 기능
+BUYMA 상품을 관리하면서 경쟁 상품 가격을 반복해서 확인하고, 조건에 맞는 상품의 판매가를 직접 수정하는 작업이 계속 발생했습니다. 상품 수가 늘어날수록 가격 확인과 변경 여부 판단에 시간이 들고, 한 번에 너무 큰 폭으로 가격을 조정하지 않도록 일관된 기준을 적용하는 것도 중요했습니다.
 
-- **가격 비교:** Google Sheets에 등록된 BUYMA URL을 읽고 경쟁 상품의 가격을 비교
-- **변경 기준 설정:** 경쟁 최저가와의 차액(delta), 한 번에 변경할 수 있는 최대 금액(max_change) 설정
-- **미리보기:** 변경 대상과 계산된 가격을 먼저 확인한 뒤 단일 상품 또는 전체 상품 처리
-- **가격 변경:** BUYMA Personal Shopper Product API를 통해 변경 요청
-- **실행 이력:** Google Sheets와 CSV에 실행 결과 및 변경 내역 기록
-- **예약 실행:** 지정한 시간에 반복 실행하고 Windows 실행 파일로 패키징
+이 과정을 자동화하기 위해 Google Sheets를 상품 목록과 실행 결과의 기준으로 사용하고, 경쟁 가격 비교와 가격 변경 요청을 하나의 흐름으로 연결했습니다.
 
-## 구현 구성
+## 전체 처리 흐름
 
-| 영역 | 구성 |
-| --- | --- |
-| Language | Python 3.11 |
-| Environment | uv |
-| External services | BUYMA Product API, Google Sheets API |
-| Browser automation | Playwright |
-| Testing | pytest |
-| Distribution | Windows executable build |
+~~~text
+Google Sheets 상품 URL
+        │
+        ▼
+BUYMA 경쟁 상품 조회
+        │
+        ▼
+BestShip 내 상품 및 현재 판매가 조회
+        │
+        ▼
+가격 정책 계산
+  ├── 이미 경쟁 최저가 이하인가?
+  ├── 목표 가격이 유효한가?
+  └── 인하 금액이 허용 범위인가?
+        │
+        ▼
+미리보기 및 변경 대상 확인
+        │
+        ▼
+BUYMA Product API 변경 요청
+        │
+        ▼
+Google Sheets / CSV 실행 이력
+~~~
 
-실행은 메뉴형 프로그램과 예약 실행 프로그램으로 나누었습니다. 기본 흐름은 가격 비교와 미리보기이며, 실제 변경은 사용자가 확인한 뒤 진행하도록 구성했습니다.
+## 가격 정책
 
-## 개발 과정
+<TechStack items={["Python", "uv", "Playwright", "Google Sheets API", "BUYMA Product API", "pytest"]} />
 
-가격 변경 로직에서 가장 중요했던 부분은 무조건 최저가를 따라가는 것이 아니라, 허용한 범위 안에서만 가격을 조정하는 것이었습니다. 기준값과 예외 조건을 설정 파일로 분리하고, 단일 상품 테스트와 전체 상품 실행을 구분해 실수로 대량 변경이 일어나지 않도록 했습니다.
+가격 계산은 pricing.py의 순수 함수로 분리했습니다. 경쟁 최저가를 무조건 따라가는 방식이 아니라, 현재 가격과 설정된 제한값을 함께 확인해 변경 여부를 결정합니다.
 
-AI 도구는 가격 정책과 실행 흐름을 정리하고, API 연동 코드와 테스트 케이스를 다듬는 과정에서 보조적으로 활용했습니다. 실제 상품 운영에 맞는 기준과 변경 여부는 제가 직접 판단하고 확인하도록 만들었습니다.
+<Table
+  data={{
+    headers: [
+      { content: "조건", key: "condition" },
+      { content: "처리", key: "action" }
+    ],
+    rows: [
+      ["현재 가격이 경쟁 최저가 이하", "이미 경쟁력이 있다고 판단해 변경하지 않음"],
+      ["목표 가격 = 경쟁 최저가 - delta", "설정한 차액만큼 낮춘 가격을 계산"],
+      ["목표 가격이 0 이하", "유효하지 않은 가격이므로 변경하지 않음"],
+      ["현재 가격과 목표 가격의 차이가 max_change 초과", "한 번의 변경 한도를 넘으므로 변경하지 않음"],
+      ["모든 조건을 통과", "가격 변경 대상으로 분류"]
+    ]
+  }}
+/>
 
-## 테스트 및 주의사항
+~~~python
+target_price = competitor_min - delta
+reduction = current_price - target_price
 
-자동 테스트는 모의 HTTP 응답과 Google Sheets 객체를 사용합니다. 따라서 테스트 통과가 실제 BUYMA 계정에서의 가격 변경 성공을 의미하지는 않습니다. 실제 연동에는 사용자의 BUYMA 인증 정보, API 권한과 Google 서비스 계정 설정이 필요합니다. 타임세일 상품의 처리 여부도 설정값에 따라 달라집니다.
+# current_price > competitor_min
+# target_price > 0
+# reduction <= max_change
+~~~
+
+delta는 경쟁 최저가보다 낮게 설정할 금액이고, max_change는 한 번 실행할 때 허용할 최대 인하 금액입니다. 두 기준은 config.yaml에서 관리합니다.
+
+## 기능 구성
+
+<AccordionGroup
+  items={[
+    { title: "상품 목록과 경쟁 가격 비교", content: <Text variant="body-default-s" onBackground="neutral-weak">Google Sheets의 상품 URL을 매 실행마다 읽어 경쟁 가격을 조회합니다. 상품별 현재 가격과 경쟁 가격을 모아 가격 정책 함수에 전달합니다.</Text> },
+    { title: "미리보기 및 단일·일괄 실행", content: <Text variant="body-default-s" onBackground="neutral-weak">전체 상품을 바로 변경하지 않고 계산 결과를 먼저 확인할 수 있습니다. 단일 상품 테스트와 전체 상품 실행을 분리하고, 실제 변경 단계에서는 명시적인 확인을 거칩니다.</Text> },
+    { title: "예약 실행과 실행 이력", content: <Text variant="body-default-s" onBackground="neutral-weak">설정한 시각에 반복 실행하는 별도 스케줄러를 제공하고, 실행 결과를 Google Sheets와 CSV에 기록합니다. Windows 실행 파일로 패키징해 개발 환경이 없는 PC에서도 사용할 수 있도록 구성했습니다.</Text> }
+  ]}
+/>
+
+## 기술 구성
+
+<Table
+  data={{
+    headers: [
+      { content: "영역", key: "area" },
+      { content: "기술 및 모듈", key: "stack" },
+      { content: "역할", key: "role" }
+    ],
+    rows: [
+      ["Application", "Python 3.11 / uv", "메뉴형 실행 및 설정 관리"],
+      ["Pricing", "pricing.py", "가격 계산과 변경 조건 판단"],
+      ["External API", "BUYMA Product API", "상품 가격 변경 요청"],
+      ["Spreadsheet", "Google Sheets API", "상품 URL 입력과 결과·이력 관리"],
+      ["Browser", "Playwright", "일부 상품 및 판매자 정보 확인"],
+      ["Scheduler", "scheduler.py", "설정 시각에 반복 실행"],
+      ["Testing", "pytest", "가격 정책, API 및 실행 흐름 테스트"]
+    ]
+  }}
+/>
+
+## 안정성과 검증
+
+<CalloutBox type="warning">
+  자동 테스트는 모의 HTTP 응답과 Google Sheets 객체를 사용합니다. 테스트가 통과해도 실제 BUYMA 계정의 가격 변경 성공까지 보장하지는 않습니다. 운영 환경에서는 인증 정보, API 권한, 상품 상태와 외부 서비스 응답을 별도로 확인해야 합니다.
+</CalloutBox>
+
+타임세일 상품은 설정에 따라 변경 대상에서 제외할 수 있도록 했습니다. 예약 실행 중 추가 인증이나 외부 서비스 문제가 발생하면 해당 실행을 무리하게 진행하지 않도록 처리하고, 결과와 사유를 기록하는 흐름을 두었습니다.
+
+## AI 도구 활용과 개발 기여
+
+AI 도구는 가격 변경 규칙을 정리하고 예외 조건을 검토하거나, API 연동 코드와 테스트 시나리오를 구체화하는 데 활용했습니다. 다만 가격 정책의 기준값과 실제 운영 방식은 직접 결정했습니다. 특히 이미 최저가인 상품, 0 이하 가격, 허용 한도 초과, 타임세일 상품 등 변경하면 안 되는 상황을 코드와 테스트로 분리해 검증했습니다.
+
+## 정리
+
+이 프로젝트에서 중요한 것은 가격을 자동으로 바꾸는 기능 자체보다, **어떤 상황에서 변경하고 어떤 상황에서는 변경하지 않을지**를 명확하게 정의하는 것이었습니다. 반복 업무를 줄이면서도 외부 시스템에 영향을 주는 자동화에는 미리보기, 제한 조건, 실행 기록과 테스트가 함께 필요하다는 점을 경험했습니다.

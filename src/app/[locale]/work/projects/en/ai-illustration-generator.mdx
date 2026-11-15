@@ -1,0 +1,122 @@
+---
+title: "AI Illustration Studio — Character Artwork and Short Comic Generation"
+publishedAt: "2026-11-16"
+summary: "A local AI image-generation workflow that connects scene planning, image candidates, quality checks, and multi-panel composition for character-focused illustrations and short comics."
+images: []
+tag: "Python / Generative AI"
+link: "https://github.com/BaeDoge/python-image-generator"
+---
+
+<Feedback icon variant="success" title="At a glance" description="An experimental pipeline that combines LLM-based scene planning with local image generation and multi-panel composition" />
+
+## Background
+
+Generating one image from a prompt is only part of the challenge. For a short comic or a sequence of illustrations, the scenes need to follow a coherent direction, the visual style should remain recognisable, and the generated candidates need to be reviewed before they are composed.
+
+I started this project to automate that workflow: plan a sequence of scenes from text, generate multiple image candidates for each scene, compare the results, and assemble selected images into a visual sequence. Recent experiments have focused on friendly animal characters such as dogs, cats, and rabbits, with simple shapes and restrained detail.
+
+## Generation Pipeline
+
+<TechStack items={["Python", "PyTorch", "Diffusers", "Stable Diffusion XL", "Pillow", "CLIP", "CUDA"]} />
+
+~~~text
+Topic and scene information
+       │
+       ▼
+LLM-based planning
+  ├── Story flow
+  ├── Scene descriptions
+  └── Visual style selection
+       │
+       ▼
+Style Prompt Builder
+       │
+       ▼
+SDXL image generation
+  └── Multiple candidates per scene
+       │
+       ▼
+Image verification and selection
+  ├── Basic quality checks
+  ├── CLIP similarity ranking
+  └── Optional VLM semantic review
+       │
+       ▼
+Pillow-based panel composition
+       │
+       ▼
+Image sequence and verification report
+~~~
+
+## Core Implementation
+
+<MetricRow
+  items={[
+    { value: "896 × 1152", label: "Default generation resolution" },
+    { value: "3", label: "Story scene panels" },
+    { value: "6", label: "Panels in the current sample layout" }
+  ]}
+/>
+
+<Table
+  data={{
+    headers: [
+      { content: "Stage", key: "step" },
+      { content: "Implementation", key: "implementation" },
+      { content: "Responsibility", key: "role" }
+    ],
+    rows: [
+      ["Planning", "LLM + planner.py", "Topic analysis, scene flow, and prompt generation"],
+      ["Style", "styles.py", "Style presets including flat pastel, paper cut, watercolor, and clay 3D"],
+      ["Generation", "Diffusers / SDXL", "Generate multiple image candidates per scene"],
+      ["Verification", "verify.py", "Basic image quality, CLIP ranking, and optional VLM review"],
+      ["Composition", "Pillow / compose.py", "Arrange text and images into individual panels"],
+      ["Report", "verify.json", "Record validation results and unresolved warnings"]
+    ]
+  }}
+/>
+
+### 1. Scene Planning and Style Composition
+
+The LLM turns the topic and scene information into a short sequence, then converts each scene into an image-generation description. A style is selected from code-defined presets, and shared positive and negative prompt elements are combined with the individual scene prompt to reduce visual drift.
+
+### 2. Image Candidate Generation
+
+The application runs a Diffusers Stable Diffusion XL pipeline on a local GPU. It generates multiple candidates for each scene and records the seed so that results can be reproduced under the same conditions. The model path, optional LoRA, and CPU offload behaviour can be configured for the local environment.
+
+### 3. Candidate Verification and Retry
+
+<AccordionGroup
+  items={[
+    { title: "Basic quality checks", content: <Text variant="body-default-s" onBackground="neutral-weak">The pipeline checks for basic issues such as overly dark or nearly empty images, and compositions that are too flat or visually sparse.</Text> },
+    { title: "CLIP and optional VLM review", content: <Text variant="body-default-s" onBackground="neutral-weak">CLIP scores are used to compare candidates against the scene description. When a VLM is configured, it can provide additional checks on whether the image matches the intended scene and contains the expected visual elements.</Text> },
+    { title: "Retry with a simpler scene", content: <Text variant="body-default-s" onBackground="neutral-weak">When candidates fail the configured checks, the scene description is simplified and generated again. The final verification results are saved to verify.json for human review.</Text> }
+  ]}
+/>
+
+## Development Environment
+
+The public repository uses Python 3.11, PyTorch, and Diffusers to run image generation on a CUDA-capable GPU. The default pipeline is based on SDXL, with support for specifying another checkpoint or a LoRA.
+
+~~~bash
+uv sync
+python main.py check
+~~~
+
+Demo mode can be used to inspect the planning flow and image-generation output with test input. Actual image generation requires the model files and a correctly configured CUDA environment.
+
+## Current Scope and Limitations
+
+<CalloutBox type="warning">
+  The public repository is an experimental implementation of an image-generation and scene-composition pipeline. Without a VLM, semantic image checking relies on CLIP ranking and basic quality checks. It also does not guarantee that a character's appearance, clothing, or proportions remain identical across multiple panels; reference-image conditioning and additional training for consistent characters remain areas for further experimentation.
+</CalloutBox>
+
+Some execution paths are built around a particular multi-panel content format, so this should not be considered a general-purpose image editor or a complete comic-production application. The current focus is to keep planning, candidate generation, image comparison, and panel composition as separate steps that can be improved independently.
+
+## AI-assisted Development and My Contribution
+
+I planned the pipeline around more than simply calling an image-generation model. I defined how scenes should be prepared, how candidates should be compared, and how selected images should be assembled. AI tools helped me explore storyboard structures, prompt design, validation criteria, and implementation options. I ran the models directly in a GPU environment, reviewed the generated results, and adjusted the code based on image quality and scene relevance.
+
+## Takeaways
+
+The project gave me hands-on experience with the workflow surrounding generative image models: scene planning, prompt construction, candidate generation, validation, and panel composition. I am continuing to explore ways to preserve a character's visual identity across scenes and create short illustrated stories that feel consistent from panel to panel.
