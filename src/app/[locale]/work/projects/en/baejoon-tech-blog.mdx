@@ -1,39 +1,85 @@
 ---
-title: "Baejoon — A Hands-on Developer Learning Blog"
-publishedAt: "2026-11-14"
-summary: "A learning platform for algorithm solutions, troubleshooting notes, paper reviews, and open-source analysis, with code examples to explore in practice."
+title: "Baejoon — A Practical Engineering Learning Blog"
+publishedAt: "2026-11-16"
+summary: "A personal learning platform for organising algorithm solutions, troubleshooting, paper reviews, and open-source analysis with MDX, references, and code examples."
 images: []
-tag: "Next.js / Content Platform"
+tag: "Next.js / MDX"
 link: "https://github.com/BaeDoge/nextjs-tech-blog"
 ---
 
-## Overview
+<Feedback icon variant="success" title="At a glance" description="A technical learning platform that records problems, references, explanations, and code examples for future use" />
 
-I created this technical blog to document the problems I encounter while developing, the solutions I try, algorithm exercises, and research or open-source projects that I find useful. The goal is not just to collect articles, but to make each topic easier to explore through explanations and practical code examples.
+## Background
 
-The live site is [Baejoon](https://baejoon.vercel.app). The name takes inspiration from Baekjoon, the well-known algorithm practice platform in Korea.
+Details from a bug investigation or a newly learned technology are easy to forget over time. A solution found through search may also stop working when the original environment or library version changes.
 
-## Features
+I wanted a technical notebook that records more than the final fix. It should explain how an issue was reproduced, which causes were investigated, and what change actually resolved it. The same site also covers algorithm exercises, paper reviews, and open-source analysis.
 
-- **Topic-based content:** Algorithms, troubleshooting, paper reviews, and open-source analysis
-- **MDX authoring:** Combines written explanations, code, and visual components
-- **Content discovery:** Category pages, site search, related posts, and estimated reading time
-- **Hands-on learning:** Presents problem-solving steps alongside code examples
-- **Search and sharing:** Metadata, canonical URLs, sitemap, robots.txt, and structured data
+Live site: [Baejoon — 함께 공부합시다](https://baejoon.vercel.app)
+
+The name takes inspiration from Baekjoon, the well-known algorithm practice platform in Korea. The idea is similar: solve a problem, verify the approach, and keep a useful record of the solution.
+
+## Content Structure
+
+<Table
+  data={{
+    headers: [
+      { content: "Category", key: "category" },
+      { content: "Topics", key: "topics" },
+      { content: "Article focus", key: "method" }
+    ],
+    rows: [
+      ["Algorithm", "Data structures and coding exercises", "Approach, complexity, and solution code"],
+      ["Troubleshooting", "Development environments and library errors", "Reproduction, root cause, and resolution"],
+      ["Paper Review", "AI and software research", "Motivation, core ideas, experiments, and limitations"],
+      ["Open Source", "Libraries and developer tools", "Problem addressed, architecture, and code observations"]
+    ]
+  }}
+/>
 
 ## Implementation
 
-The site uses Next.js App Router and MDX. Articles are stored as Markdown or MDX files grouped by category, making it straightforward to add new topics and revise existing posts. GitHub changes are deployed through Vercel.
+<TechStack items={["Next.js", "React", "MDX", "Markdown", "Vercel"]} />
 
-| Area | Technologies |
-| --- | --- |
-| Frontend | Next.js App Router, React |
-| Content | MDX, Markdown |
-| Styling | CSS |
-| Deployment | Vercel |
+Articles are stored as MDX files grouped by category rather than being hard-coded into page components. This separates content from presentation and makes it possible to add or revise articles without changing the application structure.
 
-## Planning and Editorial Process
+~~~text
+content/
+  algorithm/
+  troubleshooting/
+  paper/
+  opensource/
 
-I choose the topics, review source material, and run code examples as part of preparing an article. AI tools such as ChatGPT help me explore technical topics, organise explanations, and review code drafts. I do not publish generated answers without checking them: I verify original sources, test examples, and edit the content based on the results.
+Next.js App Router
+        │
+        ▼
+MDX metadata + article content
+        │
+        ├── Category / Article pages
+        ├── Search / Related posts
+        └── Article metadata / SEO
+~~~
 
-As the collection grows, I want Baejoon to become a practical reference that I can return to during future development, rather than just a personal diary.
+## Features
+
+<AccordionGroup
+  items={[
+    { title: "MDX-based content management", content: <Text variant="body-default-s" onBackground="neutral-weak">Articles combine Markdown with code blocks and visual components. Metadata such as title, summary, and publication date is managed separately and reused across list and detail pages.</Text> },
+    { title: "Content discovery", content: <Text variant="body-default-s" onBackground="neutral-weak">Category pages, site search, related articles, and estimated reading time make it easier to return to earlier notes and solutions.</Text> },
+    { title: "Search and sharing", content: <Text variant="body-default-s" onBackground="neutral-weak">Canonical URLs, sitemap, robots.txt, and structured data provide the metadata needed by search engines to understand and index the articles.</Text> }
+  ]}
+/>
+
+## Editorial Approach
+
+For paper reviews and open-source articles, I start with the original paper or repository and run relevant examples where practical. Troubleshooting articles include the environment and reproduction context, rather than only listing the command that fixed the issue.
+
+AI tools help me explore topics, organise source material, draft explanations, and review code. I do not treat generated explanations as verified facts: I check original references and practical results before publishing.
+
+## Maintenance
+
+As the article collection grows, it becomes important to revisit old explanations, update version-specific information, and repair outdated links. I want Baejoon to remain useful as a technical reference, not simply a stream of newly published posts.
+
+## Takeaways
+
+Baejoon is less about publishing as often as possible and more about keeping development knowledge reusable. Writing down a problem, verifying the explanation, and preserving a working example are all part of the learning process.

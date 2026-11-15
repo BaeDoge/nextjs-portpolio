@@ -1,42 +1,94 @@
 ---
-title: "Knowledge Vault — Searchable Workspace Knowledge Base"
-publishedAt: "2026-11-14"
-summary: "A lightweight knowledge store for organising work notes and recurring solutions with categories and tags, and finding them through full-text search."
+title: "Knowledge Vault — A Searchable Workspace Knowledge Base"
+publishedAt: "2026-11-16"
+summary: "A lightweight knowledge platform for organising work experience with categories, tags, and attachments, then retrieving it through SQLite full-text search."
 images: []
-tag: "Python / Knowledge Management"
+tag: "FastAPI / SQLite FTS5"
 link: "https://github.com/BaeDoge/python-knowledge-store"
 ---
 
-## Overview
+<Feedback icon variant="success" title="At a glance" description="A local-first knowledge store that turns personal experience and recurring work solutions into searchable entries" />
 
-Work notes and solutions to recurring problems often end up scattered across personal memory, chat messages, and documents. I built a lightweight knowledge store to organise that information with categories and tags, making it easier to retrieve when needed.
+## Background
 
-## Features
+Configuration notes and solutions to recurring problems often become scattered across chat messages, personal documents, and browser bookmarks. When the same problem appears again, it can take time to find the relevant notes and reconstruct what was done.
 
-- **Knowledge records:** Create and edit entries with titles, content, categories, and tags
-- **Full-text search:** Search titles, content, and tags with SQLite FTS5
-- **Category management:** Add and remove categories to fit the team's work
-- **Attachments:** Store files alongside individual knowledge entries
-- **CLI:** Search and inspect the knowledge base from a terminal
-- **Backup:** Includes a script for backing up the database and attachments
+I built a knowledge store that organises this information with categories and tags, keeps related files alongside each entry, and makes it searchable by keyword.
 
-## Implementation
+## Core Features
 
-The application uses FastAPI and SQLite, so it can run without a separate database server. SQLite FTS5 provides full-text search, while knowledge entries, categories, and attachment metadata are stored separately. The browser interface and CLI use the same API.
+<Table
+  data={{
+    headers: [
+      { content: "Feature", key: "feature" },
+      { content: "Implementation", key: "implementation" },
+      { content: "Purpose", key: "purpose" }
+    ],
+    rows: [
+      ["Knowledge CRUD", "Title, content, category, and tags", "Create and revise experience notes"],
+      ["Full-text search", "SQLite FTS5", "Search titles, content, and tags"],
+      ["Categories", "User-defined categories", "Group knowledge by work topic"],
+      ["Attachments", "File storage and metadata", "Keep configuration files and references with an entry"],
+      ["CLI", "HTTP API client", "Search and inspect entries from a terminal"],
+      ["Backup", "Database and attachment backup", "Preserve local data"]
+    ]
+  }}
+/>
 
-| Area | Technologies |
-| --- | --- |
-| Backend | Python, FastAPI |
-| Database / Search | SQLite, FTS5 |
-| Templates | Jinja2 |
-| Runtime | uv, Uvicorn |
+## Technology
 
-## Planning and Development
+<TechStack items={["Python", "FastAPI", "SQLite", "FTS5", "Jinja2", "uv"]} />
 
-The main design goal was to make information easy to retrieve later, not just easy to save. I chose categories, tags, and full-text search as the foundation, then added editing and file attachments around the way the information is used.
+~~~text
+Browser UI ──────────────┐
+                         │
+CLI Client ── HTTP API ──┤
+                         ▼
+                      FastAPI
+                         │
+              ┌──────────┴──────────┐
+              ▼                     ▼
+        SQLite knowledge       Attachments
+              │
+              ▼
+          SQLite FTS5
+       (title / content / tags)
+~~~
 
-AI tools helped me review the data model and search flow and speed up repetitive API and CLI implementation. I decided how to structure and classify the knowledge itself, then refined the features against the intended workflow.
+FastAPI and SQLite keep the application self-contained without requiring a separate database server. Knowledge entries and attachment records are managed separately, while the browser interface and CLI use the same API.
 
-## Intended Use
+## Search Design
 
-The current implementation is a lightweight tool for personal use or a trusted internal environment, not a product with an account system or organisation-wide access control. When storing work materials, access to the host environment and backup location should be managed separately.
+SQLite FTS5 indexes titles, content, and tags. Database triggers keep the search index in sync when knowledge entries are inserted, updated, or deleted.
+
+<AccordionGroup
+  items={[
+    { title: "Search index synchronisation", content: <Text variant="body-default-s" onBackground="neutral-weak">An FTS5 virtual table is linked to the knowledge table. Insert, update, and delete triggers maintain the index, so a separate manual indexing step is not required.</Text> },
+    { title: "Knowledge entries and attachments", content: <Text variant="body-default-s" onBackground="neutral-weak">Search results include the entry title, content, category, tags, and linked attachments. Files are stored in a directory organised by the knowledge entry ID.</Text> },
+    { title: "Shared API for the browser and CLI", content: <Text variant="body-default-s" onBackground="neutral-weak">The browser interface and CLI do not access the database independently. Both use FastAPI endpoints so that search and category logic can be maintained in one place.</Text> }
+  ]}
+/>
+
+## Design Considerations
+
+### Lightweight operation
+
+The project is intended for personal or small internal use, so I chose SQLite instead of operating a separate database server. The application uses WAL mode and foreign keys, and provides a way to back up the database together with its attachments.
+
+### Making information easy to retrieve
+
+A large collection of notes is not useful if the information cannot be found when needed. Categories and tags provide secondary organisation, while full-text search is the primary way to retrieve entries.
+
+<CalloutBox type="warning">
+  The current implementation is a lightweight self-hosted tool. It does not provide multi-user authentication or organisation-wide permissions. When storing work materials, run it on localhost or a trusted internal network and manage access to the data directory and backup files separately.
+</CalloutBox>
+
+## AI-assisted Development and My Contribution
+
+I prioritised a structure that would make information easy to retrieve months later, not simply easy to save. I designed the knowledge-entry model, category management, FTS5 search flow, and attachment handling.
+
+AI tools helped me review the data model and search approach, draft repetitive API and CLI code, and investigate errors. I tested and revised the implementation to ensure that search results fit the intended workflow and that entries and attachments remained consistently managed.
+
+## Takeaways
+
+Knowledge Vault is more than a note-taking page: it is a small platform for structuring recurring work knowledge and finding it again when needed. The project gave me practical experience combining a search index, attachment storage, an API, and a CLI around a single data model.

@@ -1,42 +1,103 @@
 ---
-title: "Music Library — 영상용 배경음악 수집 및 믹스 도구"
-publishedAt: "2026-11-14"
-summary: "보유 음원과 외부 무료 음원 카탈로그를 장르·무드별로 정리하고, 영상 길이에 맞춰 편집·병합하는 데스크톱 및 CLI 도구입니다."
+title: "Music Library — 영상용 배경음악 라이브러리와 믹스 제작 도구"
+publishedAt: "2026-11-16"
+summary: "로컬 음원과 외부 카탈로그를 장르·무드별로 관리하고, 목표 영상 길이에 맞춰 플레이리스트를 편집하고 오디오를 합치는 Python 도구입니다."
 images: []
-tag: "Python / Media Automation"
+tag: "Python / Audio Automation"
 link: "https://github.com/BaeDoge/python-youtube-audio-library-crawler"
 ---
 
-## 프로젝트 개요
+<Feedback icon variant="success" title="한 줄 요약" description="음원 탐색과 분류, 플레이리스트 편집, 길이 조정, 오디오 렌더링을 하나의 작업 흐름으로 연결" />
 
-영상 편집을 할 때 장면의 분위기에 맞는 배경음악을 찾고, 영상 길이에 맞게 여러 곡을 편집하는 작업을 줄이기 위해 만든 음원 라이브러리입니다. 보유한 음원과 외부 카탈로그를 함께 관리하고, 원하는 장르·무드·재생 시간에 맞춰 믹스를 만들 수 있습니다.
+## 프로젝트 배경
 
-## 주요 기능
+영상 촬영을 시작하면서 편집 과정에서 사용할 배경음악을 찾고, 영상 길이에 맞춰 여러 곡을 자르고 이어 붙이는 일이 반복됐습니다. 음악을 찾는 시간과 실제 편집 시간이 따로 들고, 영상 분위기에 맞는 곡을 다시 찾으려면 여러 사이트를 오가야 했습니다.
 
-- **음원 수집:** 로컬 보유 음원과 Jamendo, Openverse, YouTube Audio Library 카탈로그 연동
-- **분류 및 검색:** 장르, 무드, 악기, 보컬 여부와 라이선스 정보 기반 분류
-- **길이 기반 믹스:** 목표 재생 시간에 맞춰 곡을 선택하고, 크로스페이드와 마지막 구간 트리밍 지원
-- **편집:** 생성된 플레이리스트에서 곡을 추가·삭제·이동하고, 제외한 곡은 자동 재선택에서 제외
-- **결과물:** 통합 오디오 파일, 곡별 타임라인과 크레딧 정보 생성
-- **사용 방식:** 데스크톱 메뉴와 CLI 모두 지원
+그래서 로컬에 보유한 음원과 외부 카탈로그를 하나의 라이브러리로 관리하고, 장르와 무드, 원하는 재생 시간을 기준으로 플레이리스트를 만들 수 있는 도구를 개발했습니다.
 
-## 구현
+## 전체 작업 흐름
 
-Python 기반으로 음원 메타데이터와 플레이리스트를 관리하고, 오디오 처리 도구를 이용해 최종 믹스를 생성합니다. 외부 서비스별 수집 코드는 Provider 단위로 분리해, 로컬 라이브러리만 사용하는 방식과 외부 카탈로그를 추가하는 방식을 선택할 수 있도록 했습니다.
+~~~text
+음원 소스
+  ├── Local Library
+  ├── Jamendo
+  ├── Openverse
+  └── YouTube Audio Library (Optional)
+        │
+        ▼
+Metadata 수집 및 SQLite 저장
+        │
+        ▼
+Genre / Mood / Instrument / Vocal 분류
+        │
+        ▼
+목표 길이에 맞는 곡 선택
+        │
+        ▼
+Playlist 검토 및 편집
+        │
+        ▼
+Download → Crossfade / Trim → FFmpeg
+        │
+        ▼
+Mix 파일 + Timeline + Credits
+~~~
 
-| 영역 | 구성 |
-| --- | --- |
-| Language | Python 3.11 |
-| Runtime | uv |
-| Metadata | SQLite |
-| Providers | Local, Jamendo, Openverse, YouTube Audio Library |
-| Audio | FFmpeg / ffprobe |
-| Optional browser integration | Playwright |
+## 기술 구성
 
-## 개발 과정
+<TechStack items={["Python", "SQLite", "HTTPX", "FFmpeg", "ffprobe", "Playwright", "uv"]} />
 
-유튜브 영상 촬영을 시작하면서 매번 음원을 검색하고 길이를 맞추는 작업이 번거로워 직접 필요한 흐름을 정의했습니다. AI 도구는 장르·무드 분류 기준을 정리하고, 플랫폼별 수집 모듈과 플레이리스트 편집 흐름을 구현하는 과정에서 보조적으로 사용했습니다. 실제 다운로드와 믹스 결과를 들어보고, 선택이나 편집이 기대한 대로 동작하는지 확인하며 개선했습니다.
+<Table
+  data={{
+    headers: [
+      { content: "영역", key: "area" },
+      { content: "구성", key: "stack" },
+      { content: "역할", key: "role" }
+    ],
+    rows: [
+      ["Application", "Python 3.11 / uv", "CLI와 데스크톱 메뉴"],
+      ["Library", "SQLite", "곡 정보, 분류와 플레이리스트 저장"],
+      ["Providers", "Local / Jamendo / Openverse / YouTube Audio Library", "음원과 메타데이터 수집"],
+      ["Selection", "Genre / Mood / Duration Criteria", "영상 분위기와 목표 길이에 맞는 곡 선택"],
+      ["Audio", "FFmpeg / ffprobe", "음원 변환, 길이 처리와 믹스 렌더링"],
+      ["Browser", "Playwright (Optional)", "YouTube Studio 세션을 이용한 카탈로그 연동"]
+    ]
+  }}
+/>
 
-## 라이선스 관련 참고
+## 플레이리스트 설계
 
-음원 메타데이터와 라이선스 필터는 후보를 정리하는 보조 기능입니다. 특정 음원의 영상 사용이나 수익화를 보증하지는 않습니다. 공개 또는 수익화 전에 원본 플랫폼의 최신 약관과 곡별 라이선스를 확인하고, 저작자 표시가 필요한 경우 생성된 크레딧을 함께 제공해야 합니다. YouTube Audio Library 연동은 로그인된 YouTube Studio 브라우저 세션과 내부 웹 API 동작에 의존하므로, 플랫폼 변경에 따라 수정이 필요할 수 있습니다.
+곡을 단순히 순서대로 이어 붙이는 것보다, 목표 길이 안에서 분위기와 곡 구성을 함께 조절할 수 있도록 플레이리스트를 독립적인 데이터로 관리했습니다.
+
+<AccordionGroup
+  items={[
+    { title: "조건 기반 곡 선택", content: <Text variant="body-default-s" onBackground="neutral-weak">장르, 무드, 악기, 보컬 여부 등의 조건으로 후보를 좁히고, 목표 재생 시간에 맞춰 트랙을 선택합니다. 로컬 라이브러리만 사용할지 외부 카탈로그까지 확장할지도 선택할 수 있습니다.</Text> },
+    { title: "플레이리스트 검토와 편집", content: <Text variant="body-default-s" onBackground="neutral-weak">선택된 곡을 추가·삭제·이동할 수 있습니다. 사용자가 직접 제외한 곡은 자동으로 다시 채우는 과정에서도 제외해, 원하지 않는 곡이 반복해서 들어오는 것을 방지합니다.</Text> },
+    { title: "길이 조정과 렌더링", content: <Text variant="body-default-s" onBackground="neutral-weak">트랙 사이의 크로스페이드 시간을 고려해 전체 재생 시간을 계산합니다. 필요하면 마지막 트랙을 잘라 목표 길이에 맞추고, FFmpeg로 통합 파일과 곡별 타임라인을 생성합니다.</Text> }
+  ]}
+/>
+
+## 결과물
+
+- 최종 믹스 오디오 파일
+- 곡별 시작 시간과 순서를 확인할 수 있는 타임라인
+- 저작자 표시가 필요한 곡의 크레딧 정보
+- 수정 가능한 플레이리스트 데이터
+
+## 라이선스와 외부 연동의 한계
+
+<CalloutBox type="warning">
+  라이선스 메타데이터와 자동 필터는 음원을 정리하기 위한 보조 기능이며, 특정 영상에 사용할 권리를 보증하지 않습니다. 게시하거나 수익화하기 전에 각 곡의 최신 라이선스와 원본 플랫폼 약관을 확인해야 합니다.
+</CalloutBox>
+
+특히 YouTube Audio Library 연동은 로그인된 YouTube Studio 브라우저 세션과 내부 웹 API 동작에 의존합니다. 안정적인 공개 API 계약이 아니므로 YouTube 측 화면이나 API가 바뀌면 수정이 필요할 수 있습니다. Jamendo 등 외부 소스 역시 각 서비스의 API 정책과 사용 조건을 따릅니다.
+
+## AI 도구 활용과 개발 기여
+
+영상 제작에 필요한 실제 작업 흐름을 먼저 정의하고, 라이브러리 구조와 곡 선택 기준, 플레이리스트 편집 방식을 직접 설계했습니다. AI 도구는 장르·무드 분류 기준을 정리하고 Provider 모듈과 편집 기능의 구현 대안을 검토하는 데 활용했습니다.
+
+생성된 믹스는 실제로 재생해 보고, 곡 선택과 길이 계산, 편집 결과가 기대한 대로 동작하는지 확인하면서 개선했습니다. 자동화가 음원 사용 권리까지 판단해 주는 것은 아니라는 점도 명확히 구분했습니다.
+
+## 정리
+
+이 프로젝트는 음악 검색부터 최종 오디오 파일 생성까지 흩어진 작업을 한 흐름으로 연결한 도구입니다. 외부 API 연동뿐 아니라 메타데이터 모델, 선택 알고리즘, 오디오 처리와 라이선스 정보까지 함께 다뤄 볼 수 있었습니다.

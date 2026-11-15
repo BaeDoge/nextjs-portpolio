@@ -2,19 +2,9 @@ import { getLocale } from "next-intl/server";
 import { Column, Heading, Meta, Schema } from "@once-ui-system/core";
 import { baseURL, about, person, work } from "@/resources";
 import { Projects } from "@/components/work/Projects";
-import { TechStack, MetricRow,CalloutBox, ImageGrid } from "@/components/mdx/index";
-
-export const revalidate = 0; // 항상 최신 버전 서빙
-
-const components = {
-  // 기존 컴포넌트들...
-  TechStack,
-  MetricRow,
-  CalloutBox,
-  ImageGrid,
-};
-
 import { PAGE_DESCRIPTIONS, withAlternates } from "@/utils/seo";
+
+export const revalidate = 0;
 
 export async function generateMetadata() {
   const locale = await getLocale();
@@ -23,7 +13,7 @@ export async function generateMetadata() {
       title: work.title,
       description: PAGE_DESCRIPTIONS.work[locale === "en" ? "en" : "ko"],
       baseURL: baseURL,
-      image: `/api/og/generate?title=${encodeURIComponent(work.title)}`,
+      image: "/api/og/generate?title=" + encodeURIComponent(work.title),
       path: work.path,
     }),
     work.path,
@@ -40,11 +30,11 @@ export default function Work() {
         path={work.path}
         title={work.title}
         description={work.description}
-        image={`/api/og/generate?title=${encodeURIComponent(work.title)}`}
+        image={"/api/og/generate?title=" + encodeURIComponent(work.title)}
         author={{
           name: person.name,
-          url: `${baseURL}${about.path}`,
-          image: `${baseURL}${person.avatar}`,
+          url: baseURL + about.path,
+          image: baseURL + person.avatar,
         }}
       />
       <Heading marginBottom="l" variant="heading-strong-xl" align="center">
@@ -54,4 +44,3 @@ export default function Work() {
     </Column>
   );
 }
-
