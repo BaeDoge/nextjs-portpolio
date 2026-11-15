@@ -1,0 +1,42 @@
+---
+title: "Team Calendar — Shared Schedule and Task Platform"
+publishedAt: "2026-11-14"
+summary: "A lightweight web platform for sharing team calendars, to-dos, work items, and related documents in one place."
+images: []
+tag: "Python / Internal Tools"
+link: "https://github.com/BaeDoge/python-share-calender"
+---
+
+## Overview
+
+When team schedules and work updates are scattered across chat rooms, personal calendars, and file folders, it becomes difficult to find information or keep everyone aligned. I built a shared calendar that brings schedules, to-dos, and work-related information into one place.
+
+## Features
+
+- **Calendar:** Monthly and weekly views, with schedule creation and editing
+- **Work categories:** Schedule types such as SR, CM, meetings, and leave, with environment, assignee, and ticket details
+- **To-dos:** Personal and shared tasks with owners, due dates, priorities, and status
+- **Collaboration:** Comments on events and attachments for plans and deliverables
+- **Administration:** User and schedule management, deleted-item history, and recovery
+- **Task overview:** Search, pagination, and a Kanban-style view
+
+## Implementation
+
+The application is built with FastAPI and SQLite as a lightweight web service intended for an internal network. It uses SQLite WAL mode and foreign keys, with separate records for schedules, to-dos, attachments, comments, and activity history.
+
+| Area | Technologies |
+| --- | --- |
+| Backend | Python, FastAPI |
+| Database | SQLite |
+| Template / UI | Jinja2, HTML, CSS, JavaScript |
+| Runtime | uv, Uvicorn |
+
+## Development Process
+
+I designed the data model and screens around the way the team manages schedules and work documents. After the initial version, I incorporated feedback and added comments, attachments, a Kanban view, administrative history, and search.
+
+AI tools helped me break requests into implementable features, review data models and screen flows, and speed up repetitive implementation and debugging. I made the decisions about how the tool should fit the team's workflow and handled the integration and follow-up changes.
+
+## Deployment and Security
+
+The current implementation identifies users using a browser identifier and connection IP rather than account-based authentication. It is therefore not a replacement for an SSO-backed service or a full role-based identity system. It is intended for a trusted internal network; a public deployment would require additional authentication, access control, backup, and data-retention measures.

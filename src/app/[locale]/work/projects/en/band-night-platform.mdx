@@ -1,0 +1,45 @@
+---
+title: "BAND NIGHT — Concert Invitation and Audience Platform"
+publishedAt: "2026-11-14"
+summary: "A mobile-first concert website combining event information, audience interaction, an admin dashboard, and a post-event photo archive."
+images: []
+tag: "Web / Product"
+link: "https://github.com/BaeDoge/nextjs-band-concert-webpage"
+---
+
+## Overview
+
+I built a mobile-first web invitation for an in-house band concert. The page brings together practical event information such as the schedule, venue, members, and setlist. I also wanted it to be more than a static announcement, so I added ways for the audience to participate before and after the show.
+
+The live site is available at [BAND NIGHT](https://daeil-band.vercel.app).
+
+## Features
+
+- **Event information:** Schedule, venue, map links, band members, and setlist
+- **Audience interaction:** Nickname registration, emoji cheers, questions, and after-party responses
+- **Admin dashboard:** Visitor activity, cheers, questions, RSVP responses, and visitor management
+- **Event memories:** Photo gallery and an archive that remains available after the concert
+- **Post-event mode:** Keeps the core content available as a static page without depending on the database
+
+## Implementation
+
+The frontend is built with Next.js and designed for mobile browsers. Supabase stores audience interaction data and supports the admin features. The site is deployed on Vercel and can be opened directly from a QR code or a link without installing an app.
+
+| Area | Technologies |
+| --- | --- |
+| Frontend | Next.js, React, JavaScript |
+| Database | Supabase |
+| Deployment | Vercel |
+| Media | Responsive images, video, and WebP assets |
+
+## Planning and Development
+
+I defined the event flows and priorities based on what the band and audience actually needed, then translated them into screens and data structures. I used AI tools such as ChatGPT to compare UI approaches, reason through API flows, draft SQL changes, and investigate errors. I did not treat generated code as finished work: I tested it in mobile browsers and the deployed environment, then adjusted the implementation based on what I observed.
+
+I handled the planning, feature prioritisation, implementation, deployment, and follow-up improvements.
+
+## Design Considerations
+
+The audience can participate without creating an account. The current implementation uses a browser identifier, so moderation is browser-based rather than account-based; a visitor using another device or a private browsing session may receive a different identifier. It should not be considered a full account-authentication system.
+
+The post-event mode hides interactive features after the event and keeps the photo archive available as static content.

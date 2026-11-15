@@ -1,0 +1,44 @@
+---
+title: "BUYMA Price Manager — Competitor Price Monitoring and Updates"
+publishedAt: "2026-11-14"
+summary: "A Python tool that compares BUYMA competitor prices from a Google Sheets list and prepares eligible BestShip product price updates within configurable limits."
+images: []
+tag: "Python / Automation"
+link: "https://github.com/BaeDoge/python-buyma-management"
+---
+
+## Overview
+
+I built this tool to reduce the repetitive work of checking competitor prices on BUYMA and updating product prices manually. It reads product URLs from Google Sheets, compares competitor prices, and submits price changes for eligible BestShip listings.
+
+## Features
+
+- **Price comparison:** Reads BUYMA product URLs from Google Sheets and compares competitor prices
+- **Configurable rules:** Sets the target difference from the lowest competitor price (delta) and the maximum reduction per run (max_change)
+- **Preview before applying:** Reviews calculated prices before processing a single product or the full list
+- **Price updates:** Sends update requests through the BUYMA Personal Shopper Product API
+- **Execution history:** Records run summaries and product-level results in Google Sheets and CSV
+- **Scheduled runs:** Supports recurring execution and Windows executable packaging
+
+## Implementation
+
+| Area | Technologies |
+| --- | --- |
+| Language | Python 3.11 |
+| Environment | uv |
+| External services | BUYMA Product API, Google Sheets API |
+| Browser automation | Playwright |
+| Testing | pytest |
+| Distribution | Windows executable build |
+
+The application separates the interactive manager from the scheduler. Price comparison and preview come first; actual changes require an explicit confirmation.
+
+## Development Process
+
+The key requirement was not to blindly match the lowest market price. A price update must stay within the rules configured by the operator. I separated those rules from the execution flow and kept single-product and bulk operations distinct to reduce the risk of unintended large-scale updates.
+
+I used AI tools as development support when refining the pricing workflow, API integration, and test cases. Decisions about pricing rules and whether to apply a change remain under my control.
+
+## Testing and Requirements
+
+Automated tests use mocked HTTP responses and Google Sheets objects. Passing those tests does not prove that a price update will succeed against a live BUYMA account. Real use requires valid BUYMA credentials, API permissions, and Google service-account configuration. Time-sale products are handled according to the configured option.
