@@ -1,0 +1,90 @@
+---
+title: "[Coding Test] Core Keyword"
+publishedAt: "2026-11-17"
+summary: "Given an array of scores, return an array indicating each player's rank as Gold Medal, Silver Medal, Bronze Medal, or a numeric string."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given an array of distinct scores, determine each player's rank. Ranks are assigned in descending order: 1st place is "Gold Medal", 2nd is "Silver Medal", 3rd is "Bronze Medal", and all other positions are represented by their numeric string. Return an array where each element corresponds to the rank of the score at that index.
+
+## Approach
+
+The simplest method is to sort the scores in descending order and then map each score to its rank. After building a mapping from score to rank, iterate through the original array and replace each score with its rank. This sorting-based approach runs in O(n log n) time and uses O(n) extra space.
+
+```python
+def findRelativeRank(score):
+    # 내림차순 정렬
+    sorted_scores = sorted(score, reverse=True)
+    rank_map = {}
+    for i, s in enumerate(sorted_scores):
+        if i == 0:
+            rank_map[s] = "Gold Medal"
+        elif i == 1:
+            rank_map[s] = "Silver Medal"
+        elif i == 2:
+            rank_map[s] = "Bronze Medal"
+        else:
+            rank_map[s] = str(i + 1)
+    return [rank_map[s] for s in score]
+```
+
+## Solution
+
+The solution follows the same sorting-based approach. We sort the scores, assign medals or numeric strings based on the sorted index, and then apply the mapping back to the original order. Time complexity is O(n log n) and space complexity is O(n).
+
+```python
+def findRelativeRank(score):
+    sorted_scores = sorted(score, reverse=True)
+    rank_map = {}
+    for i, s in enumerate(sorted_scores):
+        if i == 0:
+            rank_map[s] = "Gold Medal"
+        elif i == 1:
+            rank_map[s] = "Silver Medal"
+        elif i == 2:
+            rank_map[s] = "Bronze Medal"
+        else:
+            rank_map[s] = str(i + 1)
+    return [rank_map[s] for s in score]
+```
+
+- **Time complexity:** `O(n log n)`
+- **Space complexity:** `O(n)`
+
+## Alternative Approaches
+
+A heap-based alternative is also possible. By storing (score, index) pairs in a max-heap (using negative scores), we can repeatedly extract the highest score and assign ranks. This also runs in O(n log n) time but has a slightly larger constant factor due to heap operations.
+
+```python
+import heapq
+
+def findRelativeRank(score):
+    # (점수, 인덱스) 쌍을 최대 힙에 저장 (음수 점수로 최대 힙 구현)
+    heap = [(-s, i) for i, s in enumerate(score)]
+    heapq.heapify(heap)
+
+    answer = [""] * len(score)
+    medals = ["Gold Medal", "Silver Medal", "Bronze Medal"]
+
+    for rank in range(len(score)):
+        neg_s, idx = heapq.heappop(heap)
+        if rank < 3:
+            answer[idx] = medals[rank]
+        else:
+            answer[idx] = str(rank + 1)
+
+    return answer
+```
+
+- **Time complexity:** `O(n log n)`
+- **Space complexity:** `O(n)`
+
+## Additional Notes
+
+The input array length is at most 10^4, and each score is between 0 and 10^6. Since all scores are distinct, tie handling is unnecessary. Sorting is efficient for these constraints, and O(n log n) is acceptable. The heap approach adds implementation complexity compared to simply using a sorted list.
+
+## Sources
+
+- LeetCode: [LeetCode 506 - Relative Ranks](https://leetcode.com/problems/relative-ranks/)
