@@ -1,0 +1,64 @@
+---
+title: "[Coding Test] Steps to Make Number Zero"
+publishedAt: "2026-11-17"
+summary: "Find the total number of steps to reduce an integer to zero by dividing by 2 when even and subtracting 1 when odd."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given an integer `num`, find the number of steps required to make it 0 by repeatedly applying the following rule: if the current number is even, divide by 2; if odd, subtract 1.  
+For example, `num = 14` requires 6 steps, `num = 8` requires 4 steps, and `num = 123` requires 12 steps.  
+The constraint is `0 <= num <= 10^6`.
+
+## Approach
+
+The most intuitive solution is simulation. Loop until `num` becomes 0, performing divide by 2 if even or subtract 1 if odd, and accumulate the step count.  
+This method has time complexity O(log num) and space complexity O(1).  
+Alternatively, using binary representation, the step count can be computed in O(1) by leveraging the bit length and the number of 1 bits.
+
+## Solution
+
+The simulation implementation is as follows.
+
+```python
+class Solution:
+    def numberOfSteps(self, num: int) -> int:
+        steps = 0
+        while num > 0:
+            if num % 2 == 0:
+                num //= 2
+            else:
+                num -= 1
+            steps += 1
+        return steps
+```
+
+This algorithm repeats until `num` reaches 0, so the maximum number of iterations equals the number of binary digits, giving time complexity O(log num).  
+It uses no extra memory, so space complexity is O(1).
+
+## Alternative Approaches
+
+Using bit operations, the step count can be calculated directly. By obtaining the binary length (`bit_length`) and the number of 1 bits (`popcount`) of `num`, the step count equals `bit_length + popcount - 1`.  
+The implementation is as follows.
+
+```python
+class Solution:
+    def numberOfSteps(self, num: int) -> int:
+        if num == 0:
+            return 0
+        return num.bit_length() + num.bit_count() - 1
+```
+
+This approach uses built-in functions, so its time complexity is close to O(1) and space complexity is also O(1).  
+However, the simulation method may be easier to understand in terms of readability and maintainability.
+
+## Additional Notes
+
+When `num = 0`, the number of steps is 0, so it should return 0 immediately.  
+Given the constraint that `num` is at most 10^6, the simulation-based solution runs sufficiently fast.  
+This problem belongs to the Math and Bit Manipulation categories and is a good example for understanding bit operations.
+
+## Sources
+
+- LeetCode: [LeetCode 1342 - Number of Steps to Reduce a Number to Zero](https://leetcode.com/problems/number-of-steps-to-reduce-a-number-to-zero/)
