@@ -1,0 +1,66 @@
+---
+title: "[Coding Test] Minimum Gene Mutation"
+publishedAt: "2026-11-17"
+summary: "Returns the minimum number of mutations required to transform startGene into endGene, or -1 if impossible."
+tag: "Algorithm"
+---
+
+## Problem
+
+A gene string consists of 8 characters, each being 'A', 'C', 'G', or 'T'. A single mutation is a change of one character in the string to another character. `bank` stores a list of valid mutation strings, and any string involved in a mutation must be present in `bank`. `startGene` may be valid but not necessarily in `bank`. Determine the minimum number of mutations required to transform `startGene` into `endGene`, returning -1 if the transformation is impossible.
+
+## Approach
+
+Use BFS to find the shortest path from `startGene` to `endGene`. At each step, iterate over each position of the current string and try all four possible characters; if the resulting string is in `bank` and not visited, add it to the queue. When `endGene` is reached, return the current step count.
+
+```python
+from collections import deque
+
+def minMutation(startGene: str, endGene: str, bank: list[str]) -> int:
+    bank_set = set(bank)
+    if endGene not in bank_set:
+        return -1
+    visited = {startGene}
+    q = deque([(startGene, 0)])
+    chars = {'A', 'C', 'G', 'T'}
+
+    while q:
+        gene, steps = q.popleft()
+        if gene == endGene:
+            return steps
+        # change one character
+        for i in range(len(gene)):
+            for c in chars:
+                if c == gene[i]:
+                    continue
+                nxt = gene[:i] + c + gene[i+1:]
+                if nxt in bank_set and nxt not in visited:
+                    visited.add(nxt)
+                    q.append((nxt, steps + 1))
+    return -1
+```
+
+## Solution
+
+The above BFS code computes the minimum number of mutations. `bank_set` provides O(1) lookups, and `visited` set prevents duplicate exploration. The search continues until `endGene` is reached or the queue is empty. The time complexity is O(N·L·4), where N ≤ 10 and L = 8, which is effectively constant. The space complexity is O(N).
+
+```python
+# Example execution
+print(minMutation("AACCGGTT", "AACCGGTA", ["AACCGGTA"]))  # 1
+print(minMutation("AACCGGTT", "AAACGGTA", ["AACCGGTA","AACCGCTA","AAACGGTA"]))  # 2
+```
+
+## Alternative Approaches
+
+- **Bidirectional BFS:** Start BFS from both `startGene` and `endGene` simultaneously and find a meeting point, reducing the search space. This is especially useful when the bank is large, and the time complexity remains O(N·L·4).
+- **DFS + Memoization:** For each string, explore all reachable strings and store the shortest path to `endGene`. This approach is similar to BFS for small banks but may suffer from performance degradation due to repeated exploration in larger banks.
+
+## Additional Notes
+
+- If `endGene` is not in `bank`, the transformation is impossible, so return -1.
+- If `startGene` and `endGene` are the same, return 0.
+- It is valid for `bank` not to contain `startGene`; BFS relies only on `bank_set`.
+
+## Sources
+
+- LeetCode: [LeetCode 433 - Minimum Genetic Mutation](https://leetcode.com/problems/minimum-genetic-mutation/)
