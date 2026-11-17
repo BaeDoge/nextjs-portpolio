@@ -1,0 +1,58 @@
+---
+title: "[Coding Test] Balanced String Split"
+publishedAt: "2026-11-17"
+summary: "A greedy problem to find the maximum number of balanced substrings in a string."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given a string s of 'L' and 'R' that is balanced (equal number of each), split it into contiguous balanced substrings. Each substring must also be balanced. Return the maximum possible number of such substrings. The length of s is between 2 and 1000, and s is guaranteed to be balanced. Examples: "RLRRLLRLRL" → 4, "RLRRRLLRLL" → 2, "LLLLRRRR" → 1.
+
+## Approach
+
+Iterate through the string from left to right, keeping a balance counter: add 1 for each 'L', subtract 1 for each 'R'. Whenever the balance becomes 0, a balanced substring is completed, so increment the count. This greedy strategy always takes the shortest balanced prefix first, which maximizes the number of substrings when the input is balanced.
+
+## Solution
+
+```python
+def balancedStringSplit(s: str) -> int:
+    balance = 0
+    count = 0
+    for ch in s:
+        if ch == 'L':
+            balance += 1
+        else:
+            balance -= 1
+        if balance == 0:
+            count += 1
+    return count
+```
+
+The time complexity is O(n) and the space complexity is O(1), where n is the length of s.
+
+## Alternative Approaches
+
+The problem can also be solved recursively. Find the shortest balanced prefix, split it off, and recursively process the remainder. Each call traverses its substring, so the time complexity is O(n), while the space complexity is O(n) due to recursion depth and slicing. The following is a recursive implementation.
+
+```python
+def balancedStringSplit(s: str) -> int:
+    if not s:
+        return 0
+    balance = 0
+    for i, ch in enumerate(s):
+        balance += 1 if ch == 'L' else -1
+        if balance == 0:
+            return 1 + balancedStringSplit(s[i+1:])
+    return 0
+```
+
+This recursive version is also correct under the balanced condition; it uses more space (stack and slicing) than the iterative greedy approach, but offers a concise alternative.
+
+## Additional Notes
+
+Because the input is always balanced, the greedy approach is always valid. The maximum number of substrings cannot exceed n/2, and this bound is reached for alternating patterns such as "RLRLRL...". The problem reduces to a simple balanced counting task, so the solution is short.
+
+## Sources
+
+- LeetCode: [LeetCode 1221 - Split a String in Balanced Strings](https://leetcode.com/problems/split-a-string-in-balanced-strings/)
