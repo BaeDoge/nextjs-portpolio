@@ -1,0 +1,81 @@
+---
+title: "[Coding Test] LeetCode 1337 Find K Weakest Rows"
+publishedAt: "2026-11-17"
+summary: "Return k row indices sorted by the fewest soldiers in a binary matrix."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given an `m x n` binary matrix `mat`. In each row, `1` (soldiers) are placed to the left and `0` (civilians) to the right consecutively. Row `i` is weaker than row `j` if either:
+
+- the number of soldiers in row `i` is less than in row `j`, or
+- the number of soldiers is equal and `i < j`.
+
+Return an array of the first `k` row indices after sorting from weakest to strongest.
+
+Constraints: `2 <= n, m <= 100`, `1 <= k <= m`, matrix elements are 0 or 1.
+
+## Approach
+
+Count the number of soldiers in each row and sort the pairs `(soldier count, row index)`. When counts are equal, the index order naturally applies. Since `1`s are left‑aligned in each row, the position of the first `0` can be found with binary search in `O(log n)`. However, because `n <= 100`, a simple linear scan `O(n)` is sufficient. The overall complexity is `O(m * n + m log m)` or `O(m log n + m log m)`.
+
+## Solution
+
+```python
+from typing import List
+
+class Solution:
+    def kWeakestRows(self, mat: List[List[int]], k: int) -> List[int]:
+        m = len(mat)
+        n = len(mat[0])
+        
+        # calculate number of soldiers in each row (using binary search)
+        def count_soldiers(row: List[int]) -> int:
+            left, right = 0, n
+            while left < right:
+                mid = (left + right) // 2
+                if row[mid] == 1:
+                    left = mid + 1
+                else:
+                    right = mid
+            return left
+        
+        # create list of (soldier count, row index) then sort
+        rows = [(count_soldiers(mat[i]), i) for i in range(m)]
+        rows.sort()
+        
+        # extract top k indices
+        return [idx for _, idx in rows[:k]]
+```
+
+**Time complexity:** `O(m log n + m log m)` — binary search `O(log n)` per row for `m` rows plus sorting `O(m log m)`  
+**Space complexity:** `O(m)` — storing list for sorting
+
+## Alternative Approaches
+
+```python
+# linear search + sort (implementation simpler, fast enough given constraints)
+class Solution:
+    def kWeakestRows(self, mat: List[List[int]], k: int) -> List[int]:
+        rows = [(sum(row), i) for i, row in enumerate(mat)]
+        rows.sort()
+        return [idx for _, idx in rows[:k]]
+```
+
+**Time complexity:** `O(m * n + m log m)` — sum per row `O(n)` for `m` rows plus sorting  
+**Space complexity:** `O(m)` — storing list for sorting
+
+## Additional Notes
+
+- Sorting by the tuple `(count, index)` ensures the index order is automatically maintained when counts are equal; this is key.
+- `heapq.nsmallest(k, rows)` can extract the top k without full sorting in `O(m log k)`, which is advantageous when k is much smaller than m.
+- Python's `list.sort()` sorts tuples by the first element and then the second when equal, so a separate key function isn't needed.
+
+<Callout type="tip" title="Python Sorting Tip">
+Storing as a tuple `(soldier count, index)` lets `sort()` satisfy the problem conditions (ascending soldier count, then index) with just one call.
+</Callout>
+
+## Sources
+
+- LeetCode: [LeetCode 1337 - The K Weakest Rows in a Matrix](https://leetcode.com/problems/the-k-weakest-rows-in-a-matrix/)
