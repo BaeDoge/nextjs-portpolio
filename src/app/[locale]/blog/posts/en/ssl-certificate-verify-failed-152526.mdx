@@ -1,0 +1,118 @@
+---
+title: "[Troubleshooting] SSL CERTIFICATE_VERIFY_FAILED Resolution"
+publishedAt: "2026-11-17"
+summary: "Resolves SSL certificate verification failures in Python during HTTPS connections by updating the certifi package and installing system certificate packages."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+An SSL certificate verification error occurs during HTTPS connections when running a Python script or executing the `pip install` command.
+The error message typically appears as follows:
+
+```
+[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1129)
+```
+
+This is frequently observed in Windows environments when running AWS connection scripts or installing packages.
+The same error occurs when accessing external APIs using the `requests` library.
+
+```python
+import requests
+response = requests.get('https://pypi.org')
+```
+
+![Symptom screenshot](/blogs/ssl-certificate-verify-failed-152526-1.png)
+
+## Cause
+
+When establishing HTTPS connections, Python verifies the server's SSL certificate using the certificate file from the `certifi` package.
+This error occurs when Python's `certifi` library is outdated or when an internal corporate network proxy/firewall uses a self-signed certificate.
+In such cases, Python detects an untrusted certificate chain and blocks the connection.
+
+<Callout type="warning" title="Error Scenario">
+`SSLError: [SSL: CERTIFICATE_VERIFY_FAILED]` occurs when executing `pip install selenium`
+</Callout>
+
+## Solution
+
+Update the `certifi` package to the latest version to refresh the list of trusted root certificates.
+
+<Steps>
+<Step title="Upgrade certifi package">
+
+```
+pip install --upgrade certifi
+```
+
+</Step>
+<Step title="Check and apply certificate path">
+
+```python
+import certifi
+import ssl
+
+ssl_context = ssl.create_default_context(cafile=certifi.where())
+print("SSL 인증서 경로:", certifi.where())
+```
+
+</Step>
+</Steps>
+
+If the above code executes successfully, the certificate file is correctly applied.
+Mac users should run the following command to install the certificate:
+
+```
+open "/Applications/Python 3.x/Install Certificates.command"
+```
+
+Windows users can install the `pip-system-certs` package to allow Python to recognize system root certificates.
+Installing `pip-system-certs` helps resolve local certificate access issues when using the `requests` module.
+
+```
+pip install pip-system-certs
+```
+
+![Solution screenshot](/blogs/ssl-certificate-verify-failed-152526-2.png)
+
+## Alternative Solutions
+
+If you are using an outdated version of `pip` or Python, you must upgrade to the latest version.
+
+```
+python -m pip install --upgrade pip
+```
+
+In urgent cases, you can bypass certificate verification for specific hosts by adding the `--trusted-host` option when running `pip install`.
+This method poses a security risk and is not recommended for production environments.
+
+```
+pip install selenium --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org
+```
+
+When using the `requests` library, you can disable SSL verification using the `verify=False` option; however, this is risky and not recommended for security reasons.
+
+<Compare>
+<ComparePanel title="Disable Verification" tone="bad">
+Use `verify=False` option
+Poses security risks and is not recommended in production environments
+</ComparePanel>
+<ComparePanel title="Specify Trusted Host" tone="good">
+Use `--trusted-host` option
+Provides a temporary workaround to bypass certificate verification for specific hosts
+</ComparePanel>
+</Compare>
+
+## Additional Notes
+
+Python manages certificates using the `certifi` library by default, so regular updates are required.
+If you are using a self-signed certificate on a corporate or public network, installing the certificate on your system or using `pip-system-certs` is the fundamental solution.
+If an error occurs, first check if `pip-system-certs` is installed and verify that `certifi` is up to date.
+
+## Sources
+
+- StackOverflow: [SSL: CERTIFICATE_VERIFY_FAILED certificate verify failed: unable to get local issuer certificate (_ssl.c:1129)')))](https://stackoverflow.com/questions/77442172/ssl-certificate-verify-failed-certificate-verify-failed-unable-to-get-local-is) — Author: Jeff A(question), Milo Buwalda(answer) (CC BY-SA)
+- Tistory: [[ python ] SSL: CERTIFICATE_VERIFY_FAILED 에러 해결](https://it-ability.tistory.com/170) — Author: AMoon - 개발자의 각종 개발 정보 공유
+- Tistory: [[Python] 오류 해결 - SSL certificate verify failed](https://secuhh.tistory.com/3) — Author: Security Note
+
+Images are taken from the sources above.
