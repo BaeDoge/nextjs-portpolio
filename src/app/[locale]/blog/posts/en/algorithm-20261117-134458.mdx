@@ -1,0 +1,79 @@
+---
+title: "[Coding Test] Core Keywords"
+publishedAt: "2026-11-17"
+summary: "Find the number of groups with the largest size when grouping numbers from 1 to n by their digit sum."
+tag: "Algorithm"
+---
+
+## Problem
+
+Group numbers from 1 to n by the sum of their digits. For example, 14 and 5 belong to the same group (sum 5), while 13 and 3 belong to different groups (sums 4 and 3). Calculate the size of each group and return the number of groups with the largest size. For n=13, the groups are [1,10], [2,11], [3,12], [4,13], [5], [6], [7], [8], [9]; there are 4 groups with the largest size (2), so the answer is 4.
+
+## Approach
+
+Compute the digit sum of each number to form groups. Use a hash map (or array) to store counts for each sum. Find the maximum count and then count how many groups have that maximum. Since the digit sum is at most 36, a fixed-size array can be used.
+
+```python
+def digit_sum(x: int) -> int:
+    s = 0
+    while x:
+        s += x % 10
+        x //= 10
+    return s
+```
+
+```python
+from collections import Counter
+
+def countLargestGroup(n: int) -> int:
+    cnt = Counter(digit_sum(i) for i in range(1, n + 1))
+    max_size = max(cnt.values())
+    return sum(1 for v in cnt.values() if v == max_size)
+```
+
+## Solution
+
+The function `digit_sum` computes the digit sum of each number. `Counter` stores the group sizes for each sum. `max(cnt.values())` finds the largest group size, and we count the groups that achieve it. Time complexity is O(n·log₁₀ n) (digit sum calculation for each number), and space complexity is O(n) (storing group counts).
+
+```python
+# 전체 코드 (위 두 코드 블록을 합친 것)
+def digit_sum(x: int) -> int:
+    s = 0
+    while x:
+        s += x % 10
+        x //= 10
+    return s
+
+from collections import Counter
+
+def countLargestGroup(n: int) -> int:
+    cnt = Counter(digit_sum(i) for i in range(1, n + 1))
+    max_size = max(cnt.values())
+    return sum(1 for v in cnt.values() if v == max_size)
+```
+
+## Alternative Approaches
+
+Because the range of digit sums is small, a fixed-size array can be used. Initialize an array `freq[46]` and increment the count for each number's sum. Then compute the maximum value and the number of groups with that maximum. The implementation is similar but slightly faster since there is no hash collision risk. Complexity is the same as above.
+
+```python
+def countLargestGroup(n: int) -> int:
+    freq = [0] * 46  # 최대 자리수 합 = 9*4 = 36, 여유 공간 확보
+    for i in range(1, n + 1):
+        s = 0
+        x = i
+        while x:
+            s += x % 10
+            x //= 10
+        freq[s] += 1
+    max_size = max(freq)
+    return freq.count(max_size)
+```
+
+## Additional Notes
+
+The constraint `1 ≤ n ≤ 10⁴` guarantees that the digit sum is at most 36, making an array-based approach suitable. Both hash maps and arrays give the same result; the choice depends on implementation preference. This is an easy problem for practicing hash tables, math, and counting concepts.
+
+## Sources
+
+- LeetCode: [LeetCode 1399 - Count Largest Group](https://leetcode.com/problems/count-largest-group/)
