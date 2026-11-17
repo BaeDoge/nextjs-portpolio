@@ -1,0 +1,38 @@
+---
+title: "[Coding Test] Most Candies"
+publishedAt: "2026-11-17"
+summary: "Determine a boolean array indicating whether each child can have the most candies after receiving all extra candies."
+tag: "Algorithm"
+---
+
+## Problem
+
+n children have a certain number of candies. Given an integer array `candies` and an integer `extraCandies`, return a boolean array `result` where `result[i]` is `true` if `candies[i] + extraCandies` is the greatest number of candies among all children, otherwise `false`. Multiple children can have the same greatest number of candies.
+
+## Approach
+
+First, find the maximum value `maxCandies` in the `candies` array. Then, for each child, check if `candies[i] + extraCandies` is greater than or equal to `maxCandies`. This requires two passes over the array: one to find the maximum and another to compute the results, resulting in O(n) time complexity. The space complexity is O(n) to store the result array.
+
+## Solution
+
+Here is the Python solution:
+
+```python
+def kidsWithCandies(candies, extraCandies):
+    max_candies = max(candies)
+    return [c + extraCandies >= max_candies for c in candies]
+```
+
+The method first determines the maximum number of candies in the `candies` array, then checks for each child whether adding `extraCandies` makes their total at least as large as this maximum. The time complexity is O(n) and the space complexity is O(n) for the result array.
+
+## Alternative Approaches
+
+You can also find the maximum by iterating through the array manually without using the `max` function. Use a loop to compute `maxCandies` and then another loop to fill the result array. This still runs in O(n) time and O(n) space but results in more verbose code. Another alternative is to sort the `candies` array and compare each element to the largest value, but sorting takes O(n log n) time, which is less efficient.
+
+## Additional Notes
+
+The input size is small (n between 2 and 100, candy counts between 1 and 100, extra candies between 1 and 50), so any algorithm will run fast enough; optimization is unnecessary. Use `>=` for comparison because multiple children can share the greatest number of candies. The result array always has length n.
+
+## Sources
+
+- LeetCode: [LeetCode 1431 - Kids With the Greatest Number of Candies](https://leetcode.com/problems/kids-with-the-greatest-number-of-candies/)
