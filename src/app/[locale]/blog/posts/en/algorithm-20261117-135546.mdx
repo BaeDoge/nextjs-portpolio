@@ -1,0 +1,40 @@
+---
+title: "[Coding Test] Shuffle Array"
+publishedAt: "2026-11-17"
+summary: "This note explains how to rearrange an array of length 2n into the interleaved form [x1, y1, x2, y2, ..., xn, yn]."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given an array nums in the form [x1, x2, ..., xn, y1, y2, ..., yn], return an array in the form [x1, y1, x2, y2, ..., xn, yn]. This is equivalent to interleaving the first half with the second half: pair the element at index 0 with index n, index 1 with index n+1, and so on. Constraints: 1 ≤ n ≤ 500, nums.length is always 2n, and each element is an integer between 1 and 10^3 inclusive. For example, if nums = [2,5,1,3,4,7] and n = 3, the result is [2,3,5,4,1,7].
+
+## Approach
+
+The most straightforward approach is to use indexing. For each i from 0 to n-1, take nums[i] and nums[i+n] and append them in order to the result array. This can be done with a simple loop and requires no additional data structures.
+
+## Solution
+
+```python
+class Solution:
+    def shuffle(self, nums: List[int], n: int) -> List[int]:
+        result = []
+        for i in range(n):
+            result.append(nums[i])
+            result.append(nums[i + n])
+        return result
+```
+
+The time complexity is O(n) and the space complexity is O(n) for storing the result.
+
+## Alternative Approaches
+
+Using Python's list comprehension, the implementation can be shortened. For example, `result = [nums[i//2] if i % 2 == 0 else nums[n + i//2] for i in range(2*n)]` produces the same result. The algorithmic time complexity remains O(n), and the indexing logic is identical to the loop approach.
+
+## Additional Notes
+
+When n = 1, the array [x1, y1] is returned unchanged; the array length is always even. This is a LeetCode Easy problem that provides good practice for array indexing.
+
+## Sources
+
+- LeetCode: [LeetCode 1470 - Shuffle the Array](https://leetcode.com/problems/shuffle-the-array/)
