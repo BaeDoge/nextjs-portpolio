@@ -1,0 +1,100 @@
+---
+title: "[Troubleshooting] ..."
+publishedAt: "2026-11-17"
+summary: "one sentence"
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+When using a `.pth` file to register a module root path within a virtual environment, the module can be imported normally using the `python` command:
+
+```python
+>>> from rc import ns
+```
+
+However, running `pytest` results in an `ImportError` when importing the same module, causing test collection to fail:
+
+```text
+ImportError while importing test module '/home/zz/Desktop/GitFolders/rc/tests/test_ns.py'.
+Traceback:
+tests/test_ns.py:2: in <module>
+    from rc import n
+```
+
+<Callout type="warning" title="Error situation">
+An ImportError: cannot import name ... occurs when running pytest.
+</Callout>
+
+![Symptom screenshot](/blogs/pytest-import-1.png)
+
+## Cause
+
+When `pytest` detects an `__init__.py` file in a test directory, it treats that directory as a Python package.
+
+This process conflicts with the virtual environment's `.pth` path settings or alters the module search order, leading to import failures.
+
+The difference arises because regular `python` execution prioritizes `.pth` settings, while `pytest` uses its own module loading logic.
+
+## Solution
+
+Delete the `__init__.py` file in the test directory.
+
+`pytest` does not need to treat the test directory as a package when running test files, and the presence of this file actually causes module import path conflicts.
+
+```bash
+# Remove __init__.py in the test directory
+rm tests/__init__.py
+```
+
+After deleting the file, running `pytest` again will allow tests to be collected and executed normally without module import errors.
+
+<Steps>
+<Step title="Check the test directory">
+Check if there is an `__init__.py` file in the folder where the test code is located.
+</Step>
+<Step title="Delete the __init__.py file">
+Delete the `__init__.py` file if found.
+</Step>
+<Step title="Re-run pytest">
+Run the `pytest` command again to verify that the error has been resolved.
+</Step>
+</Steps>
+
+![Solution screenshot](/blogs/pytest-import-2.png)
+
+## Alternative Solutions
+
+Instead of using a `.pth` file, you can use `setup.py` or `pyproject.toml` to install the package in development mode (`pip install -e .`).
+
+This method explicitly registers the package in the virtual environment's path settings, making it more compatible with `pytest`'s module search logic.
+
+```bash
+pip install -e .
+```
+
+Alternatively, you can explicitly set the `PYTHONPATH` environment variable to pass the module path when running tests:
+
+```bash
+PYTHONPATH=. pytest
+```
+
+## Additional Notes
+
+It is recommended that `pytest` does not treat the test directory as a package.
+
+Test code should be executed separately from the actual application package, so the absence of an `__init__.py` file does not cause problems with test collection.
+
+If you need to share fixtures or utilities from other packages within tests, it is safer to use a separate `tests/utils` directory or `conftest.py`.
+
+<Callout type="info" title="Note">
+In a typical pytest project structure, it is conventional not to place an `__init__.py` file in the tests folder.
+</Callout>
+
+## Sources
+
+- StackOverflow: [pytest cannot import module while python can](https://stackoverflow.com/questions/41748464/pytest-cannot-import-module-while-python-can) — Author: Zorglub29(question), Zorglub29(answer) (CC BY-SA)
+- Velog: [Test Error in requests.py v2.31.0](https://velog.io/@bgb10/Test-Error-in-requests.py-v2.31.0)
+- Tistory: [[Python] pytest를 통한 파이썬 테스트 (feat. fixture)](https://scshim.tistory.com/573) — Author: 책 읽는 개발자_테드
+
+Images are taken from the sources above.
