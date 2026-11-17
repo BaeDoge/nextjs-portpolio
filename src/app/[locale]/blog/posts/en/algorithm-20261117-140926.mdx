@@ -1,0 +1,49 @@
+---
+title: "[Coding Test] Number of Boomerangs"
+publishedAt: "2026-11-17"
+summary: "Describes how to count boomerangs using pairs of points with equal distances."
+tag: "Algorithm"
+---
+
+## Problem
+
+Given n distinct points on a plane, each point is represented as [xi, yi]. A boomerang (i, j, k) is an ordered triple where the distance between i and j equals the distance between i and k; order matters. You must count all possible boomerangs among the given points. For example, with points [0,0], [1,0], [2,0] there are two boomerangs. n is at most 500, and each coordinate lies between -10^4 and 10^4.
+
+## Approach
+
+For each point i, compute the distance to every other point j. Use squared distances to avoid floating-point errors. Record the count of points j for each distance in a hash map. If there are m points at the same distance, the number of boomerangs centered at i is m*(m-1) (ordered pairs). Summing this value over all i yields the total number of boomerangs. The time complexity is O(n^2) and the space complexity is O(n).
+
+## Solution
+
+First, for each point i, compute the squared distances to all other points j and store the frequency of each distance in a hash map. Then, for each distance with count m, add m*(m-1) to the result. The following is a Python implementation of this algorithm.
+
+```python
+def numberOfBoomerangs(points):
+    ans = 0
+    for i in points:
+        dist_cnt = {}
+        for j in points:
+            if i == j:
+                continue
+            dx = i[0] - j[0]
+            dy = i[1] - j[1]
+            d = dx*dx + dy*dy
+            dist_cnt[d] = dist_cnt.get(d, 0) + 1
+        for cnt in dist_cnt.values():
+            ans += cnt * (cnt - 1)
+    return ans
+```
+
+The time complexity of this algorithm is O(n^2) and the space complexity is O(n).
+
+## Alternative Approaches
+
+The most straightforward method is a brute-force search over all triples, fixing i and choosing j and k in order while comparing distances. This approach has O(n^3) time complexity, which for n=500 requires about 125 million operations and may exceed time limits. Therefore, the O(n^2) hash map method described above is more efficient. Alternatively, one could sort the distances for each point and group equal distances, but the hash map approach is superior in terms of complexity.
+
+## Additional Notes
+
+Using integer squared distances enables exact comparison. When n=1, no boomerangs exist, so the function should return 0. The coordinate range is -10^4 to 10^4, so squared distances are at most approximately 2*10^8, which fits in an integer type. Python's dictionary provides average O(1) insertion and lookup, allowing the entire algorithm to run in O(n^2) time.
+
+## Sources
+
+- LeetCode: [LeetCode 447 - Number of Boomerangs](https://leetcode.com/problems/number-of-boomerangs/)
