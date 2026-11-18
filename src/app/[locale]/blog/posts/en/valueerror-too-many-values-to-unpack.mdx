@@ -1,0 +1,107 @@
+---
+title: "[Troubleshooting] ValueError: too many values to unpack solution"
+publishedAt: "2026-11-18"
+summary: "This article explains how to resolve the unpacking exception that occurs when there are more values than variables by using matching counts or slicing."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+When assigning an iterable object (such as a tuple or list) to variables in Python, if the number of elements in the object exceeds the number of variables, the following exception occurs.
+<Callout type="warning" title="Error Situation">ValueError: too many values to unpack (expected N)</Callout>
+This can be reproduced, for example, when trying to assign a tuple of length 3 to two variables. It may also appear due to internal return value structure mismatches, such as when calling methods like `user.get_profile` in Django templates.
+
+```python
+# Reproduction code
+a, b = (1, 2, 3)
+```
+
+```text
+# Original error output
+ValueError: too many values to unpack
+```
+
+## Cause
+
+Python requires the number of variables on the left side of an assignment statement to exactly match the number of elements in the sequence on the right side to distribute values.
+If the right-hand sequence returns more values than there are variables on the left, there are no variables to hold the remaining values, causing the unpacking to fail and raising an exception.
+Conversely, if there are fewer values than variables, a `ValueError: not enough values to unpack` error occurs.
+
+```python
+# 3 values, 2 variables (Error)
+a, b = (1, 2, 3) 
+
+# 2 values, 3 variables (Error)
+a, b, c = (1, 2)
+```
+
+## Solution
+
+The error is resolved by matching the number of variables in the code causing the error with the number of elements in the object being assigned.
+If the return value count is 3, you must increase the number of variables to 3 to match exactly.
+
+```python
+# Before fix: 2 variables, 3 values (Error occurs)
+# a, b = (1, 2, 3)
+
+# After fix: Match count with 3 variables
+a, b, c = (1, 2, 3)
+```
+
+## Alternative Solutions
+
+When the number of values to assign is uncertain, or when you need to process only some values while ignoring others, you can use the asterisk (`*`).
+This method allows you to assign the first value to the first variable and bundle all remaining values into a single variable as a list.
+
+```python
+# Before fix: 4 values, 2 variables (Error occurs)
+# x, y = (1, 2, 3, 4)
+
+# After fix: Assign remaining values as a list
+x, y, *rest = (1, 2, 3, 4)
+print(x)  # 1
+print(y)  # 2
+print(rest)  # [3, 4]
+```
+
+<Compare>
+<ComparePanel title="Count Matching (Basic Solution)" tone="good">
+<code>
+a, b, c = (1, 2, 3)
+</code>
+A clear and precise solution used when the number of values is constant.
+</ComparePanel>
+<ComparePanel title="Asterisk (*) (Variable Handling)" tone="good">
+<code>
+a, *rest = (1, 2, 3, 4)
+</code>
+An efficient way to handle remaining values as a list when the number of values is large or variable.
+</ComparePanel>
+</Compare>
+
+## Additional Notes
+
+This error frequently occurs when assigning results from functions that split strings, such as `split`.
+In such cases, you must match the number of variables or handle unnecessary intermediate values using `_` or `*`.
+
+```python
+# Match split result count
+s = "1/2/3"
+x, y, z = s.split('/')
+
+# Handle unnecessary values with underscore
+x, y, _ = s.split('/')
+
+# Handle unnecessary values with asterisk
+x, y, *_ = s.split('/')
+```
+
+<Checklist>
+<ul><li>Check if the number of variables in the assignment statement matches the length of the sequence on the right</li><li>Consider using the * operator to handle remaining values when there are too many values</li><li>Accurately determine the number of return values from functions, such as string splitting</li></ul>
+</Checklist>
+
+## Sources
+
+- StackOverflow: ["Too many values to unpack" Exception](https://stackoverflow.com/questions/1479776/too-many-values-to-unpack-exception) — Author: Steve Gattuso(question), Stefano Borini(answer) (CC BY-SA)
+- Tistory: [Python "ValueError: too many values to unpack" 오류 발생 시 해결하기](https://smartmove.tistory.com/16) — Author: smartmove 님의 블로그
+- Tistory: [ValueError: too many values to unpack, ValueError: not enough values to unpack 해결 방법](https://gils-lab.tistory.com/125) — Author: GIL's LAB
