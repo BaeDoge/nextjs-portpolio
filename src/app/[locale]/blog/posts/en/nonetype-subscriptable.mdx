@@ -1,0 +1,104 @@
+---
+title: "[Troubleshooting] Recursive Function NoneType Subscriptable Error"
+publishedAt: "2026-11-18"
+summary: "Resolves TypeError occurring when indexing None values during recursive calls with validation logic."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+A `TypeError` occurs when a recursive function traverses node data and performs nested indexing operations (`tree[otu][0][0]`). When the value at that path is `None`, attempting to treat the `None` object as subscriptable causes the error.
+
+<Callout type="warning" title="Error Situation">
+TypeError: 'NoneType' object is not subscriptable
+</Callout>
+
+The error occurs during recursive function calls, with the following traceback:
+
+```python
+Traceback (most recent call last):
+  File "<pyshell#41>", line 1, in <module>
+    Ancestors('A',a)
+  File "C:\x.py", line 129, in Ancestors
+    return [otu,tree[otu][0][0]] + Ancestors (tree[otu][0][0],tree)
+  File "C:\x.py", line 126, in Ancestors
+    if tree[otu][0][0] == None:
+TypeError: 'NoneType' object is not subscriptable
+```
+
+## Cause
+
+The error location `if tree[otu][0][0] == None:` means indexing operations are performed even during condition evaluation. If `tree[otu]` itself is `None` or `tree[otu][0]` is `None`, attempting indexing on that object raises `TypeError`. In other words, intermediate values were not validated for `None` before accessing `tree[otu][0][0]`, and the condition itself triggered the error.
+
+```python
+# When tree[otu] is None
+>>> tree = {'A': None}
+>>> tree['A'][0][0] # TypeError occurs
+```
+
+Therefore, incomplete data validity checks before recursive calls cause the error.
+
+## Solution
+
+Validate `None` at each step before nested indexing to prevent access itself. The following code adds logic to verify data structure validity before proceeding with recursive calls.
+
+```python
+def Ancestors(otu, tree):
+    # Handle case where otu is not a key in tree or its value is None
+    if otu not in tree or tree[otu] is None:
+        return []
+    
+    node_data = tree[otu]
+    
+    # Handle case where first element (list) is missing or parent node inside is None
+    if not node_data or node_data[0] is None or node_data[0][0] is None:
+        return []
+        
+    parent = node_data[0][0]
+    return [otu, parent] + Ancestors(parent, tree)
+```
+
+![Solution screenshot](/blogs/nonetype-subscriptable-1.png)
+
+## Alternative Solutions
+
+Using `try-except` to catch `TypeError` during data access is another approach. This is useful when identifying specific error points or when flow control via exceptions is needed instead of complex conditionals. However, in recursive functions, exception handling can impact performance, so explicit conditionals are more efficient for simple `None` checks.
+
+```python
+def Ancestors(otu, tree):
+    try:
+        # Check for NoneType access error during data access
+        parent = tree[otu][0][0]
+    except (TypeError, IndexError):
+        # Stop recursive call on indexing failure
+        return []
+
+    if parent is None:
+        return []
+        
+    return [otu, parent] + Ancestors(parent, tree)
+```
+
+## Additional Notes
+
+`TypeError: 'NoneType' object is not subscriptable` frequently occurs when data source structure differs from expectations. When crawling or parsing files, missing values may return `None`; default value assignment or structure validation is recommended over conditional access. Additionally, using the `pdb` debugger to track `otu` and `tree` state changes at each recursive call helps identify causes faster.
+
+<Steps title="Debugging Procedure">
+<Step title="1. Verify Indexing Path">
+Check each step of nested indexing (`[]`) at the error line for `None`
+</Step>
+<Step title="2. Improve Conditionals">
+Perform stepwise `None` checks externally instead of indexing inside condition expressions
+</Step>
+<Step title="3. Block Recursive Calls">
+Handle return value (`return []`) to stop recursive calls when intermediate values are `None`
+</Step>
+</Steps>
+
+## Sources
+
+- StackOverflow: [How to correct "TypeError: 'NoneType' object is not subscriptable" in recursive function?](https://stackoverflow.com/questions/9846442/how-to-correct-typeerror-nonetype-object-is-not-subscriptable-in-recursive) — Author: TheFoxx(question), philofinfinitejest(answer) (CC BY-SA)
+- Tistory: [파이썬 openpyxl TypeError: 'NoneType' object is not subscriptable오류 해결하기](https://workauto.tistory.com/entry/%ED%8C%8C%EC%9D%B4%EC%8D%AC-openpyxl-TypeError-NoneType-object-is-not-subscriptable%EC%98%A4%EB%A5%98-%ED%95%B4%EA%B2%B0%ED%95%98%EA%B8%B0) — Author: 업무 자동화
+- Tistory: [[Python] TypeError:'nonetype' object is not subscriptable 에러 원인 및 해결방법](https://dev-coderkim.tistory.com/23) — Author: Dev_JasonKim
+
+Images are taken from the sources above.
