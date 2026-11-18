@@ -1,0 +1,96 @@
+---
+title: "[Troubleshooting] Dynamically importing Python modules with absolute paths"
+publishedAt: "2026-11-18"
+summary: "This note explains how to dynamically load Python modules using absolute file paths to resolve `ModuleNotFoundError`."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+When attempting to import a module located at an absolute file path not included in `sys.path`, a `ModuleNotFoundError` occurs.
+Standard `import` statements work with module names or paths within `sys.path`, so they cannot directly load files from arbitrary locations.
+For example, trying to load `MyClass` from `/path/to/file.py` using the following approach results in an error.
+
+```python
+import importlib.util
+spec = importlib.util.spec_from_file_location("module.name", "/path/to/file.py")
+foo = importlib.util.module_from_spec(spec)
+# foo.MyClass()  <- AttributeError may occur when called
+```
+
+![Symptom screenshot](/blogs/python-import-115053-1.png)
+
+## Cause
+
+The Python interpreter loads modules in a standardized manner by checking `sys.modules` and `sys.path`.
+An absolute path is treated merely as a file path; Python does not automatically recognize it as a module name or a path in `sys.path`.
+Therefore, you must create a specification (Spec) that allows the module loading system to recognize the file object and explicitly register the module object in `sys.modules`.
+If this process is skipped, the interpreter remains unable to load the file.
+
+## Solution
+
+In Python 3.5 and later, use the `importlib.util` module to convert a file into a module.
+This is the most stable and recommended method within the standard library.
+You must register the module object in `sys.modules` and then call `exec_module()`.
+
+```python
+import importlib.util
+import sys
+
+# 1. Create a module spec based on the file path
+spec = importlib.util.spec_from_file_location("module.name", "/path/to/file.py")
+
+# 2. Create a module object based on the spec
+foo = importlib.util.module_from_spec(spec)
+
+# 3. Register the module object in sys.modules so the import system can identify it
+sys.modules["module.name"] = foo
+
+# 4. Load and execute the module via the module spec's loader
+spec.loader.exec_module(foo)
+
+# 5. Call the loaded module's class or function
+foo.MyClass()
+```
+
+![Solution screenshot](/blogs/python-import-115053-2.png)
+
+## Alternative Solutions
+
+For Python 3.3 and later, you can use `importlib.machinery.SourceFileLoader`.
+While this method results in more concise code, the `load_module()` method was deprecated in Python 3.4 and completely removed in Python 3.12.
+Running this code in a Python 3.12 environment will raise an `AttributeError`.
+
+```python
+from importlib.machinery import SourceFileLoader
+
+foo = SourceFileLoader("module.name", "/path/to/file.py").load_module()
+foo.MyClass()
+```
+
+In Python 2 environments, use the `load_source` function from the `imp` module.
+This function was deprecated in Python 3.4 and completely removed in Python 3.12, so it is not usable in modern environments.
+
+```python
+import imp
+
+foo = imp.load_source('module.name', '/path/to/file.py')
+foo.MyClass()
+```
+
+## Additional Notes
+
+<Callout type="warning" title="Caution with paths and module names">
+The first argument passed to `importlib` functions, the module name ("module.name"), does not need to match the actual file's directory structure. However, since it becomes the key registered in `sys.modules`, you must choose a unique name to avoid conflicts.
+</Callout>
+
+Be careful to prevent the module from being loaded multiple times with the same name.
+If the key already exists in `sys.modules`, the newly created object from `module_from_spec` may overwrite it. Therefore, it is safe to check for the existence of the key before loading.
+
+## Sources
+
+- StackOverflow: [How can I import a module dynamically given the full path?](https://stackoverflow.com/questions/67631/how-can-i-import-a-module-dynamically-given-the-full-path) — Author: derfred(question), Sebastian Rittau(answer) (CC BY-SA)
+- Velog: [[python]절대경로&상대경로, 상대경로 import 에러 이유와 해결](https://velog.io/@anjaekk/python%EC%A0%88%EB%8C%80%EA%B2%BD%EB%A1%9C%EC%83%81%EB%8C%80%EA%B2%BD%EB%A1%9C-%EC%83%81%EB%8C%80%EA%B2%BD%EB%A1%9C-import-%EC%97%90%EB%9F%AC%EC%9D%B4%EC%9C%A0%EC%99%80-%ED%95%B4%EA%B2%B0)
+- Velog: [VS Code pylint unable to import 문제 해결](https://velog.io/@choi-jiwoo/VS-Code-pylint-unable-to-import-%EB%AC%B8%EC%A0%9C-%ED%95%B4%EA%B2%B0)
+
+Images are taken from the sources above.
