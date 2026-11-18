@@ -1,0 +1,61 @@
+---
+title: "[Paper Review] Lightweight Routing for Reducing LLM Inference Search Costs"
+publishedAt: "2026-11-18"
+summary: "A study proposing a lightweight classifier to route between hybrid and inference-based search to improve RAG system efficiency."
+tag: "Paper Review"
+---
+
+## Balancing Search Efficiency and Accuracy
+
+When building RAG (Retrieval-Augmented Generation) systems, developers often face a dilemma. This is because the accuracy of search results directly affects generation quality. However, each search method has a different balance of cost and performance, making it difficult to always choose the best option.
+
+Traditional hybrid search is fast and low-cost, but it may have limitations when dealing with questions that require complex reasoning. On the other hand, inference-based search like ReSP (Retrieve, Summarize, Plan) can improve search quality but incurs much higher computational costs.
+
+This study proposes using these two methods depending on the situation. Instead of processing all questions with expensive and heavy inference search, it introduces a 'lightweight cost-aware routing' approach, where simple questions are first processed with lightweight search, and only complex questions are routed to inference search.
+
+## CARE: Lightweight Cost-Aware Adaptive Retrieval Architecture
+
+The mechanism proposed by the research team is a routing mechanism named CARE (Cost-aware Adaptive REtrieval). CARE functions as a binary classifier that decides whether each query should undergo lightweight hybrid search or be escalated to heavy inference search.
+
+The key point is that the decision-making process is very lightweight. It is processed through the following flow:
+
+```flow
+Input Query
+→ Extract query-level features and lightweight search results
+→ Lightweight logistic regression classifier analysis
+→ Route to lightweight search or inference search
+```
+
+The classifier uses features of the query itself and features of the previously performed lightweight search. This approach enables efficient routing by combining existing models without requiring additional large model training.
+
+## Experimental Setup and Datasets
+
+CARE's performance was evaluated using two question-answering (QA) datasets: HotpotQA and Natural Questions (NQ). Overall, 7,914,797 documents and 10,857 benchmark queries were used, with 4,097 of those queries reserved as a completely separate test set.
+
+Optimal thresholds were independently selected for each dataset to serve as routing criteria. For HotpotQA, the threshold was set to 0.30, and for NQ, it was set to 0.60.
+
+## Experimental Results: Balancing Efficiency and Accuracy
+
+The experimental results showed different patterns depending on the dataset.
+
+In the case of HotpotQA, CARE achieved search effectiveness comparable to ReSP, an inference-based search method. While the Recall@100 score was slightly lower at 0.8770 compared to ReSP's 0.8795, it showed a marginal utility advantage of 0.0007. This advantage stems not from superior search performance, but from considering the routing-cost term. In particular, a key characteristic is that the activation rate of the expensive search branch dropped from 100% to 88.79%.
+
+In the case of Natural Questions, it demonstrated a more pronounced cost-saving effect. CARE significantly lowered the activation rate of the expensive search branch to 9.82% while still achieving a utility score of 0.7596.
+
+<StatGrid>
+<Stat value="0.7993" label="Dataset average utility" detail="Combined HotpotQA, NQ" />
+<Stat value="49.31%" label="Average expensive branch activation rate" detail="Dataset average" />
+<Stat value="9.82%" label="NQ expensive branch activation rate" detail="Clear cost-saving effect" />
+</StatGrid>
+
+These results show that CARE can maintain performance comparable to inference search in certain situations while dramatically reducing costs in others.
+
+## Developer's Perspective on Application
+
+This study highlights the limitations of the approach of 'processing all queries in the same way' when designing RAG systems. By dynamically dividing search methods based on the difficulty or type of query, overall system efficiency can be increased.
+
+In particular, deciding routing using a simple classifier like logistic regression means efficient optimization is possible without introducing additional heavy models to the system. This is an approach worth considering in environments with limited resources or services where real-time response is important.
+
+## Sources
+
+- OpenAlex / 논문 원문: [When is LLM-based reasoning retrieval worth the cost? Lightweight cost-aware query routing for retrieval-augmented generation](https://doi.org/10.1016/j.ipm.2026.105287) — Author: Sergio Arjona-Giner, Faraón Llorens Largo, Alberto Real-Fernández, Rafael Molina-Carmona
