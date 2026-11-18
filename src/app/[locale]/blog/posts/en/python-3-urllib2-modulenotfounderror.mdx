@@ -1,0 +1,60 @@
+---
+title: "[Troubleshooting] Python 3 urllib2 ModuleNotFoundError"
+publishedAt: "2026-11-18"
+summary: "This note explains how to resolve ModuleNotFoundError when calling the urllib2 module in Python 3."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+In a Python 3 environment, an error occurs when attempting to call the Python 2 library `urllib2`. A `ModuleNotFoundError: No module named 'urllib2'` is output in code calling `urlopen`.
+
+```python
+import urllib2
+
+response = urllib2.urlopen("http://www.google.com")
+html = response.read()
+print(html)
+```
+
+![Symptom screenshot](/blogs/python-3-urllib2-modulenotfounderror-1.png)
+
+## Cause
+
+Python 3 has removed the `urllib2` module and separated its functionality into `urllib.request` and `urllib.error`. Directly calling the existing `urllib2` causes the interpreter to be unable to find the module. Additionally, syntax such as `urllib2.request` is incompatible with Python 3's module structure, causing import itself to fail.
+
+## Solution
+
+Instead of `urllib2`, the `urlopen` function from the `urllib.request` module should be used. Code should be modified to call functions directly using the `from` keyword.
+
+```python
+from urllib.request import urlopen
+html = urlopen("http://www.google.com/").read()
+print(html)
+```
+
+![Solution screenshot](/blogs/python-3-urllib2-modulenotfounderror-2.png)
+
+## Alternative Solutions
+
+It is also possible to import the entire module and then call the function by module name. In this case, it must be called in the format `urllib.request.urlopen`.
+
+```python
+import urllib.request
+
+response = urllib.request.urlopen("http://www.google.com/")
+html = response.read()
+print(html)
+```
+
+## Additional Notes
+
+`urllib.request` and `urllib.error` replace the functionality of `urllib2` in Python 3. When converting Python 2 code to Python 3, the `2to3` tool can automatically fix import statements.
+
+## Sources
+
+- StackOverflow: [Import error: No module name urllib2](https://stackoverflow.com/questions/2792650/import-error-no-module-name-urllib2) — Author: delete(question), Eli Courtwright(answer) (CC BY-SA)
+- Velog: [VS Code pylint unable to import 문제 해결](https://velog.io/@choi-jiwoo/VS-Code-pylint-unable-to-import-%EB%AC%B8%EC%A0%9C-%ED%95%B4%EA%B2%B0)
+- Tistory: [[Python] import Error : cannot import name module 에러 해결](https://sillutt.tistory.com/entry/Python-import-Error-cannot-import-name-module-%EC%97%90%EB%9F%AC-%ED%95%B4%EA%B2%B0) — Author: ⌒＿⌒
+
+Images are taken from the sources above.
