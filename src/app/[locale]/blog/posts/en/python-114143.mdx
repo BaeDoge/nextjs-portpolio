@@ -1,0 +1,81 @@
+---
+title: "[Troubleshooting] Handling Default Values for Python Index Out of Range"
+publishedAt: "2026-11-18"
+summary: "This note covers try-except patterns and conditional checks to handle `IndexError` when accessing list indices out of bounds."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+Accessing a list at an index outside its valid range raises an `IndexError`.
+
+<Callout type="warning" title="Error Scenario">
+IndexError: list index out of range
+</Callout>
+
+The following code raises an error because it attempts to access index 4 in a list that contains only three elements.
+
+```python
+a = ['123', '2', 4]
+print(a[4])
+```
+
+![Symptom screenshot](/blogs/python-114143-1.png)
+
+## Cause
+
+Python list indices start at 0, and the valid indices for a list of length N range from 0 to N-1. If the requested index falls outside this range, the interpreter detects the absence of data at that position and raises an `IndexError`.
+
+Reference materials indicate that this error frequently occurs due to off-by-one calculation errors in logic or when external data is shorter than expected.
+
+## Solution
+
+Aligning with Python's philosophy of "It is easier to ask for forgiveness than permission," use a `try-except` block to catch the error and assign a default value.
+
+```python
+a = ['123', '2', 4]
+
+try:
+    b = a[4]
+except IndexError:
+    b = 'sss'
+
+print(b)  # 'sss'
+```
+
+## Alternative Solutions
+
+Instead of `try-except`, you can use a conditional statement (`if`) to validate the index beforehand. This is a defensive programming approach that prevents access before an error occurs.
+
+```python
+a = ['123', '2', 4]
+index = 4
+
+if index < len(a):
+    b = a[index]
+else:
+    b = 'sss'
+
+print(b)  # 'sss'
+```
+
+## Additional Notes
+
+Habitually checking the length of a list before accessing its index is the most effective way to prevent `IndexError`.
+
+<Steps>
+<Step title="Identify the Error Location">
+Print the list's length (`len()`) and the index you intend to access immediately above the erroneous code to compare the ranges.
+</Step>
+<Step title="Validate Index Range">
+Verify that the index is greater than or equal to 0 and less than the list length before extracting the value.
+</Step>
+</Steps>
+
+## Sources
+
+- StackOverflow: [Getting a default value on index out of range in Python](https://stackoverflow.com/questions/2574636/getting-a-default-value-on-index-out-of-range-in-python) — Author: zjm1126(question), Thomas(answer) (CC BY-SA)
+- Tistory: [파이썬 인덱스 오류 (IndexError: list index out of range) 원인과 해결](https://shanael.tistory.com/482) — Author: 샤나엘의 일상
+- Tistory: [[Python] 자주 발생하는 에러 5가지와 해결 방법](https://chunws13.tistory.com/94) — Author: We can become
+
+Images are taken from the sources above.
