@@ -1,0 +1,104 @@
+---
+title: "[Troubleshooting] UnboundLocalError in Nested Function Scope"
+publishedAt: "2026-11-18"
+summary: "Resolve the UnboundLocalError that occurs when modifying outer variables inside a nested function."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+An `UnboundLocalError` occurs when attempting to modify the value of a variable from an outer function within a nested function.
+
+<Callout type="warning" title="Error Situation">
+UnboundLocalError: local variable 'ctr' referenced before assignment
+</Callout>
+
+The code to reproduce the error is as follows.
+
+```python
+def outer():
+    ctr = 0
+
+    def inner():
+        ctr += 1
+
+    inner()
+
+outer()
+```
+
+![Symptom screenshot](/blogs/unboundlocalerror-141938-1.png)
+
+## Cause
+
+In Python, if a variable is assigned to (using `+=`, `=`, etc.) inside a function, that variable is treated as a **local variable**.
+
+When the statement `ctr += 1` is executed in the `inner` function, the interpreter treats `ctr` as a local variable. However, since the code attempts to read the current value of the variable before assigning a new value to it, an error occurs indicating that a local variable that has not been assigned to is being referenced.
+
+## Solution
+
+In Python 3, you can use the `nonlocal` keyword to allow reassignment of variables from an outer scope.
+
+```python
+def outer():
+    ctr = 0
+
+    def inner():
+        nonlocal ctr
+        ctr += 1
+
+    inner()
+```
+
+By adding `nonlocal ctr`, the `inner` function recognizes `ctr` as a variable in the `outer` function's scope rather than a local variable, allowing its value to be modified.
+
+![Solution screenshot](/blogs/unboundlocalerror-141938-2.png)
+
+## Alternative Solutions
+
+Instead of using `nonlocal`, you can use a mutable object to change the internal value without reassigning the variable itself.
+
+```python
+def outer():
+    ctr = [0]
+
+    def inner():
+        ctr[0] += 1
+
+    inner()
+```
+
+This approach does not violate scope rules because it modifies the value inside the list object rather than reassigning the `ctr` variable itself.
+
+## Additional Notes
+
+Use the `global` keyword to modify the value of a global variable.
+
+```python
+ctr = 0
+
+def inner():
+    global ctr
+    ctr += 1
+
+inner()
+```
+
+If not declared with `global`, the same error occurs due to the difference between global and local variables. Therefore, you must choose the appropriate keyword depending on whether the target of modification is a global variable or a variable in an outer function.
+
+<Compare>
+<ComparePanel title="Modifying Global Variables" tone="neutral">
+Modifies global variables using the `global` keyword. Be cautious of changing global state.
+</ComparePanel>
+<ComparePanel title="Modifying Nested Functions" tone="good">
+Modifies variables in the outer function using the `nonlocal` keyword. The scope is limited, which improves readability.
+</ComparePanel>
+</Compare>
+
+## Sources
+
+- StackOverflow: [UnboundLocalError with nested function scopes](https://stackoverflow.com/questions/2609518/unboundlocalerror-with-nested-function-scopes) — Author: Thomas O(question), Alex Martelli(answer) (CC BY-SA)
+- Tistory: [UnboundLocalError: local variable 'result1' referenced before assignment 해결](https://jack-channel-python.tistory.com/entry/UnboundLocalError-local-variable-result1-referenced-before-assignment-%ED%95%B4%EA%B2%B0) — Author: Smith_Solution
+- Tistory: [[python에러] UnboundLocalError: local variable 'xxxxx' referenced before assignment](https://everybodypyeon.tistory.com/m/entry/python%EC%97%90%EB%9F%AC-UnboundLocalError-local-variable-xxxxx-referenced-before-assignment) — Author: EveryDay, EveryPyeon
+
+Images are taken from the sources above.
