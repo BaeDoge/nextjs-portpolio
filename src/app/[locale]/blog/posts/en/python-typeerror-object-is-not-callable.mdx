@@ -1,0 +1,106 @@
+---
+title: "[Troubleshooting] Python TypeError object is not callable"
+publishedAt: "2026-11-18"
+summary: "Explains the causes and solutions for the TypeError that occurs when a non-callable object is called like a function."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+While running Python code, the error `TypeError: 'xxx' object is not callable` occurs.
+Here, `xxx` represents a non-callable data type such as an integer, string, or list.
+For example, this often happens when built-in functions like `min` or `max` are incorrectly used as variable names.
+
+```python
+min = 10
+print(min([1, 2, 3]))
+```
+
+```text
+TypeError: 'int' object is not callable
+```
+
+<Callout type="warning" title="Error Situation">
+'xxx' object is not callable: Attempted to call the 'xxx' object, which is not callable.
+</Callout>
+
+## Cause
+
+"Callable" refers to objects that can be called by appending parentheses `()`.
+This includes functions, methods, and class instances that define the `__call__` method.
+On the other hand, general data types like integers or strings cannot be called like functions.
+This error occurs when a variable is reassigned to a built-in function name, pointing to a non-callable object like an integer, or when parentheses are appended to a non-callable object.
+
+## Solution
+
+You must check whether the variable or object causing the error is callable and fix the code.
+If a built-in function name was used as a variable name, delete the variable or change its name.
+
+```python
+# Error-causing code
+min = 10
+print(min([1, 2, 3]))
+
+# Solution: Change variable name or remove assignment
+min_val = 10
+print(min([1, 2, 3]))
+```
+
+<Steps>
+<Step title="Check the Cause of the Error">
+Check the 'xxx' part in the error message to identify which object was incorrectly appended with parentheses.
+</Step>
+<Step title="Check for Variable Name Conflicts">
+Verify whether a variable with that name overlaps with a built-in function name and was reassigned.
+</Step>
+<Step title="Modify the Code">
+Change the variable name or remove unnecessary reassignment to normally call the original built-in function.
+</Step>
+</Steps>
+
+![Solution screenshot](/blogs/python-typeerror-object-is-not-callable-1.png)
+
+## Alternative Solutions
+
+In a Jupyter Notebook environment, if a variable was reassigned to a built-in function name in a previously executed cell, you must remove the variable reference using the `del` command to use the original built-in function again.
+
+```python
+# Delete reassigned variables in Jupyter environment
+del min
+del max
+```
+
+<Callout type="info" title="Environment Notice">
+In a Jupyter Notebook environment, variables remain in the namespace due to previously executed code. In this case, you must explicitly remove the variable reference using the `del` command to normally call the built-in function again.
+</Callout>
+
+## Additional Notes
+
+You can use the `callable()` built-in function to check whether an object is callable.
+Class instances that define the `__call__` method are considered callable objects.
+
+```python
+class Foo:
+    def __call__(self):
+        print('called')
+
+foo_instance = Foo()
+print(callable(foo_instance))  # True
+print(callable(10))            # False
+```
+
+<Checklist>
+<ul>
+<li>Do not use function or method names as variables.</li>
+<li>Check the type and state of the object before calling.</li>
+<li>Use the `del` command to remove reassigned variables in Jupyter environments.</li>
+</ul>
+</Checklist>
+
+## Sources
+
+- StackOverflow: [What is a "callable"?](https://stackoverflow.com/questions/111234/what-is-a-callable) — Author: Bite code(question), Florian Bösch(answer) (CC BY-SA)
+- Tistory: [[파이썬 오류] "TypeError 'xxx' object is not callable" 무슨 뜻?](https://chasingdreams.tistory.com/74) — Author: chasingDreams
+- Tistory: [[Python] 'int' object is not callable](https://ubermensch-with.tistory.com/766) — Author: 개발누나
+
+Images are taken from the sources above.
