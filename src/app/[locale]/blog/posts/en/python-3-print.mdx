@@ -1,0 +1,77 @@
+---
+title: "[Troubleshooting] Python 3 print Syntax Error"
+publishedAt: "2026-11-18"
+summary: "Covers the cause and solution for the SyntaxError that occurs when using the print statement without parentheses in Python 3."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+Running legacy Python 2 style code to print strings in a Python 3 environment results in a syntax error.
+
+Reproduce code:
+
+```python
+print "hello World"
+```
+
+Error output:
+
+```text
+  File "<stdin>", line 1
+    print "hello World"
+                      ^
+SyntaxError: invalid syntax
+```
+
+![Symptom screenshot](/blogs/python-3-print-1.png)
+
+## Cause
+
+Starting with Python 3, `print` was changed from a statement to a built-in function. Consequently, the parentheses required for function calls are omitted, causing the Python interpreter to treat it as a syntax error.
+
+## Solution
+
+Modify the code into a function call format that wraps the arguments to be printed in parentheses.
+
+<Compare>
+<ComparePanel title="Before" tone="bad">
+
+```python
+print "Hello World"
+```
+
+</ComparePanel>
+<ComparePanel title="After" tone="good">
+
+```python
+print("Hello World")
+```
+
+</ComparePanel>
+</Compare>
+
+![Solution screenshot](/blogs/python-3-print-2.png)
+
+## Alternative Solutions
+
+You can use the `file` argument in the `print` function call to route output to standard error or a file object instead of standard output.
+
+```python
+import sys
+
+# Example of printing to the standard error (stderr) stream
+print("Error Message", file=sys.stderr)
+```
+
+## Additional Notes
+
+When writing code, leveraging an IDE's syntax checking or auto-completion features can help prevent basic syntax errors such as missing parentheses. The Python 3 `print` function supports arguments like `sep`, `end`, `file`, and `flush`.
+
+## Sources
+
+- StackOverflow: [Syntax error on print with Python 3](https://stackoverflow.com/questions/826948/syntax-error-on-print-with-python-3) — Author: Scott(question), Unknown(answer) (CC BY-SA)
+- Tistory: [[파이썬] 파이썬 에러 SyntaxError: Missing parentheses in call to 'print'](https://korbillgates.tistory.com/93) — Author: 생물정보학자의 블로그
+- Tistory: [[Python] SyntaxError: invalid syntax 오류 해결 방법과 원인 분석](https://paperlover.tistory.com/151) — Author: PaperLover
+
+Images are taken from the sources above.
