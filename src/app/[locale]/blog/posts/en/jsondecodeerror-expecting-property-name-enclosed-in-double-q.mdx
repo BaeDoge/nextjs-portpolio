@@ -1,0 +1,128 @@
+---
+title: "[Troubleshooting] JSONDecodeError: Expecting property name enclosed in double quotes"
+publishedAt: "2026-11-18"
+summary: "Summarizes how to resolve errors caused by using single quotes when parsing JSON."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+When using the `json.loads()` function to convert a string to a JSON object, a `json.JSONDecodeError` occurs.
+The error message is `Expecting property name enclosed in double quotes` and includes location information.
+
+<Callout type="warning" title="Error situation">
+
+```python
+json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+```
+
+</Callout>
+
+The minimum code and output for reproduction are as follows.
+
+```python
+import json
+
+# String with single quotes
+data = "{'key': 'value'}"
+
+# Error occurs when calling json.loads(data)
+json.loads(data)
+```
+
+## Cause
+
+According to the JSON specification (RFC 7159), keys and string values must be enclosed in double quotes (`"`).
+Single quotes (`'`) are not recognized as delimiters for keys or values in JSON, and are only allowed as special characters within strings.
+This mainly occurs when converting a Python dictionary to a string or when receiving incorrectly formatted data.
+
+```python
+# Error when using single quotes
+json.loads("{'key': 'value'}")
+```
+
+## Solution
+
+All keys and string values in the JSON string must be changed to double quotes (`"`).
+
+<Steps>
+<Step title="Check for single quotes">
+Check if the string contains single quotes (`'`).
+</Step>
+<Step title="Replace with double quotes">
+Change the string delimiters to double quotes (`"`).
+</Step>
+<Step title="JSON parsing">
+Pass the modified string to `json.loads()`.
+</Step>
+</Steps>
+
+The code before and after the fix is as follows.
+
+```python
+import json
+
+# Before fix: using single quotes (error occurs)
+bad_data = "{'key': 'value'}"
+
+# After fix: using double quotes (works correctly)
+good_data = '{"key": "value"}'
+
+result = json.loads(good_data)
+print(result)  # {'key': 'value'}
+```
+
+![Solution screenshot](/blogs/jsondecodeerror-expecting-property-name-enclosed-in-double-q-1.png)
+
+## Alternative Solutions
+
+If the input data is in Python literal format (dict string), `ast.literal_eval` can be used instead of JSON.
+This method safely evaluates a Python dictionary with single quotes and converts it to a dictionary.
+However, this does not follow JSON specifications, so caution should be exercised when receiving external data for security reasons.
+
+```python
+import ast
+
+# Python dictionary string with single quotes
+data = "{'key': 'value'}"
+
+# Use literal_eval instead of JSON parsing
+result = ast.literal_eval(data)
+print(result)  # {'key': 'value'}
+```
+
+## Additional Notes
+
+Similar errors and causes that can occur during JSON parsing are as follows.
+
+<Callout type="info" title="Similar error reference">
+- `Expecting value: line 1 column 1 (char 0)`: Occurs when the file is empty or non-JSON data such as HTML is received.
+- `Extra data: line 1 column 9 (char 8)`: Occurs when multiple JSON objects are concatenated.
+</Callout>
+
+When processing JSON Lines format (JSONL) files, read line by line and parse individually.
+
+```python
+import json
+
+# Example of reading JSON Lines file
+with open('data.jsonl', 'r') as f:
+    for line in f:
+        obj = json.loads(line)
+        print(obj)
+```
+
+<Checklist>
+<ul>
+<li>Ensure all keys and string values in the JSON string are enclosed in double quotes.</li>
+<li>Validate that externally received data is in JSON format before processing.</li>
+</ul>
+</Checklist>
+
+## Sources
+
+- StackOverflow: [Python/Json:Expecting property name enclosed in double quotes](https://stackoverflow.com/questions/39491420/python-jsonexpecting-property-name-enclosed-in-double-quotes) — Author: raeX(question), ElmoVanKielmo(answer) (CC BY-SA)
+- Tistory: [JSONDecodeError 해결 — Expecting value 등 원인 5가지](https://doitwithai.tistory.com/entry/JSONDecodeError-Expecting-value-line-1-column-1-%ED%8C%8C%EC%9D%B4%EC%8D%AC-%ED%95%B4%EA%B2%B0) — Author: AI로 다 하리
+- Tistory: [파이썬 NameError: name ‘…’ is not defined [해결 총정리]](https://20230602.tistory.com/entry/%ED%8C%8C%EC%9D%B4%EC%8D%AC-NameError-name-%E2%80%98%E2%80%A6%E2%80%99-is-not-defined-%ED%95%B4%EA%B2%B0-%EC%B4%9D%EC%A0%95%EB%A6%AC) — Author: 현우의블로그
+
+Images are taken from the sources above.
