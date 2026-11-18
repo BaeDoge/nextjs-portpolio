@@ -1,0 +1,111 @@
+---
+title: "[Troubleshooting] NoneType Error When Assigning List Append"
+publishedAt: "2026-11-18"
+summary: "The list.append() method returns None, so assigning its result to a variable causes an AttributeError on subsequent calls."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+When adding elements to a list inside a `for` loop or other iteration, you may mistakenly assign the return value of the `list.append()` method back to the original variable. In this case, after the first iteration, the variable's type changes from a list to `None`, causing an `AttributeError` during the second iteration.
+
+<Callout type="warning" title="Error Situation">
+
+```python
+a = []
+for i in range(5):    
+    a = a.append(i)
+```
+
+</Callout>
+
+Executing the above code produces the following error:
+
+```
+AttributeError: 'NoneType' object has no attribute 'append'
+```
+
+## Cause
+
+Python's `list.append()` method is a **mutating method** that modifies the list object in place. This method does not return any value; it implicitly returns `None` after adding the element to the list.
+
+Therefore, the code `a = a.append(i)` triggers the following behavior:
+1. Adds `i` to `a`.
+2. Reassigns the return value of `append()`, which is `None`, to the variable `a`.
+3. In the next loop iteration, `a` is no longer a list but a `None` object, causing an error when calling `None.append()`.
+
+## Solution
+
+Since the `append()` method modifies the list object in place and does not return a value, you should call the method without assigning it to a variable.
+
+<Compare>
+<ComparePanel title="Error Code" tone="bad">
+
+```python
+a = []
+for i in range(5):    
+    a = a.append(i)  # None is assigned
+```
+
+</ComparePanel>
+<ComparePanel title="Correct Code" tone="good">
+
+```python
+a = []
+for i in range(5):
+    a.append(i)  # Just call the method
+print(a)
+# [0, 1, 2, 3, 4]
+```
+
+</ComparePanel>
+</Compare>
+
+![Solution screenshot](/blogs/list-append-nonetype-1.png)
+
+## Alternative Solutions
+
+To create a new list without modifying the existing one, you can use the assignment operator `+`. Unlike `append()`, this approach returns a new list object, making it appropriate to assign to a variable.
+
+```python
+a = ['a', 'b', 'c']
+# Create a new list and reassign to a
+a = a + ['d']
+
+print(a)
+# ['a', 'b', 'c', 'd']
+
+# It is possible to verify that the original 'a' was not modified
+```
+
+## Additional Notes
+
+Besides `append()`, the `insert()` method is another way to add elements to a list. Like `append()`, `insert()` returns `None`, so you should not assign it to a variable.
+
+```python
+sample_l = ['sql', 'java', 'mysql']
+# Add 'javascript' at index 1
+sample_l.insert(1, 'javascript')
+print(sample_l)
+# ['sql', 'javascript', 'java', 'mysql']
+```
+
+<Steps title="Debugging Checklist">
+<Step title="Check Variable Initialization">
+Verify that the list variable is initialized with `[]`.
+</Step>
+<Step title="Check for Assignment">
+Ensure that you do not use the `=` operator when calling mutating methods such as `append()`, `insert()`, or `sort()`.
+</Step>
+<Step title="Check Type">
+Use the `type()` function to confirm that the variable's actual type is a list.
+</Step>
+</Steps>
+
+## Sources
+
+- StackOverflow: [List append() in for loop raises exception: 'NoneType' object has no attribute 'append'](https://stackoverflow.com/questions/41452819/list-append-in-for-loop-raises-exception-nonetype-object-has-no-attribute) — Author: jim jarnac(question), Rafael Aguilar(answer) (CC BY-SA)
+- Tistory: [[파이썬][Error] 048. AttributeError - 'int' object has no attribute 'append'](https://about-ittt.tistory.com/375) — Author: about_IT
+- Tistory: [[에러노트/파이썬] AttributeError: 'NoneType' object has no attribute 'append'](https://wewegh.tistory.com/36) — Author: 데이터 사이언스로 한걸음
+
+Images are taken from the sources above.
