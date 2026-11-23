@@ -1,0 +1,114 @@
+---
+title: "[Troubleshooting] tqdm: 'module' object is not callable"
+publishedAt: "2026-11-23"
+summary: "This note explains the cause and solution for the TypeError that occurs when calling the tqdm module directly instead of its function."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+An error occurs when you import `tqdm` using `import tqdm` and then try to call the module name `tqdm` as if it were a function.
+
+```python
+import tqdm
+import os
+
+path = '../dialogs'
+dirs = os.listdir(path)
+
+for dir in tqdm(dirs, desc='dirs'):
+    print(dir)
+```
+
+Running this code produces the following `TypeError`:
+
+```
+Traceback (most recent call last):
+  File "process.py", line 15, in <module>
+    for dir in tqdm(os.listdir(path), desc = 'dirs'):
+TypeError: 'module' object is not callable
+```
+
+<Callout type="warning" title="Error Situation">
+'tqdm' is a module, not a function, so it cannot be called with parentheses.
+</Callout>
+
+## Cause
+
+In Python, `import tqdm` creates a module object for the `tqdm` package and binds it to the name `tqdm` in the current namespace.
+
+At this point, the `tqdm` variable refers to the module itself, not the actual progress bar function inside the module.
+
+Therefore, attempting to call it with parentheses like `tqdm(...)` results in Python raising a `TypeError: 'module' object is not callable` because it cannot call a module object.
+
+## Solution
+
+Explicitly call the `tqdm` function inside the module by appending a dot (.) to the module name.
+
+```python
+import tqdm
+import os
+
+path = '../dialogs'
+dirs = os.listdir(path)
+
+# Call the internal function using tqdm.tqdm()
+for dir in tqdm.tqdm(dirs, desc='dirs'):
+    print(dir)
+```
+
+<Steps>
+<Step title="Import Module">
+Import the `tqdm` module.
+</Step>
+<Step title="Call Internal Function">
+Call the tqdm function, which is a sub-object of the module, using the `tqdm.tqdm()` syntax.
+</Step>
+</Steps>
+
+## Alternative Solutions
+
+Instead of importing the entire module, import the specific function you need directly.
+
+```python
+from tqdm import tqdm
+import os
+
+path = '../dialogs'
+dirs = os.listdir(path)
+
+# Call the tqdm function directly
+for dir in tqdm(dirs, desc='dirs'):
+    print(dir)
+```
+
+This method avoids the verbose `tqdm.tqdm()` notation and improves readability by preventing name conflicts with other libraries' `tqdm` functions.
+
+<Compare>
+<ComparePanel title="Module Import (import tqdm)" tone="neutral">
+Must be called in the form `tqdm.tqdm()`. Clearly indicates the module structure.
+</ComparePanel>
+<ComparePanel title="Function Import (from tqdm import tqdm)" tone="good">
+Can be called directly as `tqdm()`. The code is concise and highly readable.
+</ComparePanel>
+</Compare>
+
+## Additional Notes
+
+The `object is not callable` error occurs when you try to call an object that is not callable (such as a function or class) using parentheses.
+
+<Callout type="info" title="Similar Error">
+`TypeError: 'list' object is not callable`
+This occurs when you try to call a list variable using parentheses. You must use square brackets `[]` for indexing.
+</Callout>
+
+<Callout type="info" title="Similar Error">
+`TypeError: 'function' object is not subscriptable`
+This occurs when you try to index a function object using square brackets `[]`. You must use parentheses `()` for function calls.
+</Callout>
+
+## Sources
+
+- StackOverflow: [tqdm: 'module' object is not callable](https://stackoverflow.com/questions/39323182/tqdm-module-object-is-not-callable) — Author: Zhao(question), idjaw(answer) (CC BY-SA)
+- Tistory: [TypeError: 'function' object is not subscriptable 해결](https://jimmy-ai.tistory.com/193) — Author: 지미뉴트론 개발일기
+- Tistory: [TypeError: 'list' object is not callable 원인과 해결법](https://jimmy-ai.tistory.com/192) — Author: 지미뉴트론 개발일기
