@@ -1,0 +1,99 @@
+---
+title: "[Troubleshooting] Resolving click _unicodefun ImportError"
+publishedAt: "2026-11-23"
+summary: "This guide explains how to resolve the ImportError caused by incompatibility between the Black package and click 8.1.0."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+<Callout type="warning" title="Error Situation">
+ImportError: cannot import name '_unicodefun' from 'click'
+</Callout>
+
+This error occurs when running lint checks or code formatting using the Python Black package. It typically happens in environments where `pre-commit` hooks are executed or when running the `black` command directly.
+
+When the error occurs, the traceback appears as follows:
+
+```python
+ImportError: cannot import name '_unicodefun' from 'click' (/Users/robot/.cache/pre-commit/repo3u71ccm2/py_env-python3.9/lib/python3.9/site-packages/click/__init__.py)
+```
+
+## Cause
+
+<Callout type="info" title="Cause Analysis">
+Black versions below 22.3.0 are incompatible with click 8.1.0 or higher.
+</Callout>
+
+The Black package uses the `click` library as a dependency. When the `click` library was upgraded to version 8.1.0, the internal `_unicodefun` module it relied on was removed.
+
+Black versions below 22.3.0 are written to reference this internal module, causing an ImportError when the latest version of `click` is installed.
+
+## Solution
+
+<Callout type="success" title="Recommended Solution">
+Upgrade the Black package to version 22.3.0 or higher.
+</Callout>
+
+Starting from Black version 22.3.0, the error is resolved by addressing the changes in click 8.1.0.
+
+**Upgrade via pip**
+
+```bash
+pip install "black>=22.3.0"
+```
+
+**Modify pre-commit configuration file**
+
+Explicitly pin the Black version to 22.3.0 or higher in the `pre-commit-config.yaml` file.
+
+```yaml
+repos:
+-   repo: https://github.com/psf/black
+    rev: 22.3.0  # or a newer version
+    hooks:
+    -   id: black
+```
+
+You must clear the cache after updating for the new package to take effect.
+
+```bash
+pre-commit clean
+pre-commit autoupdate
+```
+
+![Solution screenshot](/blogs/click-unicodefun-importerror-1.png)
+
+## Alternative Solutions
+
+<Callout type="tip" title="Maintaining Backward Compatibility">
+If upgrading Black is not possible, restrict the click version to a lower version.
+</Callout>
+
+If upgrading Black is difficult due to project policies or other dependency issues, you can downgrade the `click` library to a compatible previous version.
+
+**Pin click version**
+
+```bash
+pip install click==8.0.2
+```
+
+This method resolves the error without upgrading Black.
+
+## Additional Notes
+
+<Callout type="info" title="Notes">
+*   **Cache Issues**: If the error persists despite upgrading the package or changing versions, previous installation files may be cached. Try running the `pre-commit clean` command or creating a new virtual environment to test.
+*   **Version Check**: To check the currently installed package versions, use the following command:
+
+```bash
+pip show black click
+```
+
+## Sources
+
+- StackOverflow: [ImportError: cannot import name '_unicodefun' from 'click'](https://stackoverflow.com/questions/71673404/importerror-cannot-import-name-unicodefun-from-click) — Author: zerocewl(question), zerocewl(answer) (CC BY-SA)
+- Tistory: [가져오기 오류: '클릭'에서 '_unicodefun' 이름을 가져올 수 없습니다.](https://stoneblock.tistory.com/341) — Author: stoneblock
+- Tistory: [Python Import Error) cannot import name 'Literal' from 'typing'](https://luvris2.tistory.com/128) — Author: 고은별의 기술 공유 연구소
+
+Images are taken from the sources above.
