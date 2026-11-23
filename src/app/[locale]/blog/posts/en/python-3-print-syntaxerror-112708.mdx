@@ -1,0 +1,80 @@
+---
+title: "[Troubleshooting] Python 3 print statement SyntaxError"
+publishedAt: "2026-11-23"
+summary: "Resolves the SyntaxError caused by using the Python 2 print statement syntax instead of the Python 3 print function."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+In Python 3.1 or later environments, using `print` without parentheses, such as `print 2 ** 100`, results in a `SyntaxError: invalid syntax`.
+The error message points to the `2` number, which occurs because `print` was changed from a statement to a function in Python 3.
+
+```python
+print 2 ** 100
+# SyntaxError: invalid syntax
+```
+
+## Cause
+
+Python 3 redefined `print` as a built-in function to increase syntactic flexibility.
+The existing Python 2 `print` statement allowed listing arguments without parentheses, but Python 3 requires the function call format with parentheses `()`.
+Omitting the parentheses causes the interpreter to recognize the syntax as invalid, triggering an error before execution.
+
+## Solution
+
+Wrap the value to be printed in parentheses `()` after `print` to change it to a function call format.
+
+```python
+# Before modification (Python 2 style)
+print 2 ** 100
+
+# After modification (Python 3 style)
+print(2 ** 100)
+```
+
+## Alternative Solutions
+
+The `print` function in Python 3 supports various keyword arguments to control output formatting.
+To accurately reproduce the behavior of the existing Python 2 `print` in Python 3, explicitly specify arguments such as `end` and `file`.
+
+```python
+# Python 2: print x,  (adds a space at the end, no newline)
+# Python 3 equivalent:
+print(x, end=" ")
+
+# Python 2: print >>sys.stderr, "error"
+# Python 3 equivalent:
+print("error", file=sys.stderr)
+```
+
+## Additional Notes
+
+The difference in `print` syntax between Python 2 and Python 3 is one of the most common errors encountered during the initial learning phase.
+The following table compares the main changes.
+
+<Compare>
+<ComparePanel title="Python 2 (Syntax)" tone="bad">
+print "The answer is", 2*2
+print x,
+print
+print >>sys.stderr, "fatal error"
+</ComparePanel>
+<ComparePanel title="Python 3 (Function)" tone="good">
+print("The answer is", 2*2)
+print(x, end=" ")
+print()
+print("fatal error", file=sys.stderr)
+</ComparePanel>
+</Compare>
+
+<Callout type="info" title="Caution">
+In Python 3, `print (x, y)` receives the tuple `(x, y)` as a single argument and prints it.
+To print two values separated by a space like Python 2's `print x, y`, you must write `print(x, y)`.
+</Callout>
+
+## Sources
+
+- StackOverflow: [Invalid syntax when using "print"?](https://stackoverflow.com/questions/937491/invalid-syntax-when-using-print) — Author: Lonnie Price(question), TM.(answer) (CC BY-SA)
+- Tistory: [[혼공학습단 8기][혼공파] while 반복문 + <stdin> line 1 Syntax Error (3주차 보충)](https://hianzhi.tistory.com/90) — Author: 독일다락방 | Dachgeschoss
+- Tistory: ['Python' 카테고리의 글 목록](https://yooloo.tistory.com/category/Python) — Author: 잡학문구
