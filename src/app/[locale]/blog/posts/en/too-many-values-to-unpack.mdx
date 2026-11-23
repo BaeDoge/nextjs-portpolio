@@ -1,0 +1,74 @@
+---
+title: "[Troubleshooting] Too many values to unpack"
+publishedAt: "2026-11-23"
+summary: "Resolves the ValueError that occurs when unpacking a sequence with more elements than assigned variables."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+Unpacking fails when attempting to extract only the first two elements from a list or tuple if additional elements exist.
+
+<Callout type="warning" title="Error Situation">
+
+```python
+a, b = 1, 3, 4, 5
+# ValueError: too many values to unpack (expected 2)
+```
+
+</Callout>
+
+## Cause
+
+In Python, the number of variables on the left side of an assignment must exactly match the number of elements in the sequence on the right.
+Attempting to assign a sequence with multiple elements to only two variables results in an error because the remaining elements are not handled.
+
+## Solution
+
+Starting from Python 3, you can use the starred expression (`*`) to collect the remaining elements into a list.
+This approach allows you to assign the first two elements to specific variables while storing the rest in a separate variable.
+
+```python
+# Assign the first two elements to a and b, and the rest to the rest list
+a, b, *rest = 1, 3, 4, 5
+
+print(a)  # 1
+print(b)  # 3
+print(rest)  # [4, 5]
+```
+
+![Solution screenshot](/blogs/too-many-values-to-unpack-1.png)
+
+## Alternative Solutions
+
+You can also extract only the necessary parts using slicing before assignment.
+This method is useful when selecting only the first two elements without using the starred expression.
+
+```python
+values = 1, 3, 4, 5
+
+# Extract only the first two elements using slicing and assign
+a, b = values[:2]
+
+print(a)  # 1
+print(b)  # 3
+```
+
+## Additional Notes
+
+<Steps>
+<Step title="Using Slicing">
+`values[:2]` slices the sequence to include only up to the second element.
+</Step>
+<Step title="Beware of IndexError">
+If the sequence has fewer than two elements, slicing returns an empty sequence. However, assigning this to two variables will raise a `ValueError`.
+</Step>
+</Steps>
+
+## Sources
+
+- StackOverflow: [Unpack the first two elements in list/tuple](https://stackoverflow.com/questions/11371204/unpack-the-first-two-elements-in-list-tuple) — Author: Hanfei Sun(question), Gustav Larsson(answer) (CC BY-SA)
+- Velog: [[뿌셔먹는 파이썬]CS(list vs tuple)](https://velog.io/@burnern/%EB%BF%8C%EC%85%94%EB%A8%B9%EB%8A%94-%ED%8C%8C%EC%9D%B4%EC%8D%ACCSlisttuple)
+- Tistory: [[Python 기초] 부분 Unpacking과 Starred Expression](https://trillionver2.tistory.com/entry/Python-Programming-%EA%B8%B0%EC%B4%88-%EB%B6%80%EB%B6%84-unpacking) — Author: TrillionStack
+
+Images are taken from the sources above.
