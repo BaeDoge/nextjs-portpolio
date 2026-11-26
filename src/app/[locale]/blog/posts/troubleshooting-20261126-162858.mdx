@@ -1,74 +1,98 @@
 ---
-title: "[트러블슈팅] Python 메서드 호출 시 인자 개수 오류 해결"
+title: "[Troubleshooting] Resolving Argument Count Error When Passing Two Arguments"
 publishedAt: "2026-11-26"
-summary: "인스턴스 메서드에 self가 전달되는 원리와 정적 메서드의 차이를 설명합니다."
+summary: "Resolves the argument count mismatch error caused by omitting `self` when calling an instance method."
 tag: "Troubleshooting"
 ---
 
-## 현상
+## Symptom
 
-클래스를 인스턴스화한 뒤 메서드를 호출했는데, 정의한 것보다 인자가 하나 더 전달되었다는 TypeError가 발생할 수 있습니다.
+When instantiating a class and calling a method, an error occurs indicating that too many arguments were provided.
 
-~~~python
+<Callout type="warning" title="Error Situation">
+
+```python
+TypeError: takes exactly 1 argument (2 given)
+```
+
+</Callout>
+
+The minimal code to reproduce the error is as follows.
+
+```python
 class Extractor:
-    def extract_all(tag):
+    def extractAll(tag):
         print(tag)
 
-extractor = Extractor()
-extractor.extract_all("th")
-~~~
+e = Extractor()
+e.extractAll("th")
+```
 
-오류 메시지는 Python 버전에 따라 다음과 유사하게 나타납니다.
+## Cause
 
-~~~
-TypeError: Extractor.extract_all() takes 1 positional argument but 2 were given
-~~~
+Python instance methods pass the instance object itself as the first argument when called.
 
-## 원인
+Therefore, the call `e.extractAll("th")` is internally processed identically to `Extractor.extractAll(e, "th")`.
 
-인스턴스 메서드는 인스턴스를 통해 호출하면 해당 인스턴스가 첫 번째 인자로 자동 전달됩니다.
+If the `self` parameter is not explicitly defined in the method definition, Python attempts to assign the passed instance `e` to the `tag` parameter.
 
-따라서 extractor.extract_all("th")는 개념적으로 Extractor.extract_all(extractor, "th")와 같이 호출됩니다.
+Consequently, the actual number of arguments passed (2) exceeds the number of arguments the defined method expects (1), causing an error.
 
-기존 정의에는 매개변수가 tag 하나뿐이므로, 자동으로 전달된 인스턴스와 사용자가 전달한 문자열까지 총 두 개의 인자를 받으려다 오류가 발생합니다.
+## Solution
 
-## 해결 방법 1: self 매개변수 추가
+Modify the instance method definition to explicitly accept the instance reference by adding `self` as the first parameter.
 
-인스턴스 메서드의 첫 번째 매개변수에 관례적으로 self를 선언합니다.
+<Steps>
+<Step title="Add self parameter">
+Add `self` to the beginning of the class method's parameter list.
+</Step>
+<Step title="Modify code">
+The modified code is as follows.
+</Step>
+</Steps>
 
-~~~python
+```python
 class Extractor:
-    def extract_all(self, tag):
+    def extractAll(self, tag):
         print(tag)
 
-extractor = Extractor()
-extractor.extract_all("th")  # th
-~~~
+e = Extractor()
+e.extractAll("th")
+```
 
-self는 현재 인스턴스를 가리킵니다. 메서드 내부에서 self.options처럼 인스턴스 속성에 접근할 수 있습니다.
+## Alternative Solutions
 
-## 해결 방법 2: 인스턴스 상태가 필요 없다면 staticmethod 사용
+If there is no need to access instance state, you can use the `@staticmethod` decorator.
 
-메서드가 인스턴스나 클래스의 상태를 사용하지 않는 독립적인 기능이라면 @staticmethod를 사용할 수 있습니다.
+In this case, the method does not receive the instance object, so the `self` parameter is not required.
 
-~~~python
+```python
 class Extractor:
     @staticmethod
-    def extract_all(tag):
+    def extractAll(tag):
         print(tag)
 
-extractor = Extractor()
-extractor.extract_all("th")  # th
-~~~
+e = Extractor()
+e.extractAll("th")
+```
 
-정적 메서드는 인스턴스를 첫 번째 인자로 자동 전달하지 않으므로 self 매개변수가 필요하지 않습니다.
+<Compare>
+<ComparePanel title="Instance Method" tone="good">
+Allows access to instance attributes using `self`.
+</ComparePanel>
+<ComparePanel title="Static Method" tone="good">
+Used as a utility function that operates independently without creating an instance.
+</ComparePanel>
+</Compare>
 
-## 선택 기준
+## Additional Notes
 
-- 인스턴스의 속성이나 다른 인스턴스 메서드를 사용한다면 일반 인스턴스 메서드와 self를 사용합니다.
-- 인스턴스 상태와 무관한 기능이라면 @staticmethod를 고려합니다.
+When defined as a static method, you cannot access instance attributes, so you must clearly distinguish whether the intent is a class method or a static method.
 
-## 출처
+Conversely, omitting `self` in an instance method that requires it can result in a `TypeError: missing 1 required positional argument: 'self'` error.
 
-- Python 공식 문서: [Instance methods](https://docs.python.org/3/tutorial/classes.html#instance-objects)
-- Python 공식 문서: [The staticmethod() built-in function](https://docs.python.org/3/library/functions.html#staticmethod)
+Such errors can be prevented by understanding Python's behavior where the first argument is implicitly passed when calling an instance method.
+
+## Sources
+
+- StackOverflow: [Why do I get 'takes exactly 1 argument (2 given)' when trying to call a method?](https://stackoverflow.com/questions/4909585/why-do-i-get-takes-exactly-1-argument-2-given-when-trying-to-call-a-method) — Author: funk-shun(question), Sven Marnach(answer) (CC BY-SA)
