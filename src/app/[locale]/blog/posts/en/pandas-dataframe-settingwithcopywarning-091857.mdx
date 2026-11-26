@@ -1,0 +1,87 @@
+---
+title: "[Troubleshooting] SettingWithCopyWarning When Performing Column Operations on Pandas DataFrame"
+publishedAt: "2026-11-26"
+summary: "This note explains the causes and solutions for the SettingWithCopyWarning that occurs when assigning values to a partial copy of a DataFrame."
+tag: "Troubleshooting"
+---
+
+## Symptom
+
+A `SettingWithCopyWarning` occurs when multiplying a sliced DataFrame column by a scalar or assigning a value to it.
+Attempting to perform operations directly on the column of a sliced DataFrame as shown below triggers the warning.
+
+```python
+df_slice = df[['quantity']]
+df_slice['quantity'] *= -1
+```
+
+The warning message displayed is as follows.
+
+```
+SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+```
+
+This warning indicates that the operation may not affect the original data or is being performed on an unintended copy.
+
+![Symptom screenshot](/blogs/pandas-dataframe-settingwithcopywarning-091857-1.jpg)
+
+## Cause
+
+This warning occurs when the distinction between a 'view' and a 'copy' resulting from DataFrame slicing is ambiguous.
+Pandas often returns a view that references the original data to optimize memory usage during slicing.
+However, under certain conditions (e.g., multi-indexing, filtering), it may internally create a copy.
+When a user performs an assignment operation on a sliced object, Pandas may not clearly determine whether the user intends to modify the original column or the copy's column.
+Assignment operations in such ambiguous states can lead to unexpected results, prompting Pandas to issue a warning.
+
+## Solution
+
+To prevent the warning and clearly modify the original DataFrame's column, you should explicitly create a copy using the `.copy()` method during slicing.
+This makes it clear that the object being worked on is an independent copy of the original, preventing the warning.
+
+```python
+df_slice = df[['quantity']].copy()
+df_slice['quantity'] *= -1
+```
+
+Alternatively, you can use the `.loc` indexer to directly modify the column in the original DataFrame.
+Since `.loc` explicitly specifies the location in the original data, Pandas determines that you are modifying the original, not a copy.
+
+```python
+df.loc[:, 'quantity'] *= -1
+```
+
+This method does not trigger `SettingWithCopyWarning`, and the original data is modified as intended.
+
+## Alternative Solutions
+
+If you are aware that the DataFrame you are currently working with is already a copy and are certain that the warning does not affect changes to the original data, you can ignore the warning.
+However, this is not recommended, and it is better to clarify the intent of the code.
+Additionally, you can explicitly use the `.copy()` method when creating or slicing the DataFrame to clarify that it is a copy.
+
+```python
+df_copy = df[['quantity']].copy()
+df_copy['quantity'] *= -1
+```
+
+In this case, `df_copy` is an independent copy, so it does not affect the original, and no warning is generated.
+
+## Additional Notes
+
+<Callout type="info" title="Note">
+Since Pandas 2.0, the `Copy-on-Write` feature has been introduced, which may change whether this warning is triggered and how it is handled.
+</Callout>
+
+- Using `.loc` is the most standard and safe solution.
+- Using `iterrows()` to loop and modify individual cells is inefficient in terms of performance and is not a fundamental solution to this problem.
+- Explicitly calling `.copy()` when slicing a DataFrame clarifies that it is a copy, avoiding the warning.
+- This warning is not an error and does not stop program execution, but caution is needed for data integrity.
+
+## Sources
+
+- StackOverflow: [Python: Pandas Dataframe how to multiply entire column with a scalar](https://stackoverflow.com/questions/33768122/python-pandas-dataframe-how-to-multiply-entire-column-with-a-scalar) — Author: labheshr(question), labheshr(answer) (CC BY-SA)
+- Tistory: [[Python] pandas DataFrame: ValueError: If using all scalar values, you must pass an index 에러 해결 방법](https://rfriend.tistory.com/482) — Author: R, Python 분석과 프로그래밍의 친구 (by R Friend)
+- Tistory: [[python 파이썬, pandas 판다스] series와 dataframe](https://sunning-10.tistory.com/entry/%ED%8C%8C%EC%9D%B4%EC%8D%AC-python-%ED%8C%90%EB%8B%A4%EC%8A%A4%EC%99%80-%EA%B8%B0%EB%B3%B8-%EB%8D%B0%EC%9D%B4%ED%84%B0-%EC%B2%98%EB%A6%AC) — Author: TODAY IS SUNNING
+
+Images are taken from the sources above.
