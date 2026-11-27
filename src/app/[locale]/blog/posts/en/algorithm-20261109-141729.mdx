@@ -53,6 +53,8 @@ class Solution:
 Using `zip(*grid)` allows you to transpose the matrix, making it easy to iterate over columns and resulting in more concise code.
 
 ```python
+from typing import List
+
 class Solution:
     def projectionArea(self, grid: List[List[int]]) -> int:
         xy = sum(v > 0 for row in grid for v in row)
