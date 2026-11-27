@@ -1,5 +1,5 @@
 ---
-title: "[코딩테스트] 문자열의 각 단어 뒤집기"
+title: "[코딩테스트] 단어별 문자 역순 뒤집기"
 publishedAt: "2026-11-05"
 summary: "문장 속 단어의 순서는 유지하면서 각 단어의 문자만 역순으로 바꾸는 두 포인터 풀이를 설명한다."
 tag: "Algorithm"
@@ -34,8 +34,6 @@ def reverseWords(s: str) -> str:
             chars[left], chars[right] = chars[right], chars[left]
             left += 1
             right -= 1
-
-        i += 1  # 단어 사이 공백을 건너뜀
 
     return "".join(chars)
 ~~~~
