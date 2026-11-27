@@ -1,5 +1,5 @@
 ---
-title: "[Coding Test] Core Keywords"
+title: "[Coding Test] Count Largest Group"
 publishedAt: "2026-11-17"
 summary: "Find the number of groups with the largest size when grouping numbers from 1 to n by their digit sum."
 tag: "Algorithm"
@@ -33,10 +33,10 @@ def countLargestGroup(n: int) -> int:
 
 ## Solution
 
-The function `digit_sum` computes the digit sum of each number. `Counter` stores the group sizes for each sum. `max(cnt.values())` finds the largest group size, and we count the groups that achieve it. Time complexity is O(n·log₁₀ n) (digit sum calculation for each number), and space complexity is O(n) (storing group counts).
+The function `digit_sum` computes the digit sum of each number. `Counter` stores the group sizes for each sum. `max(cnt.values())` finds the largest group size, and we count the groups that achieve it. The time complexity is O(n·d), where d is the number of digits in each number. Under the given constraint (n ≤ 10⁴), there are at most 37 possible digit sums, so the additional counting space is O(1).
 
 ```python
-# 전체 코드 (위 두 코드 블록을 합친 것)
+# Complete implementation (combining the two code blocks above)
 def digit_sum(x: int) -> int:
     s = 0
     while x:
@@ -54,11 +54,11 @@ def countLargestGroup(n: int) -> int:
 
 ## Alternative Approaches
 
-Because the range of digit sums is small, a fixed-size array can be used. Initialize an array `freq[46]` and increment the count for each number's sum. Then compute the maximum value and the number of groups with that maximum. The implementation is similar but slightly faster since there is no hash collision risk. Complexity is the same as above.
+Because the range of digit sums is small, a fixed-size array can be used. Initialize an array `freq[46]` and increment the count for each number's sum. Then compute the maximum value and the number of groups with that maximum. This approach uses direct indexing instead of hashing. It has the same asymptotic complexity, and it is not necessarily faster in every Python implementation.
 
 ```python
 def countLargestGroup(n: int) -> int:
-    freq = [0] * 46  # 최대 자리수 합 = 9*4 = 36, 여유 공간 확보
+    freq = [0] * 46  # The maximum digit sum is 9*4 = 36 for n <= 10^4
     for i in range(1, n + 1):
         s = 0
         x = i
