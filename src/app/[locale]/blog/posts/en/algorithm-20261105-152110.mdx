@@ -31,6 +31,8 @@ The most intuitive approach is a brute-force search, where we check the absolute
 Let `M` be the length of `arr1` and `N` be the length of `arr2`. Since all pairs are compared, the time complexity is O(M * N).
 
 ```python
+from typing import List
+
 class Solution:
     def findTheDistanceValue(self, arr1: List[int], arr2: List[int], d: int) -> int:
         count = 0
@@ -64,6 +66,7 @@ The time complexity of this method is O((M + N) log N), combining sorting O(N lo
 
 ```python
 import bisect
+from typing import List
 
 class Solution:
     def findTheDistanceValue(self, arr1: List[int], arr2: List[int], d: int) -> int:
