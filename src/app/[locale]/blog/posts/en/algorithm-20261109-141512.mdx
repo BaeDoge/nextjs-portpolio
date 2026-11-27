@@ -60,6 +60,8 @@ Space Complexity: O(1) (Only two variables used)
 You can solve this problem using a Dynamic Programming (DP) approach. Let `dp[i]` be the maximum profit achievable up to day `i`. `dp[i]` is calculated as the maximum of `dp[i-1]` (maximum profit up to the previous day) and `prices[i] - min_price` (profit if sold on day `i`). This approach accumulates the maximum profit for each day by iterating through the array.
 
 ```python
+from typing import List
+
 class Solution:
     def maxProfit(self, prices: List[int]) -> int:
         if not prices:
