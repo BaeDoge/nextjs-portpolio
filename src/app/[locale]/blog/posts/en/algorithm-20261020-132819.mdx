@@ -28,6 +28,8 @@ The most direct approach is to start at the left side, move through the increasi
 The following implementation uses one loop for the increasing segment and another for the decreasing segment.
 
 ```python
+from typing import List
+
 class Solution:
     def validMountainArray(self, arr: List[int]) -> bool:
         n = len(arr)
