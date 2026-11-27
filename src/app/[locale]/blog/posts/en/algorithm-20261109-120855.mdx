@@ -31,6 +31,8 @@ Additionally, validation must be performed to ensure that applying an offer does
 A recursive function `dfs` is used to find the minimum cost based on the remaining `needs` array. A `memo` dictionary stores the minimum cost for each state (converted `needs` as a tuple).
 
 ```python
+from typing import List
+
 class Solution:
     def shoppingOffers(self, price: List[int], special: List[List[int]], needs: List[int]) -> int:
         # dictionary for memoization

@@ -27,6 +27,8 @@ After replacement, recursively delete the duplicate node (the successor or prede
 The following code solves the problem using a recursive function.
 
 ```python
+from typing import Optional
+
 class Solution:
     def deleteNode(self, root: Optional[TreeNode], key: int) -> Optional[TreeNode]:
         # 1. Search for the node and perform deletion based on recursion

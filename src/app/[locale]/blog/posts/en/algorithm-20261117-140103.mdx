@@ -1,5 +1,5 @@
 ---
-title: "[Coding Test] Core Keyword"
+title: "[Coding Test] Relative Ranks"
 publishedAt: "2026-11-17"
 summary: "Given an array of scores, return an array indicating each player's rank as Gold Medal, Silver Medal, Bronze Medal, or a numeric string."
 tag: "Algorithm"
@@ -15,7 +15,7 @@ The simplest method is to sort the scores in descending order and then map each 
 
 ```python
 def findRelativeRank(score):
-    # 내림차순 정렬
+    # Sort in descending order
     sorted_scores = sorted(score, reverse=True)
     rank_map = {}
     for i, s in enumerate(sorted_scores):
@@ -61,7 +61,7 @@ A heap-based alternative is also possible. By storing (score, index) pairs in a 
 import heapq
 
 def findRelativeRank(score):
-    # (점수, 인덱스) 쌍을 최대 힙에 저장 (음수 점수로 최대 힙 구현)
+    # Store (score, original index) pairs in a max-heap using negative scores
     heap = [(-s, i) for i, s in enumerate(score)]
     heapq.heapify(heap)
 

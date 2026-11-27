@@ -17,6 +17,9 @@ Use BFS to find the shortest path from `startGene` to `endGene`. At each step, i
 from collections import deque
 
 def minMutation(startGene: str, endGene: str, bank: list[str]) -> int:
+    if startGene == endGene:
+        return 0
+
     bank_set = set(bank)
     if endGene not in bank_set:
         return -1
@@ -42,7 +45,7 @@ def minMutation(startGene: str, endGene: str, bank: list[str]) -> int:
 
 ## Solution
 
-The above BFS code computes the minimum number of mutations. `bank_set` provides O(1) lookups, and `visited` set prevents duplicate exploration. The search continues until `endGene` is reached or the queue is empty. The time complexity is O(N·L·4), where N ≤ 10 and L = 8, which is effectively constant. The space complexity is O(N).
+The above BFS code computes the minimum number of mutations. `bank_set` provides O(1) lookups, and `visited` set prevents duplicate exploration. The search continues until `endGene` is reached or the queue is empty. There are at most 3 replacement characters for each of the L positions of each visited gene. Creating each candidate string takes O(L) time, so the worst-case time complexity is O(N·L²). The visited set and queue store gene strings, giving O(N·L) auxiliary space.
 
 ```python
 # Example execution
@@ -52,7 +55,7 @@ print(minMutation("AACCGGTT", "AAACGGTA", ["AACCGGTA","AACCGCTA","AAACGGTA"]))  
 
 ## Alternative Approaches
 
-- **Bidirectional BFS:** Start BFS from both `startGene` and `endGene` simultaneously and find a meeting point, reducing the search space. This is especially useful when the bank is large, and the time complexity remains O(N·L·4).
+- **Bidirectional BFS:** Start BFS from both `startGene` and `endGene` simultaneously and find a meeting point, reducing the search space. This can reduce the number of explored states in practice. The worst-case time complexity still includes candidate-string construction and is O(N·L²).
 - **DFS + Memoization:** For each string, explore all reachable strings and store the shortest path to `endGene`. This approach is similar to BFS for small banks but may suffer from performance degradation due to repeated exploration in larger banks.
 
 ## Additional Notes

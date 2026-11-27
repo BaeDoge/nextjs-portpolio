@@ -33,7 +33,7 @@ The time complexity is O(n) and the space complexity is O(1), where n is the len
 
 ## Alternative Approaches
 
-The problem can also be solved recursively. Find the shortest balanced prefix, split it off, and recursively process the remainder. Each call traverses its substring, so the time complexity is O(n), while the space complexity is O(n) due to recursion depth and slicing. The following is a recursive implementation.
+The problem can also be solved recursively. Find the shortest balanced prefix, split it off, and recursively process the remainder. Each recursive call scans the remaining suffix and creates another sliced string. In the worst case, the total scanning and copying time is O(n²). The call stack is O(n), and the total memory retained by the sliced suffixes can also reach O(n²). The following is a recursive implementation.
 
 ```python
 def balancedStringSplit(s: str) -> int:

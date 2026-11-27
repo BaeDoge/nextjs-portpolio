@@ -26,6 +26,8 @@ This code implements the solution using iteration.
 It uses three pointers (`prev`, `curr`, `next`) to reverse the node connections in a single pass.
 
 ```python
+from typing import Optional
+
 class Solution:
     def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
         prev = None
@@ -52,6 +54,8 @@ When the recursive call returns, the direction is flipped by setting `curr.next.
 Finally, `curr.next` is set to `None` to prevent circular links.
 
 ```python
+from typing import Optional
+
 class Solution:
     def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
         if not head or not head.next:

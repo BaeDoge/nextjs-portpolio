@@ -1,5 +1,5 @@
 ---
-title: "[Coding Test] Core Keywords"
+title: "[Coding Test] Reverse Words in a String III"
 publishedAt: "2026-11-05"
 summary: "An algorithm problem that reverses the order of characters within each word while preserving spaces between words."
 tag: "Algorithm"
@@ -33,7 +33,7 @@ def reverseWords(s: str) -> str:
 
 ## Solution
 
-Convert the string to a list and reverse each word using two pointers (start, end). Swap characters within each word while traversing the string once. Time complexity is O(n). Extra space is O(n) for the character list, or O(1) additional space if the list is considered in-place.
+Convert the string to a list and reverse each word using two pointers (start, end). Swap characters within each word while traversing the string once. Time complexity is O(n). Extra space is O(n) because Python strings are immutable and converting the input to a character list creates a copy.
 
 ```python
 def reverseWords(s: str) -> str:

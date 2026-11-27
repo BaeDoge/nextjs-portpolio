@@ -18,7 +18,7 @@ Process the logs sequentially while maintaining a stack of currently executing f
 ```python
 def exclusiveTime(n: int, logs: list[str]) -> list[int]:
     ans = [0] * n
-    stack = []          # (function_id, start_time)
+    stack = []          # Function IDs, one entry per invocation
     prev_time = 0
 
     for entry in logs:
@@ -28,12 +28,12 @@ def exclusiveTime(n: int, logs: list[str]) -> list[int]:
         if typ == 'start':
             if stack:
                 # Add time for the previous function up to the start
-                ans[stack[-1][0]] += ts - prev_time
-            stack.append((fid, ts))
+                ans[stack[-1]] += ts - prev_time
+            stack.append(fid)
             prev_time = ts
         else:  # 'end'
             # Pop the ending function
-            cur_id, start = stack.pop()
+            cur_id = stack.pop()
             # Include the time at the end
             ans[cur_id] += ts - prev_time + 1
             prev_time = ts + 1   # +1 for the next start
@@ -42,7 +42,7 @@ def exclusiveTime(n: int, logs: list[str]) -> list[int]:
 ```
 
 Time complexity: `O(L)` (L = logs.length)  
-Space complexity: `O(n)` (stack stores at most n entries)
+Space complexity: `O(L)` in the worst case, where L is the number of log events. Recursive calls to the same function can create more stack entries than the number of distinct function IDs.
 
 ## Alternative Approaches
 
