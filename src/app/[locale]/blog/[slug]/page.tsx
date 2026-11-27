@@ -26,7 +26,7 @@ import { Posts } from "@/components/blog/Posts";
 import { ShareSection } from "@/components/blog/ShareSection";
 
 export async function generateStaticParams() {
-  const posts = getPosts(["src", "app", "[locale]", "blog", "posts"]);
+  const posts = getPosts("blog");
 
   return routing.locales.flatMap((locale) =>
     posts.map((post) => ({
@@ -47,7 +47,7 @@ export async function generateMetadata({
     : routeParams.slug || "";
 
   const locale = await getLocale();
-  const posts = getPostsByLocale(["src", "app", "[locale]", "blog", "posts"], locale);
+  const posts = getPostsByLocale("blog", locale);
   let post = posts.find((post) => post.slug === slugPath);
 
   if (!post) return {};
@@ -73,7 +73,7 @@ export default async function Blog({ params }: { params: Promise<{ slug: string 
     ? routeParams.slug.join("/")
     : routeParams.slug || "";
 
-  let post = getPostsByLocale(["src", "app", "[locale]", "blog", "posts"], locale).find((post) => post.slug === slugPath);
+  let post = getPostsByLocale("blog", locale).find((post) => post.slug === slugPath);
 
   if (!post) {
     notFound();

@@ -21,7 +21,7 @@ export async function Posts({
   direction,
 }: PostsProps) {
   const locale = await getLocale();
-  let allBlogs = getPostsByLocale(["src", "app", "[locale]", "blog", "posts"], locale);
+  let allBlogs = getPostsByLocale("blog", locale);
   if (exclude.length) {
     allBlogs = allBlogs.filter((post) => !exclude.includes(post.slug));
   }
