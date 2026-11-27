@@ -9,8 +9,8 @@ tag: "Algorithm"
 
 The `prices` array represents the stock price on each day. You must buy the stock once and sell it on a later day to maximize profit. The buy day must strictly precede the sell day. If no profit can be made, return 0.
 
-```python
-# Example 1
+```text
+Example 1
 Input: prices = [7, 1, 5, 3, 6, 4]
 Output: 5
 # Buy at 1, sell at 6 (Profit 5)
@@ -18,7 +18,7 @@ Output: 5
 # Example 2
 Input: prices = [7, 6, 4, 3, 1]
 Output: 0
-# Prices decrease every day, so no trade is possible
+Prices decrease every day, so no trade is possible
 ```
 
 ## Approach
@@ -38,6 +38,8 @@ for price in prices:
 Iterate through the array while maintaining `min_price` as the lowest stock price seen. The difference between each day's price and `min_price` represents potential profit, and the maximum of these differences determines the maximum profit. This approach is very fast because it scans the entire array only once.
 
 ```python
+from typing import List
+
 class Solution:
     def maxProfit(self, prices: List[int]) -> int:
         min_price = float('inf')
