@@ -26,6 +26,8 @@ This code implements the solution using iteration.
 It uses three pointers (`prev`, `curr`, `next`) to reverse the node connections in a single pass.
 
 ```python
+from typing import Optional
+
 class Solution:
     def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
         prev = None
