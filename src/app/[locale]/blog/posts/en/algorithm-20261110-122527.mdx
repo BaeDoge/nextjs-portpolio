@@ -34,6 +34,8 @@ Compare `nums[fast]` with `nums[slow - 1]`. If they are different, `nums[fast]` 
 After the loop, the value of `slow` becomes the total count of unique elements, `k`. This algorithm is efficient as it traverses the array only once.
 
 ```python
+from typing import List
+
 class Solution:
     def removeDuplicates(self, nums: List[int]) -> int:
         if not nums:

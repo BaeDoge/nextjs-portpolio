@@ -71,18 +71,18 @@ Takes $O(N \log N)$ time to sort the array. Space complexity may be lower than t
 As a constraint, both `arr.length` and `arr[i]` are 500 or less. Since the array size is very small, instead of a separate hash map, a regular array of size 501 can be used as a count array to count frequencies. This eliminates hash map overhead and allows constant-time access, but in Python, hash maps are fast enough and memory usage is not an issue, so the hash map approach is recommended.
 
 ```python
-# Example using a count array (for reference)
-count = [0] * 501
-for num in arr:
-    count[num] += 1
+def findLucky_counting_array(arr: list[int]) -> int:
+    count = [0] * 501
+    for num in arr:
+        count[num] += 1
 
-for i in range(500, 0, -1):
-    if count[i] == i:
-        return i
-return -1
+    for value in range(500, 0, -1):
+        if count[value] == value:
+            return value
+    return -1
 ```
 
-Both the code above and the hash map method have an $O(N)$ time complexity. The count array method has a limitation in that its space complexity depends on the maximum value of the array.
+The count-array implementation takes $O(N + K)$ time and $O(K)$ space, where $K=501$ is the fixed value range. Under this problem's constraints, that is $O(N)$ time and $O(1)$ auxiliary space.
 
 ## Sources
 

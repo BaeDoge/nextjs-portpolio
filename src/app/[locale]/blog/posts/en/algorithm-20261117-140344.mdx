@@ -15,7 +15,7 @@ The constraint is `0 <= num <= 10^6`.
 
 The most intuitive solution is simulation. Loop until `num` becomes 0, performing divide by 2 if even or subtract 1 if odd, and accumulate the step count.  
 This method has time complexity O(log num) and space complexity O(1).  
-Alternatively, using binary representation, the step count can be computed in O(1) by leveraging the bit length and the number of 1 bits.
+Alternatively, the binary representation gives a direct formula using the bit length and the number of 1 bits. These operations still take time proportional to the number of bits, or O(log num).
 
 ## Solution
 
@@ -39,7 +39,7 @@ It uses no extra memory, so space complexity is O(1).
 
 ## Alternative Approaches
 
-Using bit operations, the step count can be calculated directly. By obtaining the binary length (`bit_length`) and the number of 1 bits (`popcount`) of `num`, the step count equals `bit_length + popcount - 1`.  
+In Python 3.10 and later, the step count can be calculated using `int.bit_length()` and `int.bit_count()`. By obtaining the binary length and the number of 1 bits of `num`, the step count equals `bit_length + bit_count - 1`. The `bit_count()` method was added in Python 3.10.  
 The implementation is as follows.
 
 ```python
@@ -50,8 +50,7 @@ class Solution:
         return num.bit_length() + num.bit_count() - 1
 ```
 
-This approach uses built-in functions, so its time complexity is close to O(1) and space complexity is also O(1).  
-However, the simulation method may be easier to understand in terms of readability and maintainability.
+Both `bit_length()` and `bit_count()` inspect the integer representation, so the time complexity is O(log num), with O(1) additional space. The simulation method may still be easier to understand and is compatible with older Python versions.
 
 ## Additional Notes
 

@@ -68,22 +68,29 @@ function getMDXData(dir: string) {
   });
 }
 
-export function getPosts(customPath = ["", "", "", ""]) {
-  const postsDir = path.join(process.cwd(), ...customPath);
-  return getMDXData(postsDir);
+type PostCollection = "blog" | "work";
+
+// Explicit content roots let Turbopack trace only the MDX directories.
+const POST_DIRECTORIES: Record<PostCollection, string> = {
+  blog: path.join(process.cwd(), "src", "app", "[locale]", "blog", "posts"),
+  work: path.join(process.cwd(), "src", "app", "[locale]", "work", "projects"),
+};
+
+export function getPosts(collection: PostCollection) {
+  return getMDXData(POST_DIRECTORIES[collection]);
 }
 
 /**
  * 로케일에 맞는 글 목록을 돌려줍니다.
- *  - ko: <dir>/ 의 글을 그대로 사용
- *  - en: <dir>/en/ 에 같은 slug의 글이 있으면 그것으로 대체,
+ *  - ko: 기본 디렉터리의 글을 그대로 사용
+ *  - en: en/ 에 같은 slug의 글이 있으면 그것으로 대체,
  *        없으면 한국어 글을 그대로 보여줍니다(번역 누락 시 빈 목록 방지).
  */
-export function getPostsByLocale(customPath: string[], locale: string) {
-  const koPosts = getPosts(customPath);
+export function getPostsByLocale(collection: PostCollection, locale: string) {
+  const koPosts = getPosts(collection);
   if (locale !== "en") return koPosts;
 
-  const enDir = path.join(process.cwd(), ...customPath, "en");
+  const enDir = path.join(POST_DIRECTORIES[collection], "en");
   if (!fs.existsSync(enDir)) return koPosts;
 
   const enPosts = getMDXData(enDir);

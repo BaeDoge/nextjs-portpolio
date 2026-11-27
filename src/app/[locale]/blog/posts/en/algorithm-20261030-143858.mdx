@@ -30,6 +30,8 @@ Iterate through amounts `i` from 1 to `amount` in the outer loop, and iterate th
 Finally, if `dp[amount]` is less than the initial impossible value, return it; otherwise, return -1.
 
 ```python
+from typing import List
+
 class Solution:
     def coinChange(self, coins: List[int], amount: int) -> int:
         # dp[i] is the minimum number of coins to make amount i

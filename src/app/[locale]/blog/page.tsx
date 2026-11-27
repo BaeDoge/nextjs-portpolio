@@ -28,7 +28,7 @@ export async function generateMetadata() {
 
 export default async function Blog() {
   const locale = await getLocale();
-  const posts = getPostsByLocale(["src", "app", "[locale]", "blog", "posts"], locale);
+  const posts = getPostsByLocale("blog", locale);
   // 현재 언어에 실제 존재하는 글만 고정합니다. 번역이 없는 글 때문에 일반 글이 누락되지 않도록 합니다.
   const pinnedPostSlugs = PINNED_POST_SLUGS.filter((slug) =>
     posts.some((post) => post.slug === slug),
