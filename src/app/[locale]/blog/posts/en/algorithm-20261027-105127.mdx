@@ -44,6 +44,8 @@ Time Complexity: O(N), Space Complexity: O(1)
 You can approach this by pre-building a prefix sum array. Create separate arrays for the left cumulative sum and the right cumulative sum, then compare the sums at each index. While this method makes the code more intuitive, it increases the space complexity to O(N) because it uses additional arrays.
 
 ```python
+from typing import List
+
 class Solution:
     def pivotIndex(self, nums: List[int]) -> int:
         n = len(nums)
