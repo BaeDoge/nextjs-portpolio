@@ -24,6 +24,8 @@ Since the projection onto each plane is determined by the outer silhouette heigh
 ## Solution
 
 ```python
+from typing import List
+
 class Solution:
     def projectionArea(self, grid: List[List[int]]) -> int:
         n = len(grid)
@@ -59,7 +61,7 @@ class Solution:
         return xy + yz + zx
 ```
 
-- **Comparison**: The above method has high code readability by using `zip` to generate column data. However, `zip` creates a new list of tuples, which can consume $O(n^2)$ additional memory. Since the constraint is $n \le 50$, this does not exceed practical memory limits.
+- **Comparison**: The above method has high code readability by using `zip` to generate column data. In Python 3, `zip` returns an iterator rather than materializing the entire transposed matrix. It produces one column tuple at a time, so the additional working space is O(n), not O(n²).
 
 ## Additional Notes
 
